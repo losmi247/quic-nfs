@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package rpc;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+
+
+// Message types
+enum MsgType {
+    CALL = 0;
+    REPLY = 1;
+}
+
+// Reply status
+enum ReplyStat {
+    MSG_ACCEPTED = 0;
+    MSG_DENIED = 1;
+}
+
+// Accept status
+enum AcceptStat {
+    SUCCESS = 0;        // RPC executed successfully
+    PROG_UNAVAIL = 1;   // remote hasn't exported program
+    PROG_MISMATCH = 2;  // remote can't support version
+    PROC_UNAVAIL = 3;   // program can't support procedure
+    GARBAGE_ARGS = 4;   // procedure can't decode params
+    SYSTEM_ERR = 5;     // memory allocation failure
+}
+
+// Reject status
+enum RejectStat {
+    RPC_MISMATCH = 0;   // RPC version number != 2
+    AUTH_ERROR = 1;     // remote can't authenticate caller
+}
+
+// Auth status
+enum AuthStat {
+    AUTH_OK = 0;
+
+    // missing othe authentication statuses
+}
+
+// Generic CallBody to handle any program-specific procedures
+message CallBody {
+    uint32 rpcvers = 1;  // RPC version number (must be 2)
+    uint32 prog = 2;     // RPC program number
+    uint32 vers = 3;     // version number of the program
+    uint32 proc = 4;     // procedure number
+
+    // here: opaque cred+verf for auth protocol - length 0 when AUTH_NONE
+
+    // Procedure-specific parameters can be added here as fields
+    google.protobuf.Any params = 5; // Serialized params for the procedure
+}
+
+
+// MismatchInfo message definition (for AcceptedReply and RejectedReply)
+message MismatchInfo {
+    uint32 low = 1;
+    uint32 high = 2;
+}
+
+// AcceptedReply message definition
+message AcceptedReply {
+    // here: opaque verf for auth protocol - length 0 when AUTH_NONE
+    AcceptStat stat = 1;
+
+    // The reply_data union from the original C structure
+    oneof reply_data {
+        google.protobuf.Any results = 2; // case SUCCESS
+        MismatchInfo mismatch_info = 3; // case PROG_MISMATCH
+        google.protobuf.Empty default_case = 4; // default case
+    }
+}
+
+// RejectedReply message definition
+message RejectedReply {
+    RejectStat stat = 1;
+
+    oneof reply_data {
+        MismatchInfo mismatch_info = 2; // case RPC_MISMATCH
+        AuthStat auth_stat = 3;         // case AUTH_ERROR
+    }
+}
+
+// ReplyBody message definition
+message ReplyBody {
+    ReplyStat stat = 1;
+
+    oneof reply {
+        AcceptedReply areply = 2; // case MSG_ACCEPTED
+        RejectedReply rreply = 3; // case MSG_DENIED
+    }
+}
+
+// RpcMsg message definition
+message RpcMsg {
+    uint32 xid = 1;
+    MsgType mtype = 2;
+
+    oneof body {
+        CallBody cbody = 3;  // case CALL
+        ReplyBody rbody = 4; // case REPLY
+    }
+}

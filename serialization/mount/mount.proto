@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package nfs.mount;
+
+// Types for Mount program arguments
+
+// Define an empty message for procedures that don't require parameters
+message Empty {}
+
+// The "fhandle" type, a file handle represented as a byte array
+message FHandle {
+    bytes handle = 1;
+}
+
+// The "fhstatus" type, a union-like structure to indicate status or file handle
+message FhStatus {
+    uint32 status = 1; // 0 for success, non-zero for error
+    FHandle directory = 2; // Valid only when status is 0
+}
+
+// The "dirpath" type, a string representing a server pathname
+message DirPath {
+    string path = 1;
+}
+
+// The "name" type, an arbitrary string used for hostnames and group names
+message Name {
+    string name = 1;
+}
+
+// The "mountlist" type, a linked list of mounted entries
+message MountList {
+    Name hostname = 1;
+    DirPath directory = 2;
+    MountList nextentry = 3; // Recursive reference for the linked list
+}
+
+// The "groups" type, a linked list of group names
+message Groups {
+    Name grname = 1;
+    Groups grnext = 2; // Recursive reference for the linked list
+}
+
+// The "exportlist" type, a linked list of exported filesystems
+message ExportList {
+    DirPath filesys = 1;
+    Groups groups = 2;
+    ExportList next = 3; // Recursive reference for the linked list
+}
