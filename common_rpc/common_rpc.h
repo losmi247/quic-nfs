@@ -10,7 +10,7 @@
 * Functions used in both client and server RPC program implementations.
 */
 
-uint32_t generate_rpc_xid();
+uint32_t generate_rpc_xid(void);
 
 Rpc__RpcMsg *deserialize_rpc_msg(uint8_t *rpc_msg_buffer, size_t bytes_received);
 

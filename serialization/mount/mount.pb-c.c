@@ -7,385 +7,322 @@
 #endif
 
 #include "serialization/mount/mount.pb-c.h"
-void   nfs__mount__empty__init
-                     (Nfs__Mount__Empty         *message)
+void   mount__fhandle__init
+                     (Mount__FHandle         *message)
 {
-  static const Nfs__Mount__Empty init_value = NFS__MOUNT__EMPTY__INIT;
+  static const Mount__FHandle init_value = MOUNT__FHANDLE__INIT;
   *message = init_value;
 }
-size_t nfs__mount__empty__get_packed_size
-                     (const Nfs__Mount__Empty *message)
+size_t mount__fhandle__get_packed_size
+                     (const Mount__FHandle *message)
 {
-  assert(message->base.descriptor == &nfs__mount__empty__descriptor);
+  assert(message->base.descriptor == &mount__fhandle__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t nfs__mount__empty__pack
-                     (const Nfs__Mount__Empty *message,
+size_t mount__fhandle__pack
+                     (const Mount__FHandle *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &nfs__mount__empty__descriptor);
+  assert(message->base.descriptor == &mount__fhandle__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t nfs__mount__empty__pack_to_buffer
-                     (const Nfs__Mount__Empty *message,
+size_t mount__fhandle__pack_to_buffer
+                     (const Mount__FHandle *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &nfs__mount__empty__descriptor);
+  assert(message->base.descriptor == &mount__fhandle__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Nfs__Mount__Empty *
-       nfs__mount__empty__unpack
+Mount__FHandle *
+       mount__fhandle__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Nfs__Mount__Empty *)
-     protobuf_c_message_unpack (&nfs__mount__empty__descriptor,
+  return (Mount__FHandle *)
+     protobuf_c_message_unpack (&mount__fhandle__descriptor,
                                 allocator, len, data);
 }
-void   nfs__mount__empty__free_unpacked
-                     (Nfs__Mount__Empty *message,
+void   mount__fhandle__free_unpacked
+                     (Mount__FHandle *message,
                       ProtobufCAllocator *allocator)
 {
   if(!message)
     return;
-  assert(message->base.descriptor == &nfs__mount__empty__descriptor);
+  assert(message->base.descriptor == &mount__fhandle__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   nfs__mount__fhandle__init
-                     (Nfs__Mount__FHandle         *message)
+void   mount__fh_status__init
+                     (Mount__FhStatus         *message)
 {
-  static const Nfs__Mount__FHandle init_value = NFS__MOUNT__FHANDLE__INIT;
+  static const Mount__FhStatus init_value = MOUNT__FH_STATUS__INIT;
   *message = init_value;
 }
-size_t nfs__mount__fhandle__get_packed_size
-                     (const Nfs__Mount__FHandle *message)
+size_t mount__fh_status__get_packed_size
+                     (const Mount__FhStatus *message)
 {
-  assert(message->base.descriptor == &nfs__mount__fhandle__descriptor);
+  assert(message->base.descriptor == &mount__fh_status__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t nfs__mount__fhandle__pack
-                     (const Nfs__Mount__FHandle *message,
+size_t mount__fh_status__pack
+                     (const Mount__FhStatus *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &nfs__mount__fhandle__descriptor);
+  assert(message->base.descriptor == &mount__fh_status__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t nfs__mount__fhandle__pack_to_buffer
-                     (const Nfs__Mount__FHandle *message,
+size_t mount__fh_status__pack_to_buffer
+                     (const Mount__FhStatus *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &nfs__mount__fhandle__descriptor);
+  assert(message->base.descriptor == &mount__fh_status__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Nfs__Mount__FHandle *
-       nfs__mount__fhandle__unpack
+Mount__FhStatus *
+       mount__fh_status__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Nfs__Mount__FHandle *)
-     protobuf_c_message_unpack (&nfs__mount__fhandle__descriptor,
+  return (Mount__FhStatus *)
+     protobuf_c_message_unpack (&mount__fh_status__descriptor,
                                 allocator, len, data);
 }
-void   nfs__mount__fhandle__free_unpacked
-                     (Nfs__Mount__FHandle *message,
+void   mount__fh_status__free_unpacked
+                     (Mount__FhStatus *message,
                       ProtobufCAllocator *allocator)
 {
   if(!message)
     return;
-  assert(message->base.descriptor == &nfs__mount__fhandle__descriptor);
+  assert(message->base.descriptor == &mount__fh_status__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   nfs__mount__fh_status__init
-                     (Nfs__Mount__FhStatus         *message)
+void   mount__dir_path__init
+                     (Mount__DirPath         *message)
 {
-  static const Nfs__Mount__FhStatus init_value = NFS__MOUNT__FH_STATUS__INIT;
+  static const Mount__DirPath init_value = MOUNT__DIR_PATH__INIT;
   *message = init_value;
 }
-size_t nfs__mount__fh_status__get_packed_size
-                     (const Nfs__Mount__FhStatus *message)
+size_t mount__dir_path__get_packed_size
+                     (const Mount__DirPath *message)
 {
-  assert(message->base.descriptor == &nfs__mount__fh_status__descriptor);
+  assert(message->base.descriptor == &mount__dir_path__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t nfs__mount__fh_status__pack
-                     (const Nfs__Mount__FhStatus *message,
+size_t mount__dir_path__pack
+                     (const Mount__DirPath *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &nfs__mount__fh_status__descriptor);
+  assert(message->base.descriptor == &mount__dir_path__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t nfs__mount__fh_status__pack_to_buffer
-                     (const Nfs__Mount__FhStatus *message,
+size_t mount__dir_path__pack_to_buffer
+                     (const Mount__DirPath *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &nfs__mount__fh_status__descriptor);
+  assert(message->base.descriptor == &mount__dir_path__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Nfs__Mount__FhStatus *
-       nfs__mount__fh_status__unpack
+Mount__DirPath *
+       mount__dir_path__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Nfs__Mount__FhStatus *)
-     protobuf_c_message_unpack (&nfs__mount__fh_status__descriptor,
+  return (Mount__DirPath *)
+     protobuf_c_message_unpack (&mount__dir_path__descriptor,
                                 allocator, len, data);
 }
-void   nfs__mount__fh_status__free_unpacked
-                     (Nfs__Mount__FhStatus *message,
+void   mount__dir_path__free_unpacked
+                     (Mount__DirPath *message,
                       ProtobufCAllocator *allocator)
 {
   if(!message)
     return;
-  assert(message->base.descriptor == &nfs__mount__fh_status__descriptor);
+  assert(message->base.descriptor == &mount__dir_path__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   nfs__mount__dir_path__init
-                     (Nfs__Mount__DirPath         *message)
+void   mount__name__init
+                     (Mount__Name         *message)
 {
-  static const Nfs__Mount__DirPath init_value = NFS__MOUNT__DIR_PATH__INIT;
+  static const Mount__Name init_value = MOUNT__NAME__INIT;
   *message = init_value;
 }
-size_t nfs__mount__dir_path__get_packed_size
-                     (const Nfs__Mount__DirPath *message)
+size_t mount__name__get_packed_size
+                     (const Mount__Name *message)
 {
-  assert(message->base.descriptor == &nfs__mount__dir_path__descriptor);
+  assert(message->base.descriptor == &mount__name__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t nfs__mount__dir_path__pack
-                     (const Nfs__Mount__DirPath *message,
+size_t mount__name__pack
+                     (const Mount__Name *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &nfs__mount__dir_path__descriptor);
+  assert(message->base.descriptor == &mount__name__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t nfs__mount__dir_path__pack_to_buffer
-                     (const Nfs__Mount__DirPath *message,
+size_t mount__name__pack_to_buffer
+                     (const Mount__Name *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &nfs__mount__dir_path__descriptor);
+  assert(message->base.descriptor == &mount__name__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Nfs__Mount__DirPath *
-       nfs__mount__dir_path__unpack
+Mount__Name *
+       mount__name__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Nfs__Mount__DirPath *)
-     protobuf_c_message_unpack (&nfs__mount__dir_path__descriptor,
+  return (Mount__Name *)
+     protobuf_c_message_unpack (&mount__name__descriptor,
                                 allocator, len, data);
 }
-void   nfs__mount__dir_path__free_unpacked
-                     (Nfs__Mount__DirPath *message,
+void   mount__name__free_unpacked
+                     (Mount__Name *message,
                       ProtobufCAllocator *allocator)
 {
   if(!message)
     return;
-  assert(message->base.descriptor == &nfs__mount__dir_path__descriptor);
+  assert(message->base.descriptor == &mount__name__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   nfs__mount__name__init
-                     (Nfs__Mount__Name         *message)
+void   mount__mount_list__init
+                     (Mount__MountList         *message)
 {
-  static const Nfs__Mount__Name init_value = NFS__MOUNT__NAME__INIT;
+  static const Mount__MountList init_value = MOUNT__MOUNT_LIST__INIT;
   *message = init_value;
 }
-size_t nfs__mount__name__get_packed_size
-                     (const Nfs__Mount__Name *message)
+size_t mount__mount_list__get_packed_size
+                     (const Mount__MountList *message)
 {
-  assert(message->base.descriptor == &nfs__mount__name__descriptor);
+  assert(message->base.descriptor == &mount__mount_list__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t nfs__mount__name__pack
-                     (const Nfs__Mount__Name *message,
+size_t mount__mount_list__pack
+                     (const Mount__MountList *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &nfs__mount__name__descriptor);
+  assert(message->base.descriptor == &mount__mount_list__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t nfs__mount__name__pack_to_buffer
-                     (const Nfs__Mount__Name *message,
+size_t mount__mount_list__pack_to_buffer
+                     (const Mount__MountList *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &nfs__mount__name__descriptor);
+  assert(message->base.descriptor == &mount__mount_list__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Nfs__Mount__Name *
-       nfs__mount__name__unpack
+Mount__MountList *
+       mount__mount_list__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Nfs__Mount__Name *)
-     protobuf_c_message_unpack (&nfs__mount__name__descriptor,
+  return (Mount__MountList *)
+     protobuf_c_message_unpack (&mount__mount_list__descriptor,
                                 allocator, len, data);
 }
-void   nfs__mount__name__free_unpacked
-                     (Nfs__Mount__Name *message,
+void   mount__mount_list__free_unpacked
+                     (Mount__MountList *message,
                       ProtobufCAllocator *allocator)
 {
   if(!message)
     return;
-  assert(message->base.descriptor == &nfs__mount__name__descriptor);
+  assert(message->base.descriptor == &mount__mount_list__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   nfs__mount__mount_list__init
-                     (Nfs__Mount__MountList         *message)
+void   mount__groups__init
+                     (Mount__Groups         *message)
 {
-  static const Nfs__Mount__MountList init_value = NFS__MOUNT__MOUNT_LIST__INIT;
+  static const Mount__Groups init_value = MOUNT__GROUPS__INIT;
   *message = init_value;
 }
-size_t nfs__mount__mount_list__get_packed_size
-                     (const Nfs__Mount__MountList *message)
+size_t mount__groups__get_packed_size
+                     (const Mount__Groups *message)
 {
-  assert(message->base.descriptor == &nfs__mount__mount_list__descriptor);
+  assert(message->base.descriptor == &mount__groups__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t nfs__mount__mount_list__pack
-                     (const Nfs__Mount__MountList *message,
+size_t mount__groups__pack
+                     (const Mount__Groups *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &nfs__mount__mount_list__descriptor);
+  assert(message->base.descriptor == &mount__groups__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t nfs__mount__mount_list__pack_to_buffer
-                     (const Nfs__Mount__MountList *message,
+size_t mount__groups__pack_to_buffer
+                     (const Mount__Groups *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &nfs__mount__mount_list__descriptor);
+  assert(message->base.descriptor == &mount__groups__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Nfs__Mount__MountList *
-       nfs__mount__mount_list__unpack
+Mount__Groups *
+       mount__groups__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Nfs__Mount__MountList *)
-     protobuf_c_message_unpack (&nfs__mount__mount_list__descriptor,
+  return (Mount__Groups *)
+     protobuf_c_message_unpack (&mount__groups__descriptor,
                                 allocator, len, data);
 }
-void   nfs__mount__mount_list__free_unpacked
-                     (Nfs__Mount__MountList *message,
+void   mount__groups__free_unpacked
+                     (Mount__Groups *message,
                       ProtobufCAllocator *allocator)
 {
   if(!message)
     return;
-  assert(message->base.descriptor == &nfs__mount__mount_list__descriptor);
+  assert(message->base.descriptor == &mount__groups__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   nfs__mount__groups__init
-                     (Nfs__Mount__Groups         *message)
+void   mount__export_list__init
+                     (Mount__ExportList         *message)
 {
-  static const Nfs__Mount__Groups init_value = NFS__MOUNT__GROUPS__INIT;
+  static const Mount__ExportList init_value = MOUNT__EXPORT_LIST__INIT;
   *message = init_value;
 }
-size_t nfs__mount__groups__get_packed_size
-                     (const Nfs__Mount__Groups *message)
+size_t mount__export_list__get_packed_size
+                     (const Mount__ExportList *message)
 {
-  assert(message->base.descriptor == &nfs__mount__groups__descriptor);
+  assert(message->base.descriptor == &mount__export_list__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t nfs__mount__groups__pack
-                     (const Nfs__Mount__Groups *message,
+size_t mount__export_list__pack
+                     (const Mount__ExportList *message,
                       uint8_t       *out)
 {
-  assert(message->base.descriptor == &nfs__mount__groups__descriptor);
+  assert(message->base.descriptor == &mount__export_list__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t nfs__mount__groups__pack_to_buffer
-                     (const Nfs__Mount__Groups *message,
+size_t mount__export_list__pack_to_buffer
+                     (const Mount__ExportList *message,
                       ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &nfs__mount__groups__descriptor);
+  assert(message->base.descriptor == &mount__export_list__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-Nfs__Mount__Groups *
-       nfs__mount__groups__unpack
+Mount__ExportList *
+       mount__export_list__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (Nfs__Mount__Groups *)
-     protobuf_c_message_unpack (&nfs__mount__groups__descriptor,
+  return (Mount__ExportList *)
+     protobuf_c_message_unpack (&mount__export_list__descriptor,
                                 allocator, len, data);
 }
-void   nfs__mount__groups__free_unpacked
-                     (Nfs__Mount__Groups *message,
+void   mount__export_list__free_unpacked
+                     (Mount__ExportList *message,
                       ProtobufCAllocator *allocator)
 {
   if(!message)
     return;
-  assert(message->base.descriptor == &nfs__mount__groups__descriptor);
+  assert(message->base.descriptor == &mount__export_list__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   nfs__mount__export_list__init
-                     (Nfs__Mount__ExportList         *message)
-{
-  static const Nfs__Mount__ExportList init_value = NFS__MOUNT__EXPORT_LIST__INIT;
-  *message = init_value;
-}
-size_t nfs__mount__export_list__get_packed_size
-                     (const Nfs__Mount__ExportList *message)
-{
-  assert(message->base.descriptor == &nfs__mount__export_list__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
-}
-size_t nfs__mount__export_list__pack
-                     (const Nfs__Mount__ExportList *message,
-                      uint8_t       *out)
-{
-  assert(message->base.descriptor == &nfs__mount__export_list__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
-}
-size_t nfs__mount__export_list__pack_to_buffer
-                     (const Nfs__Mount__ExportList *message,
-                      ProtobufCBuffer *buffer)
-{
-  assert(message->base.descriptor == &nfs__mount__export_list__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
-}
-Nfs__Mount__ExportList *
-       nfs__mount__export_list__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
-{
-  return (Nfs__Mount__ExportList *)
-     protobuf_c_message_unpack (&nfs__mount__export_list__descriptor,
-                                allocator, len, data);
-}
-void   nfs__mount__export_list__free_unpacked
-                     (Nfs__Mount__ExportList *message,
-                      ProtobufCAllocator *allocator)
-{
-  if(!message)
-    return;
-  assert(message->base.descriptor == &nfs__mount__export_list__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
-}
-#define nfs__mount__empty__field_descriptors NULL
-#define nfs__mount__empty__field_indices_by_name NULL
-#define nfs__mount__empty__number_ranges NULL
-const ProtobufCMessageDescriptor nfs__mount__empty__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "nfs.mount.Empty",
-  "Empty",
-  "Nfs__Mount__Empty",
-  "nfs.mount",
-  sizeof(Nfs__Mount__Empty),
-  0,
-  nfs__mount__empty__field_descriptors,
-  nfs__mount__empty__field_indices_by_name,
-  0,  nfs__mount__empty__number_ranges,
-  (ProtobufCMessageInit) nfs__mount__empty__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor nfs__mount__fhandle__field_descriptors[1] =
+static const ProtobufCFieldDescriptor mount__fhandle__field_descriptors[1] =
 {
   {
     "handle",
@@ -393,37 +330,37 @@ static const ProtobufCFieldDescriptor nfs__mount__fhandle__field_descriptors[1] 
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_BYTES,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__FHandle, handle),
+    offsetof(Mount__FHandle, handle),
     NULL,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned nfs__mount__fhandle__field_indices_by_name[] = {
+static const unsigned mount__fhandle__field_indices_by_name[] = {
   0,   /* field[0] = handle */
 };
-static const ProtobufCIntRange nfs__mount__fhandle__number_ranges[1 + 1] =
+static const ProtobufCIntRange mount__fhandle__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 1 }
 };
-const ProtobufCMessageDescriptor nfs__mount__fhandle__descriptor =
+const ProtobufCMessageDescriptor mount__fhandle__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "nfs.mount.FHandle",
+  "mount.FHandle",
   "FHandle",
-  "Nfs__Mount__FHandle",
-  "nfs.mount",
-  sizeof(Nfs__Mount__FHandle),
+  "Mount__FHandle",
+  "mount",
+  sizeof(Mount__FHandle),
   1,
-  nfs__mount__fhandle__field_descriptors,
-  nfs__mount__fhandle__field_indices_by_name,
-  1,  nfs__mount__fhandle__number_ranges,
-  (ProtobufCMessageInit) nfs__mount__fhandle__init,
+  mount__fhandle__field_descriptors,
+  mount__fhandle__field_indices_by_name,
+  1,  mount__fhandle__number_ranges,
+  (ProtobufCMessageInit) mount__fhandle__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor nfs__mount__fh_status__field_descriptors[2] =
+static const ProtobufCFieldDescriptor mount__fh_status__field_descriptors[3] =
 {
   {
     "status",
@@ -431,7 +368,7 @@ static const ProtobufCFieldDescriptor nfs__mount__fh_status__field_descriptors[2
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_UINT32,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__FhStatus, status),
+    offsetof(Mount__FhStatus, status),
     NULL,
     NULL,
     0,             /* flags */
@@ -442,39 +379,52 @@ static const ProtobufCFieldDescriptor nfs__mount__fh_status__field_descriptors[2
     2,
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
-    0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__FhStatus, directory),
-    &nfs__mount__fhandle__descriptor,
+    offsetof(Mount__FhStatus, fhstatus_body_case),
+    offsetof(Mount__FhStatus, directory),
+    &mount__fhandle__descriptor,
     NULL,
-    0,             /* flags */
+    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "default_case",
+    3,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(Mount__FhStatus, fhstatus_body_case),
+    offsetof(Mount__FhStatus, default_case),
+    &google__protobuf__empty__descriptor,
+    NULL,
+    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned nfs__mount__fh_status__field_indices_by_name[] = {
+static const unsigned mount__fh_status__field_indices_by_name[] = {
+  2,   /* field[2] = default_case */
   1,   /* field[1] = directory */
   0,   /* field[0] = status */
 };
-static const ProtobufCIntRange nfs__mount__fh_status__number_ranges[1 + 1] =
+static const ProtobufCIntRange mount__fh_status__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 2 }
+  { 0, 3 }
 };
-const ProtobufCMessageDescriptor nfs__mount__fh_status__descriptor =
+const ProtobufCMessageDescriptor mount__fh_status__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "nfs.mount.FhStatus",
+  "mount.FhStatus",
   "FhStatus",
-  "Nfs__Mount__FhStatus",
-  "nfs.mount",
-  sizeof(Nfs__Mount__FhStatus),
-  2,
-  nfs__mount__fh_status__field_descriptors,
-  nfs__mount__fh_status__field_indices_by_name,
-  1,  nfs__mount__fh_status__number_ranges,
-  (ProtobufCMessageInit) nfs__mount__fh_status__init,
+  "Mount__FhStatus",
+  "mount",
+  sizeof(Mount__FhStatus),
+  3,
+  mount__fh_status__field_descriptors,
+  mount__fh_status__field_indices_by_name,
+  1,  mount__fh_status__number_ranges,
+  (ProtobufCMessageInit) mount__fh_status__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor nfs__mount__dir_path__field_descriptors[1] =
+static const ProtobufCFieldDescriptor mount__dir_path__field_descriptors[1] =
 {
   {
     "path",
@@ -482,37 +432,37 @@ static const ProtobufCFieldDescriptor nfs__mount__dir_path__field_descriptors[1]
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__DirPath, path),
+    offsetof(Mount__DirPath, path),
     NULL,
     &protobuf_c_empty_string,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned nfs__mount__dir_path__field_indices_by_name[] = {
+static const unsigned mount__dir_path__field_indices_by_name[] = {
   0,   /* field[0] = path */
 };
-static const ProtobufCIntRange nfs__mount__dir_path__number_ranges[1 + 1] =
+static const ProtobufCIntRange mount__dir_path__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 1 }
 };
-const ProtobufCMessageDescriptor nfs__mount__dir_path__descriptor =
+const ProtobufCMessageDescriptor mount__dir_path__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "nfs.mount.DirPath",
+  "mount.DirPath",
   "DirPath",
-  "Nfs__Mount__DirPath",
-  "nfs.mount",
-  sizeof(Nfs__Mount__DirPath),
+  "Mount__DirPath",
+  "mount",
+  sizeof(Mount__DirPath),
   1,
-  nfs__mount__dir_path__field_descriptors,
-  nfs__mount__dir_path__field_indices_by_name,
-  1,  nfs__mount__dir_path__number_ranges,
-  (ProtobufCMessageInit) nfs__mount__dir_path__init,
+  mount__dir_path__field_descriptors,
+  mount__dir_path__field_indices_by_name,
+  1,  mount__dir_path__number_ranges,
+  (ProtobufCMessageInit) mount__dir_path__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor nfs__mount__name__field_descriptors[1] =
+static const ProtobufCFieldDescriptor mount__name__field_descriptors[1] =
 {
   {
     "name",
@@ -520,37 +470,37 @@ static const ProtobufCFieldDescriptor nfs__mount__name__field_descriptors[1] =
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__Name, name),
+    offsetof(Mount__Name, name),
     NULL,
     &protobuf_c_empty_string,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned nfs__mount__name__field_indices_by_name[] = {
+static const unsigned mount__name__field_indices_by_name[] = {
   0,   /* field[0] = name */
 };
-static const ProtobufCIntRange nfs__mount__name__number_ranges[1 + 1] =
+static const ProtobufCIntRange mount__name__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 1 }
 };
-const ProtobufCMessageDescriptor nfs__mount__name__descriptor =
+const ProtobufCMessageDescriptor mount__name__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "nfs.mount.Name",
+  "mount.Name",
   "Name",
-  "Nfs__Mount__Name",
-  "nfs.mount",
-  sizeof(Nfs__Mount__Name),
+  "Mount__Name",
+  "mount",
+  sizeof(Mount__Name),
   1,
-  nfs__mount__name__field_descriptors,
-  nfs__mount__name__field_indices_by_name,
-  1,  nfs__mount__name__number_ranges,
-  (ProtobufCMessageInit) nfs__mount__name__init,
+  mount__name__field_descriptors,
+  mount__name__field_indices_by_name,
+  1,  mount__name__number_ranges,
+  (ProtobufCMessageInit) mount__name__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor nfs__mount__mount_list__field_descriptors[3] =
+static const ProtobufCFieldDescriptor mount__mount_list__field_descriptors[3] =
 {
   {
     "hostname",
@@ -558,8 +508,8 @@ static const ProtobufCFieldDescriptor nfs__mount__mount_list__field_descriptors[
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__MountList, hostname),
-    &nfs__mount__name__descriptor,
+    offsetof(Mount__MountList, hostname),
+    &mount__name__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -570,8 +520,8 @@ static const ProtobufCFieldDescriptor nfs__mount__mount_list__field_descriptors[
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__MountList, directory),
-    &nfs__mount__dir_path__descriptor,
+    offsetof(Mount__MountList, directory),
+    &mount__dir_path__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -582,39 +532,39 @@ static const ProtobufCFieldDescriptor nfs__mount__mount_list__field_descriptors[
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__MountList, nextentry),
-    &nfs__mount__mount_list__descriptor,
+    offsetof(Mount__MountList, nextentry),
+    &mount__mount_list__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned nfs__mount__mount_list__field_indices_by_name[] = {
+static const unsigned mount__mount_list__field_indices_by_name[] = {
   1,   /* field[1] = directory */
   0,   /* field[0] = hostname */
   2,   /* field[2] = nextentry */
 };
-static const ProtobufCIntRange nfs__mount__mount_list__number_ranges[1 + 1] =
+static const ProtobufCIntRange mount__mount_list__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 3 }
 };
-const ProtobufCMessageDescriptor nfs__mount__mount_list__descriptor =
+const ProtobufCMessageDescriptor mount__mount_list__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "nfs.mount.MountList",
+  "mount.MountList",
   "MountList",
-  "Nfs__Mount__MountList",
-  "nfs.mount",
-  sizeof(Nfs__Mount__MountList),
+  "Mount__MountList",
+  "mount",
+  sizeof(Mount__MountList),
   3,
-  nfs__mount__mount_list__field_descriptors,
-  nfs__mount__mount_list__field_indices_by_name,
-  1,  nfs__mount__mount_list__number_ranges,
-  (ProtobufCMessageInit) nfs__mount__mount_list__init,
+  mount__mount_list__field_descriptors,
+  mount__mount_list__field_indices_by_name,
+  1,  mount__mount_list__number_ranges,
+  (ProtobufCMessageInit) mount__mount_list__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor nfs__mount__groups__field_descriptors[2] =
+static const ProtobufCFieldDescriptor mount__groups__field_descriptors[2] =
 {
   {
     "grname",
@@ -622,8 +572,8 @@ static const ProtobufCFieldDescriptor nfs__mount__groups__field_descriptors[2] =
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__Groups, grname),
-    &nfs__mount__name__descriptor,
+    offsetof(Mount__Groups, grname),
+    &mount__name__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -634,38 +584,38 @@ static const ProtobufCFieldDescriptor nfs__mount__groups__field_descriptors[2] =
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__Groups, grnext),
-    &nfs__mount__groups__descriptor,
+    offsetof(Mount__Groups, grnext),
+    &mount__groups__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned nfs__mount__groups__field_indices_by_name[] = {
+static const unsigned mount__groups__field_indices_by_name[] = {
   0,   /* field[0] = grname */
   1,   /* field[1] = grnext */
 };
-static const ProtobufCIntRange nfs__mount__groups__number_ranges[1 + 1] =
+static const ProtobufCIntRange mount__groups__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 2 }
 };
-const ProtobufCMessageDescriptor nfs__mount__groups__descriptor =
+const ProtobufCMessageDescriptor mount__groups__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "nfs.mount.Groups",
+  "mount.Groups",
   "Groups",
-  "Nfs__Mount__Groups",
-  "nfs.mount",
-  sizeof(Nfs__Mount__Groups),
+  "Mount__Groups",
+  "mount",
+  sizeof(Mount__Groups),
   2,
-  nfs__mount__groups__field_descriptors,
-  nfs__mount__groups__field_indices_by_name,
-  1,  nfs__mount__groups__number_ranges,
-  (ProtobufCMessageInit) nfs__mount__groups__init,
+  mount__groups__field_descriptors,
+  mount__groups__field_indices_by_name,
+  1,  mount__groups__number_ranges,
+  (ProtobufCMessageInit) mount__groups__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor nfs__mount__export_list__field_descriptors[3] =
+static const ProtobufCFieldDescriptor mount__export_list__field_descriptors[3] =
 {
   {
     "filesys",
@@ -673,8 +623,8 @@ static const ProtobufCFieldDescriptor nfs__mount__export_list__field_descriptors
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__ExportList, filesys),
-    &nfs__mount__dir_path__descriptor,
+    offsetof(Mount__ExportList, filesys),
+    &mount__dir_path__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -685,8 +635,8 @@ static const ProtobufCFieldDescriptor nfs__mount__export_list__field_descriptors
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__ExportList, groups),
-    &nfs__mount__groups__descriptor,
+    offsetof(Mount__ExportList, groups),
+    &mount__groups__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -697,35 +647,35 @@ static const ProtobufCFieldDescriptor nfs__mount__export_list__field_descriptors
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__Mount__ExportList, next),
-    &nfs__mount__export_list__descriptor,
+    offsetof(Mount__ExportList, next),
+    &mount__export_list__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned nfs__mount__export_list__field_indices_by_name[] = {
+static const unsigned mount__export_list__field_indices_by_name[] = {
   0,   /* field[0] = filesys */
   1,   /* field[1] = groups */
   2,   /* field[2] = next */
 };
-static const ProtobufCIntRange nfs__mount__export_list__number_ranges[1 + 1] =
+static const ProtobufCIntRange mount__export_list__number_ranges[1 + 1] =
 {
   { 1, 0 },
   { 0, 3 }
 };
-const ProtobufCMessageDescriptor nfs__mount__export_list__descriptor =
+const ProtobufCMessageDescriptor mount__export_list__descriptor =
 {
   PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "nfs.mount.ExportList",
+  "mount.ExportList",
   "ExportList",
-  "Nfs__Mount__ExportList",
-  "nfs.mount",
-  sizeof(Nfs__Mount__ExportList),
+  "Mount__ExportList",
+  "mount",
+  sizeof(Mount__ExportList),
   3,
-  nfs__mount__export_list__field_descriptors,
-  nfs__mount__export_list__field_indices_by_name,
-  1,  nfs__mount__export_list__number_ranges,
-  (ProtobufCMessageInit) nfs__mount__export_list__init,
+  mount__export_list__field_descriptors,
+  mount__export_list__field_indices_by_name,
+  1,  mount__export_list__number_ranges,
+  (ProtobufCMessageInit) mount__export_list__init,
   NULL,NULL,NULL    /* reserved[123] */
 };

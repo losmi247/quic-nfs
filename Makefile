@@ -23,7 +23,7 @@ clean:
 	rm -rf ./build/*
 	rm -rf ./serialization/google_protos/any.pb-c.c
 	rm -rf ./serialization/google_protos/any.pb-c.h
-	rm -rf ./serialization/google_protos/empty.pb-c.c
+	rm -rf ./serialization/google_protos/empty.pb-c.h
 	rm -rf ./serialization/google_protos/empty.pb-c.c
 	rm -rf ./serialization/mount/mount.pb-c.h
 	rm -rf ./serialization/mount/mount.pb-c.c

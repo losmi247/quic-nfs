@@ -13,8 +13,7 @@
 #include "serialization/rpc/rpc.pb-c.h"
 #include "serialization/mount/mount.pb-c.h"
 
-#define MOUNT_RPC_SERVER_PORT 8080
-#define MOUNT_RPC_PROGRAM_NUMBER 10005
+#include "mount.h"
 
 Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 

@@ -5,7 +5,7 @@
 /*
 * Generates the xid for the next RPC message (no matter whether call or reply).
 */
-uint32_t generate_rpc_xid() {
+uint32_t generate_rpc_xid(void) {
     static int xid = 1;
     return xid++;
 }
