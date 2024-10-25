@@ -79,7 +79,9 @@ Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_numbe
         // for each procedure: 1. deserialize arguments, return GARBAGE_ARGS AcceptStat if unsuccessful
         //                     2. on success, call the procedure with those arguments, return accepted_result with SUCCESS and procedure results
         case 0:
+            // implement MOUNTPROC_NULL
         case 1:
+            // implement MOUNTPROC_MNT
         case 2:
         case 3:
         case 4:
