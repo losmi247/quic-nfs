@@ -1,5 +1,6 @@
 #include <stdio.h> 
-#include <netdb.h> 
+#include <netdb.h>
+#include <arpa/inet.h> // inet_addr()
 #include <netinet/in.h> 
 #include <stdlib.h> 
 #include <string.h> 
@@ -16,6 +17,9 @@
 /*
 * Sends an RPC to the given socket.
 * Returns the RPC reply received from the server.
+*
+* The user of this function takes on the responsibility to call 'rpc__rpc_msg__free_unpacked(rpc_reply, NULL)' 
+* when it's done using the rpc_reply and it's subfields (e.g. procedure parameters).
 */
 Rpc__RpcMsg *send_rpc_call(int rpc_client_socket_fd, uint32_t program_number, uint32_t program_version, uint32_t procedure_version, Google__Protobuf__Any parameters) {
     Rpc__CallBody call_body = RPC__CALL_BODY__INIT;
@@ -83,12 +87,12 @@ Rpc__RpcMsg *invoke_rpc(const char *server_ipv4_addr, uint16_t server_port, uint
 }
 
 /*
-* Validates the RPC message received from the server.
+* Checks the RPC message received from the server is a valid RPC reply.
 * 
 * If the RPC message is a valid RPC reply, 0 is returned.
 * If the RPC message has incosistencies the errors are printed to stderr and error code > 0 is returned.
 */
-int validate_rpc_reply(Rpc__RpcMsg *rpc_reply) {
+int check_rpc_msg_is_valid_rpc_reply(Rpc__RpcMsg *rpc_reply) {
     if(rpc_reply == NULL) {
         fprintf(stderr, "Something went wrong at server - NULL rpc_reply in received RPC reply.\n");
         return 1;
@@ -108,7 +112,7 @@ int validate_rpc_reply(Rpc__RpcMsg *rpc_reply) {
 
     if(reply_body->stat == RPC__REPLY_STAT__MSG_DENIED) {
         if(reply_body->reply_case != RPC__REPLY_BODY__REPLY_RREPLY) {
-            fprintf(stderr, "Something went wrong at server - mismatch between ReplyStat and reply_case in received RPC reply.\n");
+            fprintf(stderr, "Something went wrong at server - inconsistent ReplyStat and reply_case in received RPC reply.\n");
             return 4;
         }
 
@@ -121,7 +125,7 @@ int validate_rpc_reply(Rpc__RpcMsg *rpc_reply) {
         switch(rejected_reply->stat) {
             case RPC__REJECT_STAT__RPC_MISMATCH:
                 if(rejected_reply->reply_data_case != RPC__REJECTED_REPLY__REPLY_DATA_MISMATCH_INFO) {
-                    fprintf(stderr, "Something went wrong at server - mismatch between RejectStat and reply_data_case in received RPC reply.\n");
+                    fprintf(stderr, "Something went wrong at server - inconsistent RejectStat and reply_data_case in received RPC reply.\n");
                     return 6;
                 }
                 
@@ -135,7 +139,7 @@ int validate_rpc_reply(Rpc__RpcMsg *rpc_reply) {
 
             case RPC__REJECT_STAT__AUTH_ERROR:
                 if(rejected_reply->reply_data_case != RPC__REJECTED_REPLY__REPLY_DATA_AUTH_STAT) {
-                    fprintf(stderr, "Something went wrong at server - mismatch between RejectStat and reply_data_case in received RPC reply.\n");
+                    fprintf(stderr, "Something went wrong at server - inconsistent RejectStat and reply_data_case in received RPC reply.\n");
                     return 8;
                 }
 
@@ -147,7 +151,7 @@ int validate_rpc_reply(Rpc__RpcMsg *rpc_reply) {
 
     // now the reply must be AcceptedReply
     if(reply_body->stat != RPC__REPLY_STAT__MSG_ACCEPTED || reply_body->reply_case != RPC__REPLY_BODY__REPLY_AREPLY) {
-        fprintf(stderr, "Something went wrong at server - mismatch between ReplyStat and reply_case.\n");
+        fprintf(stderr, "Something went wrong at server - inconsistent ReplyStat and reply_case.\n");
         return 9;
     }
 
@@ -156,7 +160,7 @@ int validate_rpc_reply(Rpc__RpcMsg *rpc_reply) {
     switch(accepted_reply->stat) {
         case RPC__ACCEPT_STAT__SUCCESS:
             if(accepted_reply->reply_data_case != RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS) {
-                fprintf(stderr, "Something went wrong at server - mismatch between AcceptStat and reply_data_case in received RPC reply.\n");
+                fprintf(stderr, "Something went wrong at server - inconsistent AcceptStat and reply_data_case in received RPC reply.\n");
                 return 10;
             }
 
@@ -169,7 +173,7 @@ int validate_rpc_reply(Rpc__RpcMsg *rpc_reply) {
             return 0;
         case RPC__ACCEPT_STAT__PROG_MISMATCH:
             if(accepted_reply->reply_data_case != RPC__ACCEPTED_REPLY__REPLY_DATA_MISMATCH_INFO) {
-                fprintf(stderr, "Something went wrong at server - mismatch between AcceptStat and reply_data_case in received RPC reply.\n");
+                fprintf(stderr, "Something went wrong at server - inconsistent AcceptStat and reply_data_case in received RPC reply.\n");
                 return 12;
             }
 
@@ -186,14 +190,16 @@ int validate_rpc_reply(Rpc__RpcMsg *rpc_reply) {
 }
 
 /*
-* This function can only be used after the rpc_reply has been successfully 
-* validated with the 'validate_rpc_reply' function.
+* This function can only be used after the rpc_reply has been successfully
+* validated with the 'check_rpc_msg_is_valid_rpc_reply' function.
 *
-* If the RPC reply is RejectedReply, an appropriate message is printed to 'stdout' and NULL is returned.
-* If the RPC reply is AcceptedReply, for SUCCESS AcceptStat the procedure results are returned, 
-* otherwise the appropriate message is printed to 'stdout' and NULL is returned.
+* If the RPC reply is RejectedReply, an appropriate message is printed to 'stdout' and error code > 0 is returned.
+* If the RPC reply is AcceptedReply, for SUCCESS AcceptStat we return zero, and for other AcceptStat we print
+* appopriate message to 'stdout' and return error code > 0.
+*
+* The error codes in this function start from 14, continuing from the 'check_rpc_msg_is_valid_rpc_reply' function.
 */
-Google__Protobuf__Any *extract_procedure_results_from_validated_rpc_reply(Rpc__RpcMsg *rpc_reply) {
+int check_valid_rpc_reply_is_AcceptedReply_with_success_AcceptStat(Rpc__RpcMsg *rpc_reply) {
     Rpc__ReplyBody *reply_body = rpc_reply->rbody;
 
     if(reply_body->stat == RPC__REPLY_STAT__MSG_DENIED) {
@@ -203,11 +209,11 @@ Google__Protobuf__Any *extract_procedure_results_from_validated_rpc_reply(Rpc__R
             case RPC__REJECT_STAT__RPC_MISMATCH:
                 Rpc__MismatchInfo *mismatch_info = rejected_reply->mismatch_info;
                 fprintf(stdout, "Rejected RPC Reply: requested RPC version not supported, min version=%d, max version=%d\n", mismatch_info->low, mismatch_info->high);
-                return NULL;
+                return 14;
 
             case RPC__REJECT_STAT__AUTH_ERROR:
                 fprintf(stdout, "Rejected RPC Reply: authentication failed with AuthStat %d\n", rejected_reply->auth_stat);
-                return NULL;
+                return 15;
             // no other RejectStat exists
         }
     }    
@@ -217,15 +223,36 @@ Google__Protobuf__Any *extract_procedure_results_from_validated_rpc_reply(Rpc__R
 
     switch(accepted_reply->stat) {
         case RPC__ACCEPT_STAT__SUCCESS:
-            return accepted_reply->results;
+            return 0;
         case RPC__ACCEPT_STAT__PROG_MISMATCH: 
             Rpc__MismatchInfo *mismatch_info = accepted_reply->mismatch_info;
             fprintf(stdout, "Accepted RPC Reply: requested RPC program version not supported, min version=%d, max version=%d\n", mismatch_info->low, mismatch_info->high);
-            return NULL;
+            return 16;
         default:
             fprintf(stdout, "Accepted RPC Reply with AcceptStat: %d\n", accepted_reply->stat);
-            return NULL;
+            return 17;
     }
+}
+
+/*
+* Given a RPC message, first it checks it's a valid RPC reply using 'check_rpc_msg_is_valid_rpc_reply', 
+* and returns the error code if it fails.
+* Then it checks the validated Rpc reply is an AcceptedReply with SUCCESS AcceptStat - returns the error code 
+* if not.
+* Finally, if the rpc_reply is a valid (validate_rpc_reply) AcceptedReply with SUCCESS AcceptStat, it returns 0.
+*/
+int validate_rpc_message_from_server(Rpc__RpcMsg *rpc_reply) {
+    int error_code = check_rpc_msg_is_valid_rpc_reply(rpc_reply);
+    if(error_code > 0) {
+        return error_code;
+    }
+
+    error_code = check_valid_rpc_reply_is_AcceptedReply_with_success_AcceptStat(rpc_reply);
+    if(error_code > 0) {
+        return error_code;
+    }
+
+    return 0;
 }
 
 /*
