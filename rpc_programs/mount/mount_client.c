@@ -31,6 +31,14 @@ int mount_procedure_0_do_nothing(void) {
         return 1;
     }
 
+    // check that procedure results contain the right type
+    if(procedure_results->type_url == NULL || strcmp(procedure_results->type_url, "mount/None") != 0) {
+        fprintf(stderr, "MOUNTPROC_NULL: Expected mount/None but received %s\n", procedure_results->type_url);
+
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return 2;
+    }
+
     rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
 
     return 0;

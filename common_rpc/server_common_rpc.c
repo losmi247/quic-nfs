@@ -14,12 +14,35 @@
 #include "server_common_rpc.h"
 
 /*
+* Frees up heap-allocated space for procedure results or MismatchInfo in an AcceptedReply.
+*/
+void clean_up_accepted_reply(Rpc__AcceptedReply accepted_reply) {
+    if(accepted_reply.stat == RPC__ACCEPT_STAT__PROG_MISMATCH) {
+        free(accepted_reply.mismatch_info);
+        return;
+    }
+
+    if(accepted_reply.stat == RPC__ACCEPT_STAT__SUCCESS) {
+        // clean up procedure results
+        Google__Protobuf__Any *results = accepted_reply.results;
+
+        if(results == NULL) {
+            return;
+        }
+
+        if(results->value.data != NULL) {
+            free(results->value.data);
+        }
+        free(results);
+    }
+}
+
+/*
 * Sends an accepted RPC Reply back to the RPC client.
 * Returns 0 on successful send of a reply, and > 0 on error.
 *
-* All heap-allocated state in accepted_reply is freed here after the RPC reply is sent to client (e.g. mismatch_info, procedure results)
-* using the clean_up_accepted_reply() which is implemented by the specific RPC program (because different RPC programs will have
-* different ways of freeing procedure results).
+* Heap-allocated state for procedure results in accepted_reply is freed here after the RPC reply is sent to 
+* client using the clean_up_accepted_reply().
 */
 int send_rpc_accepted_reply_message(int rpc_client_socket_fd, Rpc__AcceptedReply accepted_reply) {
     Rpc__ReplyBody reply_body = RPC__REPLY_BODY__INIT;
