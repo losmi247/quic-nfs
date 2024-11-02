@@ -49,8 +49,8 @@ int mount_procedure_0_do_nothing(void) {
 * On successful run, returns 0 and places procedure result in 'result'.
 * On unsuccessful run, returns error code > 0.
 *
-* The user of this function takes responsibility to call 'mount__fh_status__free_unpacked(fh_status, NULL)'
-* on the received Mount__FhStatus eventually.
+* In case this function returns 0, the user of this function takes responsibility 
+* to call 'mount__fh_status__free_unpacked(fh_status, NULL)' on the received Mount__FhStatus eventually.
 */
 int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *result) {
     // serialize the DirPath
@@ -99,7 +99,7 @@ int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *r
         return 3;
     }
 
-    // return the result in 'result'
+    // point the 
     *result = *fh_status;
 
     rpc__rpc_msg__free_unpacked(rpc_reply, NULL);

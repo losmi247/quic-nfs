@@ -1,3 +1,7 @@
 build/
 
 .vscode/
+
+exports
+
+nfs_share/

@@ -14,7 +14,7 @@
 #include "server_common_rpc.h"
 
 /*
-* Frees up heap-allocated space for procedure results or MismatchInfo in an AcceptedReply.
+* Frees up heap-allocated memory for procedure results or MismatchInfo in an AcceptedReply.
 */
 void clean_up_accepted_reply(Rpc__AcceptedReply accepted_reply) {
     if(accepted_reply.stat == RPC__ACCEPT_STAT__PROG_MISMATCH) {

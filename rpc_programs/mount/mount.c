@@ -43,6 +43,9 @@ Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t
 * Mount RPC program implementation.
 */
 
+/*
+* MountList management.
+*/
 Mount__MountList *mount_list;
 
 void add_mount_entry(Mount__MountList *new_mount_entry) {
@@ -66,6 +69,56 @@ void cleanup_mount_list(Mount__MountList *list_head) {
 
     cleanup_mount_list(list_head->nextentry);
     free_mount_list_entry(list_head);
+}
+
+/*
+* Exported files management.
+*/
+int is_directory_exported(const char *absolute_path) {
+    if(absolute_path == NULL) {
+        return 0;
+    }
+
+    FILE *file = fopen("./exports", "r");
+    if(file == NULL) {
+        fprintf(stderr, "Mount server failed to open /etc/exports\n");
+        return 0;
+    }
+
+    int is_exported = 0;
+    char line[1024];
+    // read file line by line
+    while(fgets(line, sizeof(line), file) != NULL) {
+        // remove trailing newline if present
+        line[strcspn(line, "\n")] = '\0';
+
+        // check if the line starts with absolute_path
+        if (strncmp(line, absolute_path, strlen(absolute_path)) == 0) {
+            const char *options_start = line + strlen(absolute_path);
+            // check for whitespace after the path
+            if((*options_start == ' ' || *options_start == '\t') && strstr(options_start, "*(rw)") != NULL) {
+                is_exported = 1;
+                break;
+            }
+        }
+    }
+
+    fclose(file);
+
+    return is_exported;
+}
+
+/*
+* Creates a filehandle for the given absolute path of a directory being mounted.
+*
+* For now filehandles are literally the absolute paths themselves.
+*/
+uint8_t *get_filehandle(char *directory_absolute_path) {
+    if(directory_absolute_path == NULL) {
+        return (uint8_t *)"";
+    }
+
+    return (uint8_t *)directory_absolute_path;
 }
 
 /*
@@ -95,7 +148,7 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
 
     // check parameters are of expected type for this procedure
-    if (parameters->type_url == NULL || strcmp(parameters->type_url, "mount/DirPath") != 0) {
+    if(parameters->type_url == NULL || strcmp(parameters->type_url, "mount/DirPath") != 0) {
         fprintf(stderr, "serve_procedure_1_add_mount_entry: Expected mount/DirPath but received %s\n", parameters->type_url);
         accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
         accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
@@ -105,9 +158,23 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     // deserialize parameters
     // this DirPath is freed at server shutdown as part of mountlist cleanup - it needs to be persisted here at server!
     Mount__DirPath *dirpath = mount__dir_path__unpack(NULL, parameters->value.len, parameters->value.data);
-    if (dirpath == NULL) {
+    if(dirpath == NULL) {
         fprintf(stderr, "serve_procedure_1_add_mount_entry: Failed to unpack DirPath\n");
         accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
+        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+        return accepted_reply;
+    }
+    if(dirpath->path == NULL) {
+        fprintf(stderr, "serve_procedure_1_add_mount_entry: DirPath->path is null\n");
+        accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
+        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+        return accepted_reply;
+    }
+
+    // check the server has exported this directory for NFS
+    if(!is_directory_exported(dirpath->path)) {
+        fprintf(stderr, "serve_procedure_1_add_mount_entry: directory %s not exported for NFS\n", dirpath->path);
+        accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
         accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
         return accepted_reply;
     }
@@ -117,7 +184,7 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     mount__mount_list__init(new_mount_entry);
     new_mount_entry->hostname = malloc(sizeof(Mount__Name));
     mount__name__init(new_mount_entry->hostname);
-    new_mount_entry->hostname->name = strdup("client-hostname"); // Replace with actual hostname when available
+    new_mount_entry->hostname->name = strdup("client-hostname"); // replace with actual hostname when available
     new_mount_entry->directory = dirpath;
 
     add_mount_entry(new_mount_entry);
@@ -127,9 +194,11 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     fh_status.status = 0;
     fh_status.fhstatus_body_case = MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY;
 
+    // get a file handle for this directory
+    uint8_t *filehandle = get_filehandle(dirpath->path);
     Mount__FHandle fhandle = MOUNT__FHANDLE__INIT;
-    fhandle.handle.data = (uint8_t *)"root_handle"; // Replace with actual filehandle
-    fhandle.handle.len = strlen("root_handle");
+    fhandle.handle.data = filehandle;
+    fhandle.handle.len = strlen(filehandle);
 
     fh_status.directory = &fhandle;
 
@@ -178,12 +247,9 @@ Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_numbe
     }
 
     switch(procedure_number) {
-        // for each procedure: 1. deserialize arguments, return GARBAGE_ARGS AcceptStat if unsuccessful
-        //                     2. on success, call the procedure with those arguments, return accepted_result with SUCCESS and procedure results
         case 0:
             return serve_procedure_0_do_nothing(parameters);
         case 1:
-            // implement MOUNTPROC_MNT
             return serve_procedure_1_add_mount_entry(parameters);
         case 2:
         case 3:
