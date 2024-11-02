@@ -70,12 +70,16 @@ int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *r
 
     // validate RPC reply
     int error_code = validate_rpc_message_from_server(rpc_reply);
-    Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
-    Google__Protobuf__Any *procedure_results = accepted_reply->results;
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;
     }
+
+    log_rpc_msg_info(rpc_reply);
+
+    // extract procedure results
+    Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
+    Google__Protobuf__Any *procedure_results = accepted_reply->results;
     if(procedure_results == NULL) {
         fprintf(stderr, "MOUNTPROC_MNT: This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);

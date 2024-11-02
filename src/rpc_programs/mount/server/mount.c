@@ -6,6 +6,7 @@
 #include <sys/socket.h> 
 #include <sys/types.h> 
 #include <unistd.h> // read(), write(), close()
+#include <signal.h> // for registering the SIGTERM handler
 
 #include "src/common_rpc/server_common_rpc.h"
 
@@ -23,10 +24,6 @@ Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_numbe
 */
 
 Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {
-    printf("Program number: %d\n", program_number);
-    printf("Program version: %d\n", program_version);
-    printf("Procedure number: %d\n", procedure_number);
-
     // since we're skipping the portmapper, any program number other than mount's own is wrong
     if(program_number != MOUNT_RPC_PROGRAM_NUMBER) {
         // i don't need to set accepted_reply.default_case Empty ?
@@ -44,6 +41,7 @@ Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t
 * Mount RPC program implementation.
 */
 
+int rpc_server_socket_fd;
 Mount__MountList *mount_list;
 
 /*
@@ -86,14 +84,14 @@ int is_directory_exported(const char *absolute_path) {
 /*
 * Creates a filehandle for the given absolute path of a directory being mounted.
 *
-* For now filehandles are literally the absolute paths themselves.
+* For now, filehandles are literally the absolute paths themselves.
 */
-uint8_t *get_filehandle(char *directory_absolute_path) {
+char *get_filehandle(char *directory_absolute_path) {
     if(directory_absolute_path == NULL) {
-        return (uint8_t *)"";
+        return "";
     }
 
-    return (uint8_t *)directory_absolute_path;
+    return directory_absolute_path;
 }
 
 /*
@@ -154,8 +152,8 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
         return accepted_reply;
     }
 
-    // create a new mount entry
-    Mount__MountList *new_mount_entry = create_new_mount_entry(strdup("client-hostname"), dirpath); // replace hostname with actual client hostname when available
+    // create a new mount entry - pass *dirpath instead of dirpath so that we are able to free later
+    Mount__MountList *new_mount_entry = create_new_mount_entry(strdup("client-hostname"), *dirpath); // replace hostname with actual client hostname when available
     add_mount_entry(&mount_list, new_mount_entry);
 
     // build the procedure results
@@ -167,7 +165,7 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     uint8_t *filehandle = get_filehandle(dirpath->path);
     Mount__FHandle fhandle = MOUNT__FHANDLE__INIT;
     fhandle.handle.data = filehandle;
-    fhandle.handle.len = strlen(filehandle);
+    fhandle.handle.len = strlen(filehandle) + 1; // +1 for the null termination!
 
     fh_status.directory = &fhandle;
 
@@ -188,8 +186,7 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
     accepted_reply.results = results;
 
-    // free up memory - it's okay for dirpath to be deallocated here - serialization made a copy of all values and puts it all into buffer
-    mount__dir_path__free_unpacked(dirpath, NULL);
+    // do not mount__dir_path__free_unpacked(dirpath, NULL); here - it will be freed when mount list is cleaned up on shut down
 
     return accepted_reply;
 }
@@ -203,8 +200,7 @@ Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_numbe
 
         // accepted_reply contains a pointer to mismatch_info, so mismatch_info has to be heap allocated - because it's going to be used outside of scope of this function
         Rpc__MismatchInfo *mismatch_info = malloc(sizeof(Rpc__MismatchInfo));
-        Rpc__MismatchInfo initialized_mismatch_info = RPC__MISMATCH_INFO__INIT;
-        memcpy(mismatch_info, &initialized_mismatch_info, sizeof(Rpc__MismatchInfo));
+        rpc__mismatch_info__init(mismatch_info);
         mismatch_info->low = 2;
         mismatch_info->high = 2;
 
@@ -235,12 +231,28 @@ Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_numbe
 }
 
 /*
+* Signal handler for graceful shutdown
+*/
+void handle_signal(int signal) {
+    if (signal == SIGTERM) {
+        fprintf(stdout, "Received SIGTERM, shutting down gracefully...\n");
+        
+        close(rpc_server_socket_fd);
+        cleanup_mount_list(mount_list);
+
+        exit(0);
+    }
+}
+
+/*
 * The main body of the Mount server, which awaits RPCs.
 */
 int main() {
-    int rpc_server_socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
+    signal(SIGTERM, handle_signal);  // register signal handler
+
+    rpc_server_socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
     if(rpc_server_socket_fd < 0) { 
-        perror("Socket creation failed");
+        fprintf(stderr, "Socket creation failed\n");
         return 1;
     } 
 
@@ -251,14 +263,14 @@ int main() {
   
     // bind socket to the rpc server address
     if(bind(rpc_server_socket_fd, (struct sockaddr *) &rpc_server_addr, sizeof(rpc_server_addr)) < 0) { 
-        perror("Socket bind failed");
+        fprintf(stderr, "Socket bind failed\n");
         close(rpc_server_socket_fd);
         return 1;
     }
   
     // listen for connections on the port
     if(listen(rpc_server_socket_fd, 10) < 0) {
-        perror("Listen failed");
+        fprintf(stderr, "Listen failed\n");
         close(rpc_server_socket_fd);
         return 1;
     }
@@ -272,7 +284,7 @@ int main() {
 
         int rpc_client_socket_fd = accept(rpc_server_socket_fd, (struct sockaddr *) &rpc_client_addr, &rpc_client_addr_len);
         if(rpc_client_socket_fd < 0) { 
-            perror("Server failed to accept connection"); 
+            fprintf(stderr, "Server failed to accept connection\n"); 
             continue;
         }
     

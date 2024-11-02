@@ -15,9 +15,9 @@ repl_clients = ./src/rpc_programs/mount/client/mount_client.c
 # files used by mount server
 mount_server_files = ./src/rpc_programs/mount/server/mount_list.c
 
-all: serialization_library mount_server repl
+test_framework_files = ./tests/unity/unity.c
 
-all_but_serialization: mount_server repl
+all: mount_server repl
 
 serialization_library: google_protos rpc mount
 google_protos: any empty
@@ -36,6 +36,10 @@ mount_server: ./src/rpc_programs/mount/server/mount.c
 
 repl: ./src/repl/repl.c
 	gcc ./src/repl/repl.c ${serialization_files} ${rpc_program_client_files} ${repl_clients} -I . -o ./build/repl -l protobuf-c
+
+
+tests: ./tests/mount/test_mount.c
+	gcc ./tests/mount/test_mount.c ${serialization_files} ${rpc_program_client_files} ${repl_clients} -I . -o ./build/test_mount -l criterion -l protobuf-c
 
 clean:
 	rm -rf ./build/*

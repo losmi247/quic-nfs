@@ -139,6 +139,8 @@ void handle_client(int rpc_client_socket_fd) {
         return;
     }
 
+    log_rpc_msg_info(rpc_call);
+
     // receiving a RPC reply at server should just be ignored
     if(rpc_call->mtype != RPC__MSG_TYPE__CALL || rpc_call->body_case != RPC__RPC_MSG__BODY_CBODY) {
         fprintf(stderr, "Server received an RPC reply but it should only be receiving RPC calls.");
@@ -151,6 +153,7 @@ void handle_client(int rpc_client_socket_fd) {
         // here send a RPC reply with appropriate status code saying what went wrong (rejected_reply)
         return;
     }
+    log_rpc_call_body_info(call_body);
     if(call_body->rpcvers != 2) {
         fprintf(stderr, "Server received an RPC call with RPC version not equal to 2.");
 

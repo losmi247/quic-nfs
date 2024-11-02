@@ -4,7 +4,7 @@
 
 #include "mount_list.h"
 
-Mount__MountList *create_new_mount_entry(char *name, Mount__DirPath *dirpath) {
+Mount__MountList *create_new_mount_entry(char *name, Mount__DirPath dirpath) {
     Mount__MountList *mount_list_entry = malloc(sizeof(Mount__MountList));
     mount__mount_list__init(mount_list_entry);
 
@@ -12,7 +12,9 @@ Mount__MountList *create_new_mount_entry(char *name, Mount__DirPath *dirpath) {
     mount__name__init(mount_list_entry->hostname);
 
     mount_list_entry->hostname->name = name;
-    mount_list_entry->directory = dirpath;
+    mount_list_entry->directory = malloc(sizeof(Mount__DirPath));
+    mount__dir_path__init(mount_list_entry->directory);
+    *(mount_list_entry->directory) = dirpath;
 
     return mount_list_entry;
 }
@@ -27,6 +29,8 @@ void free_mount_list_entry(Mount__MountList *mount_list_entry) {
     free(mount_list_entry->hostname);
 
     mount__dir_path__free_unpacked(mount_list_entry->directory, NULL);
+
+    // don't need to free(mount_list_entry->directory) even though it was allocated in create_new_mount_entry - free_unpacked takes care of it
 
     free(mount_list_entry);
 }
