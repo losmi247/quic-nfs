@@ -5,7 +5,10 @@ rpc_program_server_files = ./common_rpc/server_common_rpc.c ./common_rpc/common_
 rpc_program_client_files = ./common_rpc/client_common_rpc.c ./common_rpc/common_rpc.c
 
 # the Mount and Nfs clients that the REPL uses to do RPCs
-repl_clients = ./rpc_programs/mount/mount_client.c
+repl_clients = ./rpc_programs/mount/client/mount_client.c
+
+# files used by mount server
+mount_server_files = ./rpc_programs/mount/server/mount_list.c
 
 all: serialization_library mount_server repl
 
@@ -22,9 +25,9 @@ rpc: ./serialization/rpc/rpc.proto
 mount: ./serialization/mount/mount.proto
 	protoc --c_out=. ./serialization/mount/mount.proto
 
-mount_server: ./rpc_programs/mount/mount.c
+mount_server: ./rpc_programs/mount/server/mount.c
 # -I flag adds the project root dir to include paths (so that we can include in our files as serialization/mount/mount.pb-c.h e.g.)
-	gcc ./rpc_programs/mount/mount.c ${serialization_files} ${rpc_program_server_files} -I . -o ./build/mount_server -l protobuf-c
+	gcc ./rpc_programs/mount/server/mount.c ${serialization_files} ${rpc_program_server_files} ${mount_server_files} -I . -o ./build/mount_server -l protobuf-c
 
 repl: ./repl/repl.c
 	gcc ./repl/repl.c ${serialization_files} ${rpc_program_client_files} ${repl_clients} -I . -o ./build/repl -l protobuf-c

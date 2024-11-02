@@ -13,7 +13,8 @@
 #include "serialization/rpc/rpc.pb-c.h"
 #include "serialization/mount/mount.pb-c.h"
 
-#include "mount.h"
+#include "../mount_common.h"
+#include "mount_list.h"
 
 Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
@@ -43,33 +44,7 @@ Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t
 * Mount RPC program implementation.
 */
 
-/*
-* MountList management.
-*/
 Mount__MountList *mount_list;
-
-void add_mount_entry(Mount__MountList *new_mount_entry) {
-    new_mount_entry->nextentry = mount_list;
-    mount_list = new_mount_entry;
-}
-
-void free_mount_list_entry(Mount__MountList *mount_list_entry) {
-    free(mount_list_entry->hostname->name);
-    free(mount_list_entry->hostname);
-
-    mount__dir_path__free_unpacked(mount_list_entry->directory, NULL);
-
-    free(mount_list_entry);
-}
-
-void cleanup_mount_list(Mount__MountList *list_head) {
-    if(list_head == NULL) {
-        return;
-    }
-
-    cleanup_mount_list(list_head->nextentry);
-    free_mount_list_entry(list_head);
-}
 
 /*
 * Exported files management.
@@ -180,14 +155,8 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     }
 
     // create a new mount entry
-    Mount__MountList *new_mount_entry = malloc(sizeof(Mount__MountList));
-    mount__mount_list__init(new_mount_entry);
-    new_mount_entry->hostname = malloc(sizeof(Mount__Name));
-    mount__name__init(new_mount_entry->hostname);
-    new_mount_entry->hostname->name = strdup("client-hostname"); // replace with actual hostname when available
-    new_mount_entry->directory = dirpath;
-
-    add_mount_entry(new_mount_entry);
+    Mount__MountList *new_mount_entry = create_new_mount_entry(strdup("client-hostname"), dirpath); // replace hostname with actual client hostname when available
+    add_mount_entry(&mount_list, new_mount_entry);
 
     // build the procedure results
     Mount__FhStatus fh_status = MOUNT__FH_STATUS__INIT;

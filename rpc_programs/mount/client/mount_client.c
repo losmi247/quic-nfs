@@ -5,8 +5,8 @@
 #include "common_rpc/common_rpc.h"
 #include "common_rpc/client_common_rpc.h"
 
+#include "../mount_common.h"
 #include "mount_client.h"
-#include "mount.h"
 
 #include "serialization/rpc/rpc.pb-c.h"
 
@@ -99,7 +99,7 @@ int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *r
         return 3;
     }
 
-    // point the 
+    // place fh_status into the result
     *result = *fh_status;
 
     rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
