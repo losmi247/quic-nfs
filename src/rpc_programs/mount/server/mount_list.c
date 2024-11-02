@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "serialization/mount/mount.pb-c.h"
+#include "src/serialization/mount/mount.pb-c.h"
 
 #include "mount_list.h"
 

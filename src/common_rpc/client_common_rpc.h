@@ -2,7 +2,7 @@
 #define client_common_rpc__header__INCLUDED
 
 #include <protobuf-c/protobuf-c.h>
-#include "serialization/rpc/rpc.pb-c.h"
+#include "src/serialization/rpc/rpc.pb-c.h"
 
 /*
 * Functions implemented in client_common_rpc.c file.

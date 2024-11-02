@@ -1,7 +1,7 @@
 #ifndef mount_list__header__INCLUDED
 #define mount_list__header__INCLUDEd
 
-#include "serialization/mount/mount.pb-c.h"
+#include "src/serialization/mount/mount.pb-c.h"
 
 Mount__MountList *create_new_mount_entry(char *name, Mount__DirPath *dirpath);
 

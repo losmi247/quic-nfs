@@ -7,11 +7,11 @@
 #include <sys/types.h> 
 #include <unistd.h> // read(), write(), close()
 
-#include "common_rpc/server_common_rpc.h"
+#include "src/common_rpc/server_common_rpc.h"
 
 #include <protobuf-c/protobuf-c.h>
-#include "serialization/rpc/rpc.pb-c.h"
-#include "serialization/mount/mount.pb-c.h"
+#include "src/serialization/rpc/rpc.pb-c.h"
+#include "src/serialization/mount/mount.pb-c.h"
 
 #include "../mount_common.h"
 #include "mount_list.h"

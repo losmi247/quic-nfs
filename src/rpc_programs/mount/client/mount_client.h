@@ -1,7 +1,7 @@
 #ifndef mount_client__header__INCLUDED
 #define mount_client__header__INCLUDED
 
-#include "serialization/mount/mount.pb-c.h"
+#include "src/serialization/mount/mount.pb-c.h"
 
 /*
 * Every procedure returns 0 on successful execution, and in that cases places non-NULL procedure results in the last argument that is passed to it.

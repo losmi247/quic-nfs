@@ -9,7 +9,7 @@
 #include <unistd.h> // read(), write(), close()
 
 #include <protobuf-c/protobuf-c.h>
-#include "serialization/rpc/rpc.pb-c.h"
+#include "src/serialization/rpc/rpc.pb-c.h"
 
 #include "common_rpc.h"
 #include "client_common_rpc.h"
@@ -254,73 +254,3 @@ int validate_rpc_message_from_server(Rpc__RpcMsg *rpc_reply) {
 
     return 0;
 }
-
-/*
-void send_data(int client_socket_fd) {
-    // Initialize a FhStatus message
-    Nfs__Mount__FhStatus fh_status = NFS__MOUNT__FH_STATUS__INIT;
-    fh_status.status = 0; // Success
-
-    // Initialize a FHandle message
-    Nfs__Mount__FHandle fh_handle = NFS__MOUNT__FHANDLE__INIT;
-    const char *sample_handle = "sample_handle";
-    fh_handle.handle.len = strlen(sample_handle); 
-    fh_handle.handle.data = (uint8_t *) malloc(fh_handle.handle.len);
-    memcpy(fh_handle.handle.data, sample_handle, fh_handle.handle.len); // Copy the sample handle to the data
-
-    // Assign the FHandle to fh_status
-    fh_status.directory = malloc(sizeof(Nfs__Mount__FHandle)); // Allocate memory for the FHandle pointer
-    if (fh_status.directory == NULL) {
-        fprintf(stderr, "Memory allocation for directory failed\n");
-        free(fh_handle.handle.data); // Clean up previously allocated data
-        exit(EXIT_FAILURE);
-    }
-    // Copy the FHandle data into the directory
-    memcpy(fh_status.directory, &fh_handle, sizeof(Nfs__Mount__FHandle));
-
-    // Serialize the message
-    size_t size = nfs__mount__fh_status__get_packed_size(&fh_status);
-    uint8_t *buffer = malloc(size);
-    nfs__mount__fh_status__pack(&fh_status, buffer);
-
-    // The 'buffer' now contains the serialized data - send it to server
-    write(client_socket_fd, buffer, size);
-
-    // Clean up
-    free(fh_status.directory); // Free the allocated directory (FHandle)
-    free(fh_handle.handle.data); // Free the allocated data for FHandle
-    free(buffer);
-}
-
-int main() {
-    // example of what the user (e.g. NFS client implementation) of this client will do:
-
-    Nfs__Mount__DirPath dirpath = NFS__MOUNT__DIR_PATH__INIT;
-    dirpath.path = "some/directory/path";
-    // Serialize the DirPath message
-    size_t dirpath_size = nfs__mount__dir_path__get_packed_size(&dirpath);
-    uint8_t *dirpath_buffer = malloc(dirpath_size);
-    nfs__mount__dir_path__pack(&dirpath, dirpath_buffer);
-
-    // prepare the Any message to wrap DirPath
-    Google__Protobuf__Any params = GOOGLE__PROTOBUF__ANY__INIT;
-    params.type_url = "nfs.mount/DirPath"; // This should match your package and message name
-    params.value.data = dirpath_buffer;
-    params.value.len = dirpath_size;
-
-    Google__Protobuf__Any *results = invoke_rpc("127.0.0.1",10005, 2, 1, params);
-    // deserialize params here (not the job of RPC client)
-
-    free(dirpath_buffer);
-
-    //send_data(client_socket_fd);
-    /*char *buff = (char *) malloc(200);
-    snprintf(buff, 200, "hello I'm client");
-    write(client_socket_fd, buff, 200);
-
-    recv(client_socket_fd, buff, 200, 0);
-    printf("Received from server: %s\n", buff);
-    free(buff);
-}
-
-*/

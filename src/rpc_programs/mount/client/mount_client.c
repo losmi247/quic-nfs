@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "common_rpc/common_rpc.h"
-#include "common_rpc/client_common_rpc.h"
+#include "src/common_rpc/common_rpc.h"
+#include "src/common_rpc/client_common_rpc.h"
 
 #include "../mount_common.h"
 #include "mount_client.h"
 
-#include "serialization/rpc/rpc.pb-c.h"
+#include "src/serialization/rpc/rpc.pb-c.h"
 
 /*
 * Performs the MOUNTPROC_NULL Mount procedure.

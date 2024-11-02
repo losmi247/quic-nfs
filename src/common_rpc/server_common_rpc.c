@@ -8,7 +8,7 @@
 #include <unistd.h> // read(), write(), close()
 
 #include <protobuf-c/protobuf-c.h>
-#include "serialization/rpc/rpc.pb-c.h"
+#include "src/serialization/rpc/rpc.pb-c.h"
 
 #include "common_rpc.h"
 #include "server_common_rpc.h"
