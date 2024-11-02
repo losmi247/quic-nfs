@@ -1,7 +1,15 @@
-To generate Serialization and Deserialization code for your data.proto:
-    protoc --c_out=. data.proto
+This is a user-space implementation of NFSv2 client-server pair.
 
+# Build Instructions
 
+Clone the directory
 
-So now we know how we're going to be serialising all the structures that need to be sent over the network.
-Next: implement Mount RPC msg bodies using this. Send them from client and do them at server.
+```
+https://github.com/losmi247/quic-nfs.git
+```
+
+and:
+
+1. Install **protobuf-c** from https://github.com/protobuf-c/protobuf-c - for generating serialization code
+2. Run ```make all``` to generate serialization code and build the server and client
+3. First run ```./build/mount_server``` and then ```./build/repl```
