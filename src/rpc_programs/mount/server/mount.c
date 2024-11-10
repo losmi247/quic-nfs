@@ -17,6 +17,8 @@
 #include "../mount_common.h"
 #include "mount_list.h"
 
+#include "src/file_management/file_management.h"
+
 Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
 /*
@@ -82,16 +84,23 @@ int is_directory_exported(const char *absolute_path) {
 }
 
 /*
-* Creates a filehandle for the given absolute path of a directory being mounted.
+* Creates a NFS filehandle for the given absolute path of a directory being mounted, and returns
+* it in the 'nfs_filehandle' argument.
 *
-* For now, filehandles are literally the absolute paths themselves.
+* Returns 0 on success and > 0 on failure.
 */
-char *get_filehandle(char *directory_absolute_path) {
+int create_nfs_filehandle(char *directory_absolute_path, unsigned char *nfs_filehandle) {
     if(directory_absolute_path == NULL) {
-        return "";
+        nfs_filehandle = NULL;
+        return 1;
     }
 
-    return directory_absolute_path;
+    ino_t inode_number;
+    get_inode_number(directory_absolute_path, &inode_number);
+
+    sprintf(nfs_filehandle, "%lu", inode_number);
+    
+    return 0;
 }
 
 /*
@@ -129,7 +138,7 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     }
 
     // deserialize parameters
-    // this DirPath is freed at server shutdown as part of mountlist cleanup - it needs to be persisted here at server!
+    // if valid, this DirPath is freed at server shutdown as part of mountlist cleanup - it needs to be persisted here at server!
     Mount__DirPath *dirpath = mount__dir_path__unpack(NULL, parameters->value.len, parameters->value.data);
     if(dirpath == NULL) {
         fprintf(stderr, "serve_procedure_1_add_mount_entry: Failed to unpack DirPath\n");
@@ -139,6 +148,9 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     }
     if(dirpath->path == NULL) {
         fprintf(stderr, "serve_procedure_1_add_mount_entry: DirPath->path is null\n");
+
+        mount__dir_path__free_unpacked(dirpath, NULL);
+
         accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
         accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
         return accepted_reply;
@@ -147,6 +159,22 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     // check the server has exported this directory for NFS
     if(!is_directory_exported(dirpath->path)) {
         fprintf(stderr, "serve_procedure_1_add_mount_entry: directory %s not exported for NFS\n", dirpath->path);
+
+        mount__dir_path__free_unpacked(dirpath, NULL);
+
+        accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
+        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+        return accepted_reply;
+    }
+
+    // create a file handle for this directory
+    uint8_t *filehandle = malloc(sizeof(uint8_t) * 32);
+    int error_code = create_nfs_filehandle(dirpath->path, filehandle);
+    if(error_code > 0) {
+        fprintf(stderr, "serve_procedure_1_add_mount_entry: creation of nfs filehandle failed with error code %d \n", error_code);
+
+        mount__dir_path__free_unpacked(dirpath, NULL);
+
         accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
         accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
         return accepted_reply;
@@ -161,8 +189,6 @@ Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *para
     fh_status.status = 0;
     fh_status.fhstatus_body_case = MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY;
 
-    // get a file handle for this directory
-    uint8_t *filehandle = get_filehandle(dirpath->path);
     Mount__FHandle fhandle = MOUNT__FHANDLE__INIT;
     fhandle.handle.data = filehandle;
     fhandle.handle.len = strlen(filehandle) + 1; // +1 for the null termination!

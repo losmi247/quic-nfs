@@ -15,7 +15,8 @@ repl_clients = ./src/rpc_programs/mount/client/mount_client.c
 # files used by mount server
 mount_server_files = ./src/rpc_programs/mount/server/mount_list.c
 
-test_framework_files = ./tests/unity/unity.c
+# implementations of file management functions
+file_management_library = ./src/file_management/file_management.c
 
 all: mount_server repl
 
@@ -32,7 +33,9 @@ mount: ./src/serialization/mount/mount.proto
 
 mount_server: ./src/rpc_programs/mount/server/mount.c
 # -I flag adds the project root dir to include paths (so that we can include in our files as serialization/mount/mount.pb-c.h e.g.)
-	gcc ./src/rpc_programs/mount/server/mount.c ${serialization_files} ${rpc_program_server_files} ${mount_server_files} -I . -o ./build/mount_server -l protobuf-c
+	gcc ./src/rpc_programs/mount/server/mount.c \
+		${serialization_files} ${rpc_program_server_files} ${mount_server_files} ${file_management_library} \
+		-I . -o ./build/mount_server -l protobuf-c
 
 repl: ./src/repl/repl.c
 	gcc ./src/repl/repl.c ${serialization_files} ${rpc_program_client_files} ${repl_clients} -I . -o ./build/repl -l protobuf-c

@@ -45,4 +45,7 @@ WORKDIR /quic-nfs
 RUN make clean && \
     make all
 
+# create a directory for export
+RUN mkdir -p /nfs_share
+
 CMD ["./build/mount_server"]
