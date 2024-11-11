@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package nfs;
+
+import "google/protobuf/empty.proto";
+
+
+/*
+* Basic NFS data types
+*/
+
+enum Stat {
+    NFS_OK = 0;
+    NFSERR_PERM = 1;            // not owner - caller doesn't have correct ownership to perform requested operation
+    NFSERR_NOENT = 2;           // no such file or directory
+    NFSERR_IO = 5;              // hard error e.g. disk error
+    NFSERR_NXIO = 6;            // no such device or address
+    NFSERR_ACCES = 13;          // permission denied - caller doesn't have correct permission to perform requested operation 
+    NFSERR_EXIST = 17;          // file already exists
+    NFSERR_NODEV = 19;          // no such device
+    NFSERR_NOTDIR = 20;         // not a directory - caller specified a non-directory in a directory operation 
+    NFSERR_ISDIR = 21;          // is a directory - caller specified a directory in a non-directory operation
+    NFSERR_FBIG = 27;           // file too large - operation caused a file to grow beyond server's limit
+    NFSERR_NOSPC = 28;          // no space left on device
+    NFSERR_ROFS = 30;           // write attempted on a read-only file system 
+    NFSERR_NAMETOOLONG = 63;    // file name too long
+    NFSERR_NOTEMPTY = 66;       // attempted to remove a directory that was not empty
+    NFSERR_DQUOT = 69;          // disk quota exceeded
+    NFSERR_STALE = 70;          // the 'fhandle' given in arguments was invalid - either referred to file that no longer exists, or expired
+    NFSERR_WFLUSH = 99;         // server's writecache used in WRITECACHE call got flushed to disk
+}
+
+enum FType {
+    NFNON = 0;  // non-file
+    NFREG = 1;  // regular file
+    NFDIR = 2;  // directory
+    NFBLK = 3;  // block-special device
+    NFCHR = 4;  // character-special device
+    NFLNK = 5;  // symbolic link
+}
+
+// File Handle
+message FHandle {
+    bytes handle = 1;
+}
+
+// Structure for Unix timestamp
+message TimeVal {
+    uint32 seconds = 1;
+    uint32 useconds = 2;
+}
+
+// File attributes
+message FAttr {
+    FType type = 1;
+
+    uint32 mode = 2;         // contains file type + lowest 12 bits are setuid,setgid,sticky,owner,group,other permissions
+
+    uint32 nlink = 3;        // number of hard links to the file
+    uint32 uid = 4;
+    uint32 gid = 5;
+    uint32 size = 6;         // size in bytes of the file
+    uint32 blocksize = 7;    // size in bytes of a block of the file
+    uint32 rdev = 8;         // device number of the file if it is type NFCHR or NFBLK
+    uint32 blocks = 9;       // number of blocks the file takes up on disk
+    uint32 fsid = 10;        // file system identifier
+    uint32 fileid = 11;      // uniquely identifies the file in its file system
+
+    TimeVal atime = 12;      // time of last access
+    TimeVal mtime = 13;      // time of last modification (write)
+    TimeVal ctime = 14;      // time of last change of file's status (write changes ctime if file size was changed)
+}
+
+// File attributes (from FAttr) that can be set from client - if a field is -1, it's ignored (i.e. value of that attribute is not modified)
+message SAttr {
+    uint32 mode = 1;
+
+    uint32 uid = 2;
+    uint32 gid = 3;
+    uint32 size = 4;         // size = 0 means truncate the file
+
+    TimeVal atime = 5;
+    TimeVal mtime = 6;
+}
+
+// A string used for passing file names or pathnames
+message FileName {
+    string filename = 1;    // max len - MAXNAMLEN
+}
+// A pathname
+message Path {
+    string path = 1;        // max len - MAXPATHLEN
+}
+
+// A common procedure result that contains file attributes on successful call
+message AttrStat {
+    Stat status = 1;
+
+    oneof body {
+        FAttr attributes = 2;                   // case NFS_OK
+        google.protobuf.Empty default_case = 3; // default case
+    }
+}
+
+// Structure used in directory operations, identifies a file in a directory
+message DirOpArgs {
+    FHandle dir = 1;
+    FileName name = 2;
+}
+
+// Structure for directory operation results - a new file handle 'file' and 'attributes' associated with it
+message DirOpOk {
+    FHandle file = 1;
+    FAttr attributes = 2;
+}
+
+// Structure for returning results of directory operations
+message DirOpRes {
+    Stat status = 1;
+
+    oneof body {
+        DirOpOk diropok = 2;                    // case NFS_OK
+        google.protobuf.Empty default_case = 3; // default case
+    }
+}
+
+
+/*
+* Procedure-specific data types
+*/
+
+// Used for NFSPROC_SETATTR arguments for updating file attributes
+message SAttrArgs {
+    FHandle file = 1;
+    SAttr attributes = 2;
+}
+
+// Used for NFSPROC_READLINK results, to return the path of the file that this symbolic link refers to
+message ReadLinkRes {
+    Stat status = 1;
+
+    oneof body {
+        Path data = 2;                          // case NFS_OK
+        google.protobuf.Empty default_case = 3; // default case
+    }
+}
+
+// Used for NFSPROC_READ arguments, 'totalcount' is unused
+message ReadArgs {
+    FHandle file = 1;
+
+    uint32 offset = 2;
+    uint32 count = 3;
+    uint32 totalcount = 4;
+}
+
+// Data read from a file, and file's attributes
+message ReadResBody {
+    FAttr attributes = 1;
+    bytes data = 2;
+}
+
+// Used for NFSPROC_READ results, to return the read data in case of NFS_OK
+message ReadRes {
+    Stat status = 1;
+
+    oneof body {
+        ReadResBody nfsdata = 2;                // case NFS_OK
+        google.protobuf.Empty default_case = 3; // default case
+    }
+}

@@ -14,7 +14,7 @@ message FHandle {
 message FhStatus {
     uint32 status = 1; // 0 for success, non-zero for error
     oneof fhstatus_body {
-        FHandle directory = 2; // case status is 0
+        FHandle directory = 2;                  // case status is 0
         google.protobuf.Empty default_case = 3; // default case (status > 0)
     }
 }

@@ -22,7 +22,7 @@
 Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
 /*
-* Functions from common_rpc.h that each RPC program's server must implement.
+* Functions from server_common_rpc.h that each RPC program's server must implement.
 */
 
 Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {
@@ -87,7 +87,7 @@ int is_directory_exported(const char *absolute_path) {
 * Creates a NFS filehandle for the given absolute path of a directory being mounted, and returns
 * it in the 'nfs_filehandle' argument.
 *
-* Returns 0 on success and > 0 on failure.
+* Returns 0 on success and > 0 on failure. TODO: concatenate to this a UNIX timestamp
 */
 int create_nfs_filehandle(char *directory_absolute_path, unsigned char *nfs_filehandle) {
     if(directory_absolute_path == NULL) {

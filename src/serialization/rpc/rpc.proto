@@ -38,10 +38,9 @@ enum RejectStat {
 enum AuthStat {
     AUTH_OK = 0;
 
-    // missing othe authentication statuses
+    // missing the authentication statuses
 }
 
-// Generic CallBody to handle any program-specific procedures
 message CallBody {
     uint32 rpcvers = 1;  // RPC version number (must be 2)
     uint32 prog = 2;     // RPC program number
@@ -54,14 +53,11 @@ message CallBody {
     google.protobuf.Any params = 5; // Serialized params for the procedure
 }
 
-
-// MismatchInfo message definition (for AcceptedReply and RejectedReply)
 message MismatchInfo {
     uint32 low = 1;
     uint32 high = 2;
 }
 
-// AcceptedReply message definition
 message AcceptedReply {
     // here: opaque verf for auth protocol - length 0 when AUTH_NONE
     AcceptStat stat = 1;
@@ -74,7 +70,6 @@ message AcceptedReply {
     }
 }
 
-// RejectedReply message definition
 message RejectedReply {
     RejectStat stat = 1;
 
@@ -84,7 +79,6 @@ message RejectedReply {
     }
 }
 
-// ReplyBody message definition
 message ReplyBody {
     ReplyStat stat = 1;
 
@@ -94,7 +88,6 @@ message ReplyBody {
     }
 }
 
-// RpcMsg message definition
 message RpcMsg {
     uint32 xid = 1;
     MsgType mtype = 2;
