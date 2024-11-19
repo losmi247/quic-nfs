@@ -13,7 +13,9 @@ and:
 1. Install **protobuf-c** from https://github.com/protobuf-c/protobuf-c - for generating serialization code (follow the commands performed in the docker image for testing to install all the libraries)
 2. Run ```make serialization_library``` to generate serialization code
 3. Run ```make all``` to build the server and client
-4. First run ```./build/mount_server``` and then ```./build/repl```
+4. First run ```./build/mount_and_nfs_server``` and then ```./build/repl```
+
+The Nfs and Mount server are implemented as a single process, to allowed efficient sharing of the cache containing mappings of inode numbers to files/directories.
 
 # Serialization
 
@@ -21,4 +23,4 @@ After changing ```.proto``` files, regenerate serialization code by running ```m
 
 # Tests
 
-To run the tests, build the Docker images for server and client using the ```./tests/mount/build_images.sh``` script, and then run them as Docker containers using ```./tests/mount/run_tests.sh```.
+To run the tests, build the Docker images for server and client using the ```./tests/build_images.sh``` script, and then run them as Docker containers using ```./tests/mount/run_tests.sh```.

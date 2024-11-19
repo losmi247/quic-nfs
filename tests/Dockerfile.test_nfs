@@ -14,7 +14,8 @@ RUN apt-get update && \
         ca-certificates \
         cmake \
         libprotobuf-dev \
-        protobuf-compiler && \
+        protobuf-compiler \
+        libcriterion-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # install protobuf from source
@@ -41,11 +42,7 @@ RUN git clone --recurse-submodules https://github.com/protobuf-c/protobuf-c.git 
 
 COPY . /quic-nfs
 WORKDIR /quic-nfs
-# build the mount server
-RUN make clean && \
-    make all
+# build the tests
+RUN make test
 
-# create a directory for export
-RUN mkdir -p /nfs_share
-
-CMD ["./build/mount_server"]
+CMD ["./build/test_nfs"]

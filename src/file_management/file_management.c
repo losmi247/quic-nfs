@@ -6,20 +6,84 @@
 *
 * Returns 0 on success, and > 0 on failure.
 */
-int get_inode_number(char *file_or_directory_absolute_path, ino_t *inode_number) {
-    int fd = open(file_or_directory_absolute_path, O_RDONLY);
-    if(fd < 0) {
-        perror("Failed opening the file");
-        return 1;
-    }
-
+int get_inode_number(char *absolute_path, ino_t *inode_number) {
     struct stat file_stat;
-    if(fstat(fd, &file_stat) < 0) {
+    if(stat(absolute_path, &file_stat) < 0) {
         perror("Failed retrieving file stats");
         return 2;
     }
 
     *inode_number = file_stat.st_ino;
+
+    return 0;
+}
+
+/*
+* Reads out the file type from the mode.
+*/
+Nfs__FType decode_file_type(mode_t st_mode) {
+    if(S_ISREG(st_mode)) {
+        return NFS__FTYPE__NFREG;
+    }
+    if(S_ISDIR(st_mode)) {
+        return NFS__FTYPE__NFDIR;
+    }
+    if(S_ISBLK(st_mode)) {
+        return NFS__FTYPE__NFBLK;
+    }
+    if(S_ISCHR(st_mode)) {
+        return NFS__FTYPE__NFCHR;
+    }
+    if(S_ISLNK(st_mode)) {
+        return NFS__FTYPE__NFLNK;
+    }
+
+    return NFS__FTYPE__NFNON;
+}
+
+/*
+* Given an absolute path of a file or a directory, gives the corresponding file's attributes in 'fattr'.
+* Returns 0 on succes and > 0 on failure.
+*
+* The user of this function takes the responsibility to free the heap-allocated TimeVal structures.
+*/
+int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
+    struct stat file_stat;
+    if(stat(absolute_path, &file_stat) < 0) {
+        perror("Failed retrieving file stats");
+        return 2;
+    }
+
+    fattr->type = decode_file_type(file_stat.st_mode);
+
+    fattr->mode = file_stat.st_mode;
+    fattr->nlink = file_stat.st_nlink;
+    fattr->uid = file_stat.st_uid;
+    fattr->gid = file_stat.st_gid;
+    fattr->size = file_stat.st_size;
+    fattr->blocksize = file_stat.st_blksize;
+
+    fattr->rdev = file_stat.st_rdev;
+    fattr->blocks = file_stat.st_blocks;
+    fattr->fsid = file_stat.st_dev;
+    fattr->fileid = file_stat.st_ino;
+
+    Nfs__TimeVal *atime = malloc(sizeof(Nfs__TimeVal));
+    nfs__time_val__init(atime);
+    atime->seconds = file_stat.st_atim.tv_sec;
+    atime->useconds = file_stat.st_atim.tv_nsec;
+    Nfs__TimeVal *mtime = malloc(sizeof(Nfs__TimeVal));
+    nfs__time_val__init(mtime);
+    mtime->seconds = file_stat.st_mtim.tv_sec;
+    mtime->useconds = file_stat.st_mtim.tv_nsec;
+    Nfs__TimeVal *ctime = malloc(sizeof(Nfs__TimeVal));
+    nfs__time_val__init(ctime);
+    ctime->seconds = file_stat.st_ctim.tv_sec;
+    ctime->useconds = file_stat.st_ctim.tv_nsec;
+
+    fattr->atime = atime;
+    fattr->mtime = mtime;
+    fattr->ctime = ctime;
 
     return 0;
 }

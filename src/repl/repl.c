@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "src/rpc_programs/mount/client/mount_client.h"
+#include "src/nfs/clients/mount_client.h"
 
 /*
 * The Read-Eval-Print-Loop that waits for Mount or Nfs commands and

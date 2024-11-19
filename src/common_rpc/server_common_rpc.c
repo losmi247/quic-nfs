@@ -17,6 +17,11 @@
 * Frees up heap-allocated memory for procedure results or MismatchInfo in an AcceptedReply.
 */
 void clean_up_accepted_reply(Rpc__AcceptedReply accepted_reply) {
+    if(accepted_reply.stat == RPC__ACCEPT_STAT__PROG_UNAVAIL) {
+        free(accepted_reply.default_case);
+        return;
+    }
+
     if(accepted_reply.stat == RPC__ACCEPT_STAT__PROG_MISMATCH) {
         free(accepted_reply.mismatch_info);
         return;
@@ -31,6 +36,7 @@ void clean_up_accepted_reply(Rpc__AcceptedReply accepted_reply) {
         }
 
         if(results->value.data != NULL) {
+            // free the buffer containing packed procedure results inside the Any
             free(results->value.data);
         }
         free(results);

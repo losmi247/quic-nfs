@@ -10,16 +10,17 @@ rpc_program_common_client_files = ./src/common_rpc/client_common_rpc.c \
 	./src/common_rpc/common_rpc.c
 
 # the Mount and Nfs clients that the REPL uses to do RPCs
-repl_clients = ./src/rpc_programs/mount/client/mount_client.c \
-	./src/rpc_programs/nfs/client/nfs_client.c
+repl_clients = ./src/nfs/clients/mount_client.c \
+	./src/nfs/clients/nfs_client.c
 
-# files used by mount server
-mount_server_files = ./src/rpc_programs/mount/server/mount_list.c
+# files used by Nfs+Mount server
+mount_and_nfs_server_files = ./src/nfs/server/mount_list.c \
+	./src/nfs/server/inode_cache.c
 
 # implementations of file management functions
 file_management_library = ./src/file_management/file_management.c
 
-all: mount_server nfs_server repl
+all: mount_and_nfs_server repl
 
 serialization_library: google_protos rpc_serialization mount_serialization nfs_serialization
 google_protos: any empty
@@ -34,26 +35,17 @@ mount_serialization: ./src/serialization/mount/mount.proto
 nfs_serialization: ./src/serialization/nfs/nfs.proto
 	protoc --c_out=. ./src/serialization/nfs/nfs.proto
 
-mount_server: ./src/rpc_programs/mount/server/mount.c
+mount_and_nfs_server: ./src/nfs/server/nfs.c
 # -I flag adds the project root dir to include paths (so that we can include libraries in our files as serialization/mount/mount.pb-c.h e.g.)
-	gcc ./src/rpc_programs/mount/server/mount.c \
-		${serialization_files} ${rpc_program_common_server_files} ${mount_server_files} ${file_management_library} \
-		-I . -o ./build/mount_server -l protobuf-c
-
-nfs_server: ./src/rpc_programs/nfs/server/nfs.c
-	gcc ./src/rpc_programs/nfs/server/nfs.c \
-		${serialization_files} ${rpc_program_common_server_files} \
-		-I . -o ./build/nfs_server -l protobuf-c
+	gcc ./src/nfs/server/nfs.c \
+		${serialization_files} ${rpc_program_common_server_files} ${mount_and_nfs_server_files} ${file_management_library} \
+		-I . -o ./build/mount_and_nfs_server -l protobuf-c
 
 repl: ./src/repl/repl.c
 	gcc ./src/repl/repl.c ${serialization_files} ${rpc_program_common_client_files} ${repl_clients} -I . -o ./build/repl -l protobuf-c
 
-
-tests: test_mount test_nfs
-test_mount: ./tests/mount/test_mount.c
-	gcc ./tests/mount/test_mount.c ${serialization_files} ${rpc_program_common_client_files} ${repl_clients} -I . -o ./build/test_mount -l criterion -l protobuf-c
-test_nfs: ./tests/nfs/test_nfs.c
-	gcc ./tests/nfs/test_nfs.c ${serialization_files} ${rpc_program_common_client_files} ${repl_clients} -I . -o ./build/test_nfs -l criterion -l protobuf-c
+test: ./tests/test_nfs.c
+	gcc ./tests/test_nfs.c ${serialization_files} ${rpc_program_common_client_files} ${repl_clients} -I . -o ./build/test_nfs -l criterion -l protobuf-c
 
 clean:
 	rm -rf ./build/*

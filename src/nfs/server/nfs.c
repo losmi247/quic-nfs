@@ -12,38 +12,55 @@
 
 #include <protobuf-c/protobuf-c.h>
 #include "src/serialization/rpc/rpc.pb-c.h"
+#include "src/serialization/nfs/nfs.pb-c.h"
 #include "src/serialization/mount/mount.pb-c.h"
 
-#include "../mount_common.h"
-#include "mount_list.h"
+#include "../nfs_common.h"
+
+#include "./mount_list.h"
+#include "./inode_cache.h"
 
 #include "src/file_management/file_management.h"
 
 Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
+
+Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
 /*
 * Functions from server_common_rpc.h that each RPC program's server must implement.
 */
 
 Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {
-    // since we're skipping the portmapper, any program number other than mount's own is wrong
-    if(program_number != MOUNT_RPC_PROGRAM_NUMBER) {
-        // i don't need to set accepted_reply.default_case Empty ?
-        fprintf(stderr, "Unknown program number");
-        Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
-        accepted_reply.stat = RPC__ACCEPT_STAT__PROG_UNAVAIL;
-        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
-        return accepted_reply;
+    if(program_number == MOUNT_RPC_PROGRAM_NUMBER) {
+        return call_mount(program_version, procedure_number, parameters);
+    }
+    if(program_number == NFS_RPC_PROGRAM_NUMBER) {
+        return call_nfs(program_version, procedure_number, parameters);
     }
 
-    return call_mount(program_version, procedure_number, parameters);
+    fprintf(stderr, "Unknown program number");
+    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
+    accepted_reply.stat = RPC__ACCEPT_STAT__PROG_UNAVAIL;
+    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+
+    Google__Protobuf__Empty *empty = malloc(sizeof(Google__Protobuf__Empty));
+    google__protobuf__empty__init(empty);
+    accepted_reply.default_case = empty;
+
+    return accepted_reply;
 }
+
+/*
+* Mount+Nfs RPC program state
+*/
+
+int rpc_server_socket_fd;
+InodeCache inode_cache;
 
 /*
 * Mount RPC program implementation.
 */
 
-int rpc_server_socket_fd;
 Mount__MountList *mount_list;
 
 /*
@@ -98,6 +115,9 @@ int create_nfs_filehandle(char *directory_absolute_path, unsigned char *nfs_file
     ino_t inode_number;
     get_inode_number(directory_absolute_path, &inode_number);
 
+    // remember what absolute path this inode number corresponds to
+    add_inode_mapping(inode_number, directory_absolute_path, &inode_cache);
+
     sprintf(nfs_filehandle, "%lu", inode_number);
     
     return 0;
@@ -106,7 +126,7 @@ int create_nfs_filehandle(char *directory_absolute_path, unsigned char *nfs_file
 /*
 * Runs the MOUNTPROC_NULL procedure (0).
 */
-Rpc__AcceptedReply serve_procedure_0_do_nothing(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply serve_mnt_procedure_0_do_nothing(Google__Protobuf__Any *parameters) {
     Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
     accepted_reply.stat = RPC__ACCEPT_STAT__SUCCESS;
     accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
@@ -126,7 +146,7 @@ Rpc__AcceptedReply serve_procedure_0_do_nothing(Google__Protobuf__Any *parameter
 /*
 * Runs the MOUNTPROC_MNT procedure (1).
 */
-Rpc__AcceptedReply serve_procedure_1_add_mount_entry(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *parameters) {
     Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
 
     // check parameters are of expected type for this procedure
@@ -239,9 +259,165 @@ Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_numbe
 
     switch(procedure_number) {
         case 0:
-            return serve_procedure_0_do_nothing(parameters);
+            return serve_mnt_procedure_0_do_nothing(parameters);
         case 1:
-            return serve_procedure_1_add_mount_entry(parameters);
+            return serve_mnt_procedure_1_add_mount_entry(parameters);
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        default:
+    }
+
+    // procedure not found
+    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
+    accepted_reply.stat = RPC__ACCEPT_STAT__PROC_UNAVAIL;
+    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+    return accepted_reply;
+}
+
+
+/*
+* Nfs RPC program implementation.
+*/
+
+/*
+* Runs the NFSPROC_NULL procedure (0).
+*/
+Rpc__AcceptedReply serve_nfs_procedure_0_do_nothing(Google__Protobuf__Any *parameters) {
+    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
+    accepted_reply.stat = RPC__ACCEPT_STAT__SUCCESS;
+    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
+
+    // return an Any with empty buffer inside it
+    Google__Protobuf__Any *results = malloc(sizeof(Google__Protobuf__Any));
+    google__protobuf__any__init(results);
+    results->type_url = "nfs/None";
+    results->value.data = NULL;
+    results->value.len = 0;
+
+    accepted_reply.results = results;
+
+    return accepted_reply;
+}
+
+/*
+* Runs the NFSPROC_GETATTR procedure (1).
+*/
+Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__Any *parameters) {
+    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
+
+    // check parameters are of expected type for this procedure
+    if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/FHandle") != 0) {
+        fprintf(stderr, "serve_procedure_1_get_file_attributes: Expected nfs/FHandle but received %s\n", parameters->type_url);
+        accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
+        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+        return accepted_reply;
+    }
+
+    // deserialize parameters
+    Nfs__FHandle *fhandle = nfs__fhandle__unpack(NULL, parameters->value.len, parameters->value.data);
+    if(fhandle == NULL) {
+        fprintf(stderr, "serve_procedure_1_get_file_attributes: Failed to unpack FHandle\n");
+        accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
+        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+        return accepted_reply;
+    }
+    if(fhandle->handle.data == NULL) {
+        fprintf(stderr, "serve_procedure_1_get_file_attributes: FHandle->handle.data is null\n");
+
+        nfs__fhandle__free_unpacked(fhandle, NULL);
+
+        accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
+        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+        return accepted_reply;
+    }
+
+    unsigned char *nfs_filehandle = fhandle->handle.data;
+    ino_t inode_number = strtol(nfs_filehandle, NULL, 10);
+
+    // build the procedure results
+    Nfs__AttrStat attr_stat = NFS__ATTR_STAT__INIT;
+    attr_stat.status = NFS__STAT__NFS_OK;
+    attr_stat.body_case = NFS__ATTR_STAT__BODY_ATTRIBUTES;
+
+    Nfs__FAttr fattr = NFS__FATTR__INIT;
+    char *file_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
+    if(file_absolute_path == NULL) {
+        // we couldn't decode inode number back to a file/directory
+        fprintf(stderr, "serve_procedure_1_get_file_attributes: failed to decode inode number %ld back to a file/directory\n", inode_number);
+
+        nfs__fhandle__free_unpacked(fhandle, NULL);
+
+        accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
+        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+        return accepted_reply;
+    }
+
+    int error_code = get_attributes(file_absolute_path, &fattr);
+    if(error_code > 0) {
+        fprintf(stderr, "serve_procedure_1_get_file_attributes: Failed getting file attributes\n");
+
+        nfs__fhandle__free_unpacked(fhandle, NULL);
+
+        accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
+        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+        return accepted_reply;
+    }
+
+    attr_stat.attributes = &fattr;
+
+    // serialize the procedure results
+    size_t attr_stat_size = nfs__attr_stat__get_packed_size(&attr_stat);
+    uint8_t *attr_stat_buffer = malloc(attr_stat_size);
+    nfs__attr_stat__pack(&attr_stat, attr_stat_buffer);
+
+    // wrap procedure results into Any
+    Google__Protobuf__Any *results = malloc(sizeof(Google__Protobuf__Any));
+    google__protobuf__any__init(results);
+    results->type_url = "nfs/AttrStat";
+    results->value.data = attr_stat_buffer;
+    results->value.len = attr_stat_size;
+
+    // complete the AcceptedReply
+    accepted_reply.stat = RPC__ACCEPT_STAT__SUCCESS;
+    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
+    accepted_reply.results = results;
+
+    nfs__fhandle__free_unpacked(fhandle, NULL);
+
+    free(fattr.atime);
+    free(fattr.mtime);
+    free(fattr.ctime);
+
+    return accepted_reply;
+}
+
+/*
+* Calls the appropriate procedure in the Nfs RPC program based on the procedure number.
+*/
+Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {
+    if(program_version != 2) {
+        Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
+
+        // accepted_reply contains a pointer to mismatch_info, so mismatch_info has to be heap allocated - because it's going to be used outside of scope of this function
+        Rpc__MismatchInfo *mismatch_info = malloc(sizeof(Rpc__MismatchInfo));
+        rpc__mismatch_info__init(mismatch_info);
+        mismatch_info->low = 2;
+        mismatch_info->high = 2;
+
+        accepted_reply.stat = RPC__ACCEPT_STAT__PROG_MISMATCH;
+        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_MISMATCH_INFO;
+        accepted_reply.mismatch_info = mismatch_info;
+
+        return accepted_reply;
+    }
+
+    switch(procedure_number) {
+        case 0:
+            return serve_nfs_procedure_0_do_nothing(parameters);
+        case 1:
+            return serve_nfs_procedure_1_get_file_attributes(parameters);
         case 2:
         case 3:
         case 4:
@@ -264,14 +440,13 @@ void handle_signal(int signal) {
         fprintf(stdout, "Received SIGTERM, shutting down gracefully...\n");
         
         close(rpc_server_socket_fd);
-        cleanup_mount_list(mount_list);
 
         exit(0);
     }
 }
 
 /*
-* The main body of the Mount server, which awaits RPCs.
+* The main body of the Nfs+Mount server, which awaits RPCs.
 */
 int main() {
     signal(SIGTERM, handle_signal);  // register signal handler
@@ -280,12 +455,16 @@ int main() {
     if(rpc_server_socket_fd < 0) { 
         fprintf(stderr, "Socket creation failed\n");
         return 1;
-    } 
+    }
+
+    // initialize Nfs and Mount server state
+    mount_list = NULL;
+    inode_cache = NULL;
 
     struct sockaddr_in rpc_server_addr;
     rpc_server_addr.sin_family = AF_INET; 
     rpc_server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    rpc_server_addr.sin_port = htons(MOUNT_RPC_SERVER_PORT);
+    rpc_server_addr.sin_port = htons(NFS_RPC_SERVER_PORT);
   
     // bind socket to the rpc server address
     if(bind(rpc_server_socket_fd, (struct sockaddr *) &rpc_server_addr, sizeof(rpc_server_addr)) < 0) { 
@@ -301,8 +480,7 @@ int main() {
         return 1;
     }
 
-    // initialise mount list to be empty
-    mount_list = NULL;
+    fprintf(stdout, "Server listening on port %d\n", NFS_RPC_SERVER_PORT);
   
     while(1) {
         struct sockaddr_in rpc_client_addr;
@@ -320,6 +498,4 @@ int main() {
     }
      
     close(rpc_server_socket_fd);
-
-    cleanup_mount_list(mount_list);
 } 

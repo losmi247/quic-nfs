@@ -5,7 +5,7 @@
 #include "src/common_rpc/common_rpc.h"
 #include "src/common_rpc/client_common_rpc.h"
 
-#include "../mount_common.h"
+#include "../nfs_common.h"
 #include "mount_client.h"
 
 #include "src/serialization/rpc/rpc.pb-c.h"
