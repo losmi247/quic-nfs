@@ -12,4 +12,6 @@ int nfs_procedure_0_do_nothing(void);
 
 int nfs_procedure_1_get_file_attributes(Nfs__FHandle fhandle, Nfs__AttrStat *result);
 
+int nfs_procedure_2_set_file_attributes(Nfs__SAttrArgs sattrargs, Nfs__AttrStat *result);
+
 #endif /* nfs_client__header__INCLUDED */

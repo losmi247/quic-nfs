@@ -244,11 +244,17 @@ int check_valid_rpc_reply_is_AcceptedReply_with_success_AcceptStat(Rpc__RpcMsg *
 int validate_rpc_message_from_server(Rpc__RpcMsg *rpc_reply) {
     int error_code = check_rpc_msg_is_valid_rpc_reply(rpc_reply);
     if(error_code > 0) {
+        // flush everything to print out the error
+        fflush(stdout);
+        fflush(stderr);
         return error_code;
     }
 
     error_code = check_valid_rpc_reply_is_AcceptedReply_with_success_AcceptStat(rpc_reply);
     if(error_code > 0) {
+        // flush everything to print out the error
+        fflush(stdout);
+        fflush(stderr);
         return error_code;
     }
 
