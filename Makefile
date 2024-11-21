@@ -14,7 +14,8 @@ repl_clients = ./src/nfs/clients/mount_client.c \
 	./src/nfs/clients/nfs_client.c
 
 # files used by Nfs+Mount server
-mount_and_nfs_server_files = ./src/nfs/server/mount_list.c \
+mount_and_nfs_server_files = ./src/nfs/server/mount.c ./src/nfs/server/nfs.c \
+	./src/nfs/server/mount_list.c \
 	./src/nfs/server/inode_cache.c
 
 # implementations of file management functions
@@ -35,9 +36,9 @@ mount_serialization: ./src/serialization/mount/mount.proto
 nfs_serialization: ./src/serialization/nfs/nfs.proto
 	protoc --c_out=. ./src/serialization/nfs/nfs.proto
 
-mount_and_nfs_server: ./src/nfs/server/nfs.c
+mount_and_nfs_server: ./src/nfs/server/server.c
 # -I flag adds the project root dir to include paths (so that we can include libraries in our files as serialization/mount/mount.pb-c.h e.g.)
-	gcc ./src/nfs/server/nfs.c \
+	gcc ./src/nfs/server/server.c \
 		${serialization_files} ${rpc_program_common_server_files} ${mount_and_nfs_server_files} ${file_management_library} \
 		-I . -o ./build/mount_and_nfs_server -l protobuf-c
 
