@@ -38,12 +38,12 @@ To run the tests:
 # Procedure Support Progress
 
 |  N  | Procedure      | Description                                  |  Server procedure   |  Client-side function |        Tests       |
-|-----|----------------|------------------                            |----------------     |----                   |---                 |
+|-----|----------------|-----------------------------------------------|---------------------|-----------------------|--------------------|
 |  0  | NULL           | do nothing                                   |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  1  | GETATTR        | get attributes                               |   done &#10004;     |   done &#10004;       |   done &#10004;    | 
 |  2  | SETATTR        | set attributes                               |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  3  | ROOT           | get root NFS fhandle                         |   obsolete          |                       |                    |
-|  4  | LOOKUP         | get NFS fhandle and attributes of a file     |   started           |   started             |                    |
+|  4  | LOOKUP         | get NFS fhandle and attributes of a file     |   started           |   done &#10004;       |                    |
 |  5  | READLINK       | read from symbolic link                      |                     |                       |                    |
 |  6  | READ           | read from file                               |                     |                       |                    |
 |  7  | WRITECACHE     | write to cache                               |    NFSv3            |                       |                    |

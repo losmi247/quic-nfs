@@ -98,7 +98,7 @@ Test(nfs_test_suite, getattr, .description = "NFSPROC_GETATTR") {
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
 
-    free(attr_stat);
+    nfs__attr_stat__free_unpacked(attr_stat, NULL);
 }
 
 Test(nfs_test_suite, setattr, .description = "NFSPROC_SETATTR") {
@@ -110,7 +110,7 @@ Test(nfs_test_suite, setattr, .description = "NFSPROC_SETATTR") {
 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = 0;
-    sattr.uid = 0; // make it a root-owned file
+    sattr.uid = 0;   // make it a root-owned file
     sattr.gid = 0;
     sattr.size = -1; // can't update size on a directory
     Nfs__TimeVal atime = NFS__TIME_VAL__INIT, mtime = NFS__TIME_VAL__INIT;
@@ -155,5 +155,5 @@ Test(nfs_test_suite, setattr, .description = "NFSPROC_SETATTR") {
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
 
-    free(attr_stat);
+    nfs__attr_stat__free_unpacked(attr_stat, NULL);
 }
