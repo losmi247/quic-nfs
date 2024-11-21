@@ -1,16 +1,20 @@
-This is a user-space implementation of NFSv2 client-server pair.
+This is a user-space implementation of NFSv2 client-server pair ([RFC 1094](https://datatracker.ietf.org/doc/html/rfc1094)) over QUIC.
 
 # Build Instructions
 
 Clone the directory
 
 ```
-https://github.com/losmi247/quic-nfs.git
+git clone https://github.com/losmi247/quic-nfs.git
 ```
 
 and:
 
-1. Install **protobuf-c** from https://github.com/protobuf-c/protobuf-c - for generating serialization code (follow the commands performed in the docker image for testing to install all the libraries)
+1. Install [**protobuf**](https://github.com/protocolbuffers/protobuf), [**protobuf-c**](https://github.com/protobuf-c/protobuf-c), **criterion**, and other project dependencies using:
+
+    ```
+    ./install_dependencies
+    ```
 2. Run ```make serialization_library``` to generate serialization code
 3. Run ```make all``` to build the server and client
 4. First run ```./build/mount_and_nfs_server``` and then ```./build/repl```
@@ -23,4 +27,10 @@ After changing ```.proto``` files, regenerate serialization code by running ```m
 
 # Tests
 
-To run the tests, build the Docker images for server and client using the ```./tests/build_images.sh``` script, and then run them as Docker containers using ```./tests/mount/run_tests.sh```.
+Tests are written https://github.com/Snaipe/Criterion testing framework. 
+
+To run the tests:
+- build the Mount+Nfs server using ```make all```
+- build the tests using ```make test```
+- build Docker images for the server and the client using ```./tests/build_images```
+- finally, run the tests using ```./tests/run_tests```
