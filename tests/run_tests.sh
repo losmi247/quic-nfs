@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# run 'make all' and 'make test' to build server and tests before this
+
 docker container rm -f mount-and-nfs-server
 docker container rm -f mount-and-nfs-test
 docker network rm nfs-test-net

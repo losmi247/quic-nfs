@@ -41,9 +41,6 @@ RUN git clone --recurse-submodules https://github.com/protobuf-c/protobuf-c.git 
 
 COPY . /quic-nfs
 WORKDIR /quic-nfs
-# build the mount+nfs server
-RUN make clean && \
-    make all
 
 # create a directory for export
 RUN mkdir -p /nfs_share

@@ -42,7 +42,5 @@ RUN git clone --recurse-submodules https://github.com/protobuf-c/protobuf-c.git 
 
 COPY . /quic-nfs
 WORKDIR /quic-nfs
-# build the tests
-RUN make test
 
 CMD ["./build/test_nfs"]
