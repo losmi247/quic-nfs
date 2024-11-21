@@ -34,3 +34,26 @@ To run the tests:
 - build the tests using ```make test```
 - build Docker images for the server and the client using ```./tests/build_images```
 - finally, run the tests using ```./tests/run_tests```
+
+# Procedure Support Progress
+
+|  N  | Procedure      | Description                                  |  Server procedure   |  Client-side function |        Tests       |
+|-----|----------------|------------------                            |----------------     |----                   |---                 |
+|  0  | NULL           | do nothing                                   |   done &#10004;     |   done &#10004;       |   done &#10004;    |
+|  1  | GETATTR        | get attributes                               |   done &#10004;     |   done &#10004;       |   done &#10004;    | 
+|  2  | SETATTR        | set attributes                               |   done &#10004;     |   done &#10004;       |   done &#10004;    |
+|  3  | ROOT           | get root NFS fhandle                         |   obsolete          |                       |                    |
+|  4  | LOOKUP         | get NFS fhandle and attributes of a file     |   started           |   started             |                    |
+|  5  | READLINK       | read from symbolic link                      |                     |                       |                    |
+|  6  | READ           | read from file                               |                     |                       |                    |
+|  7  | WRITECACHE     | write to cache                               |    NFSv3            |                       |                    |
+|  8  | WRITE          | write to file                                |                     |                       |                    |
+|  9  | CREATE         | create file                                  |                     |                       |                    |
+| 10  | REMOVE         | remove file                                  |                     |                       |                    |
+| 11  | RENAME         | rename file                                  |                     |                       |                    |
+| 12  | LINK           | create link to file                          |                     |                       |                    |
+| 13  | SYMLINK        | create symbolic link to file                 |                     |                       |                    |
+| 14  | MKDIR          | create directory                             |                     |                       |                    |
+| 15  | RMDIR          | remove directory                             |                     |                       |                    |
+| 16  | READDIR        | read from directory                          |                     |                       |                    |
+| 17  | STATFS         | get filesystem attributes                    |                     |                       |                    |
