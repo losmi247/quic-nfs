@@ -1,48 +1,16 @@
 FROM gcc:latest
 
-RUN apt-get update && \
-    apt-get install -y build-essential git protobuf-compiler
-RUN apt-get update && \
-    apt-get install -y \
-        build-essential \
-        autoconf \
-        automake \
-        libtool \
-        pkg-config \
-        git \
-        curl \
-        ca-certificates \
-        cmake \
-        libprotobuf-dev \
-        protobuf-compiler && \
-    rm -rf /var/lib/apt/lists/*
-
-# install protobuf from source
-WORKDIR /dep
-RUN git clone --recurse-submodules -b v3.21.1 https://github.com/protocolbuffers/protobuf.git && \
-    cd ./protobuf && \
-    git submodule update --init --recursive && \
-    mkdir build && cd build && \
-    cmake .. && \
-    make -j2 && \
-    make install && \
-    ldconfig && \
-    cd ../.. && rm -rf protobuf
-
-# install protobuf-c from source
-WORKDIR /dep
-RUN git clone --recurse-submodules https://github.com/protobuf-c/protobuf-c.git && \
-    cd ./protobuf-c && \
-    ./autogen.sh && \
-    ./configure && \
-    make && \
-    make install && \
-    ldconfig
-
 COPY . /quic-nfs
 WORKDIR /quic-nfs
 
+RUN ./install_dependencies
+
+WORKDIR /quic-nfs
 # create a directory for export
 RUN mkdir -p /nfs_share
+# mark /nfs_share as exported
+RUN touch exports && \
+    echo "/nfs_share *(rw)" >> ./exports
 
+RUN chmod +x ./build/mount_and_nfs_server
 CMD ["./build/mount_and_nfs_server"]

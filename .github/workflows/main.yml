@@ -1,4 +1,4 @@
-name: Mount and Nfs Server Tests
+name: Mount and Nfs Server CI
 on:
   push:
     branches:
@@ -10,15 +10,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build Server
-        uses: make all
-      - name: Build Tests
-        uses: make test
+      - name: Install Dependencies
+        run: sudo ./install_dependencies
 
-      - name: Upload build artifacts
+      - name: Build Server
+        run: make all
+      - name: Build Tests
+        run: make test
+
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Build
@@ -28,15 +31,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Checkout Code
         uses: actions/checkout@v4
-      - name: Download the build artifacts
+      - name: Download Build Artifacts
         uses: actions/download-artifact@v4
         with:
           name: Build
           path: build
 
-      - name: Build docker images
-        run: tests/build_images.sh
-      - name: Run tests
-        run: tests/run_tests.sh
+      - name: Build Docker Images
+        run: tests/build_images
+
+      - name: Run Tests
+        run: tests/run_tests

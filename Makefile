@@ -21,7 +21,9 @@ mount_and_nfs_server_files = ./src/nfs/server/mount.c ./src/nfs/server/nfs.c \
 # implementations of file management functions
 file_management_library = ./src/file_management/file_management.c
 
-all: mount_and_nfs_server repl
+all: create_build_dir mount_and_nfs_server repl
+create_build_dir:
+	mkdir -p ./build
 
 serialization_library: google_protos rpc_serialization mount_serialization nfs_serialization
 google_protos: any empty

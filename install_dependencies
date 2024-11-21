@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Basic packages
+apt-get update && \
+    apt-get install -y \
+        build-essential \
+        git \
+        curl \
+        ca-certificates \
+        autoconf \
+        automake \
+        libtool \
+        pkg-config \
+        cmake
+
+# Install Criterion library for tests
+apt-get update && \
+    apt-get install -y \
+        libcriterion-dev
+
+# Install Protobuf and Protobuf-C
+apt-get install -y \
+    protobuf-compiler \
+    libprotobuf-dev \
+    libprotobuf-c-dev \
+    protobuf-c-compiler
+
+echo "Verifying installation..."
+
+# Check if protoc is available
+if ! command -v protoc &>/dev/null; then
+    echo "Error: protoc is not installed."
+    exit 1
+fi
+
+echo "protoc version:"
+protoc --version
+
+echo "Dependencies installed successfully."
