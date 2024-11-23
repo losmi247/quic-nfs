@@ -16,7 +16,9 @@ repl_clients = ./src/nfs/clients/mount_client.c \
 # files used by Nfs+Mount server
 mount_and_nfs_server_files = ./src/nfs/server/mount.c ./src/nfs/server/nfs.c \
 	./src/nfs/server/mount_list.c \
-	./src/nfs/server/inode_cache.c
+	./src/nfs/server/inode_cache.c \
+	./src/nfs/server/mount_messages.c \
+	./src/nfs/server/nfs_messages.c
 
 # implementations of file management functions
 file_management_library = ./src/file_management/file_management.c

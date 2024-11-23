@@ -55,7 +55,11 @@ int create_nfs_filehandle(char *absolute_path, unsigned char *nfs_filehandle, In
     }
 
     ino_t inode_number;
-    get_inode_number(absolute_path, &inode_number);
+    int error_code = get_inode_number(absolute_path, &inode_number);
+    if(error_code > 0) {
+        // we couldn't get inode number of file/directory at this absolute path - it doesn't exist
+        return 2;
+    }
 
     // remember what absolute path this inode number corresponds to
     add_inode_mapping(inode_number, absolute_path, inode_number_cache);
@@ -64,6 +68,10 @@ int create_nfs_filehandle(char *absolute_path, unsigned char *nfs_filehandle, In
     
     return 0;
 }
+
+/*
+* Functions used in implementation of server body
+*/
 
 /*
 * Signal handler for graceful shutdown

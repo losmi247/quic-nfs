@@ -14,19 +14,65 @@
 #include "server_common_rpc.h"
 
 /*
+* Wraps the procedure results given in the buffer 'results_buffer' of size 'results_size' into an Any
+* message, along with a type 'results_type' of the result (e.g. nfs/AttrStat).
+*
+* The user of this function takes the responsibility to free the Any message allocated in this function.
+*/
+Rpc__AcceptedReply wrap_procedure_results_in_successful_accepted_reply(size_t results_size, uint8_t *results_buffer, char *results_type) {
+    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
+    accepted_reply.stat = RPC__ACCEPT_STAT__SUCCESS;
+    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
+
+     // wrap procedure results into Any
+    Google__Protobuf__Any *results = malloc(sizeof(Google__Protobuf__Any));
+    google__protobuf__any__init(results);
+    results->type_url = results_type;
+    results->value.data = results_buffer;
+    results->value.len = results_size;
+
+    // put results in AcceptedReply
+    accepted_reply.results = results;
+
+    return accepted_reply;
+}
+
+/*
+* Builds and returns an AcceptedReply with GARBAGE_ARGS AcceptStat.
+*/
+Rpc__AcceptedReply create_garbage_args_accepted_reply(void) {
+    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
+
+    accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
+    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+
+    Google__Protobuf__Empty *empty = malloc(sizeof(Google__Protobuf__Empty));
+    google__protobuf__empty__init(empty);
+    accepted_reply.default_case = empty;
+    
+    return accepted_reply;
+}
+
+/*
+* Builds and returns an AcceptedReply with SYSTEM_ERR AcceptStat.
+*/
+Rpc__AcceptedReply create_system_error_accepted_reply(void) {
+    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
+
+    accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
+    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+
+    Google__Protobuf__Empty *empty = malloc(sizeof(Google__Protobuf__Empty));
+    google__protobuf__empty__init(empty);
+    accepted_reply.default_case = empty;
+    
+    return accepted_reply;
+}
+
+/*
 * Frees up heap-allocated memory for procedure results or MismatchInfo in an AcceptedReply.
 */
 void clean_up_accepted_reply(Rpc__AcceptedReply accepted_reply) {
-    if(accepted_reply.stat == RPC__ACCEPT_STAT__PROG_UNAVAIL) {
-        free(accepted_reply.default_case);
-        return;
-    }
-
-    if(accepted_reply.stat == RPC__ACCEPT_STAT__PROG_MISMATCH) {
-        free(accepted_reply.mismatch_info);
-        return;
-    }
-
     if(accepted_reply.stat == RPC__ACCEPT_STAT__SUCCESS) {
         // clean up procedure results
         Google__Protobuf__Any *results = accepted_reply.results;
@@ -40,7 +86,17 @@ void clean_up_accepted_reply(Rpc__AcceptedReply accepted_reply) {
             free(results->value.data);
         }
         free(results);
+
+        return;
     }
+
+    if(accepted_reply.stat == RPC__ACCEPT_STAT__PROG_MISMATCH) {
+        free(accepted_reply.mismatch_info);
+        return;
+    }
+
+    // for all other AcceptStat's - PROG_UNAVAIL, GARBAGE_ARGS, etc. we only need to free the Empty default_case
+    free(accepted_reply.default_case);
 }
 
 /*
