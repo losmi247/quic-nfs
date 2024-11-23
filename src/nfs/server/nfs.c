@@ -318,7 +318,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     // absolute path of the looked up file is directory_path/file_name
     int file_absolute_path_length = strlen(directory_absolute_path) + 1 + strlen(file_name->filename);
     char *concatenation_buffer = malloc(file_absolute_path_length + 1);   // create a string with enough space, +1 for termination character
-    strcpy(concatenation_buffer, directory_absolute_path);    // move the directory absolute path there
+    strcpy(concatenation_buffer, directory_absolute_path);    // move the directory absolute path to concatenation_buffer
     concatenation_buffer = strcat(concatenation_buffer, "/"); // add a slash at end
     char *file_absolute_path = strcat(concatenation_buffer, file_name->filename);
     // create a NFS filehandle for the looked up file

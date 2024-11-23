@@ -64,6 +64,7 @@ int create_nfs_filehandle(char *absolute_path, unsigned char *nfs_filehandle, In
     // remember what absolute path this inode number corresponds to
     add_inode_mapping(inode_number, absolute_path, inode_number_cache);
 
+    // write inode_number followed by termination character '0'
     sprintf(nfs_filehandle, "%lu", inode_number);
     
     return 0;

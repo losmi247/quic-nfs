@@ -20,6 +20,8 @@ mount_and_nfs_server_files = ./src/nfs/server/mount.c ./src/nfs/server/nfs.c \
 	./src/nfs/server/mount_messages.c \
 	./src/nfs/server/nfs_messages.c
 
+tests_files = ./tests/test_common.c
+
 # implementations of file management functions
 file_management_library = ./src/file_management/file_management.c
 
@@ -50,7 +52,9 @@ repl: ./src/repl/repl.c
 	gcc ./src/repl/repl.c ${serialization_files} ${rpc_program_common_client_files} ${repl_clients} -I . -o ./build/repl -l protobuf-c
 
 test: ./tests/test_nfs.c
-	gcc ./tests/test_nfs.c ${serialization_files} ${rpc_program_common_client_files} ${repl_clients} -I . -o ./build/test_nfs -l criterion -l protobuf-c
+	gcc ./tests/test_nfs.c \
+		${serialization_files} ${rpc_program_common_client_files} ${repl_clients} ${tests_files} \
+		-I . -o ./build/test_nfs -l criterion -l protobuf-c
 
 clean:
 	rm -rf ./build/*
