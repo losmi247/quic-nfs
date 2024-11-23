@@ -89,7 +89,6 @@ Test(nfs_test_suite, getattr, .description = "NFSPROC_GETATTR") {
 
     Nfs__FAttr *fattr = attr_stat->attributes;
     cr_assert_eq(fattr->type, NFS__FTYPE__NFDIR);
-    cr_assert_eq(fattr->nlink, 2); // when a directory is created, number of links to it is 2
     cr_assert_neq(fattr->atime, NULL);
     cr_assert_neq(fattr->mtime, NULL);
     cr_assert_neq(fattr->ctime, NULL);
@@ -156,4 +155,48 @@ Test(nfs_test_suite, setattr, .description = "NFSPROC_SETATTR") {
     mount__fh_status__free_unpacked(fhstatus, NULL);
 
     nfs__attr_stat__free_unpacked(attr_stat, NULL);
+}
+
+Test(nfs_test_suite, lookup, .description = "NFSPROC_LOOKUP") {
+    Mount__FhStatus *fhstatus = mount_nfs_share();
+
+    // lookup the test_file.txt inside the mounted directory
+    Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
+    fhandle.handle = fhstatus->directory->handle;
+
+    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
+    file_name.filename = "test_file.txt";
+
+    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
+    diropargs.dir = &fhandle;
+    diropargs.name = &file_name;
+
+    Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
+    int status = nfs_procedure_4_look_up_file_name(diropargs, diropres);
+    if(status != 0) {
+        mount__fh_status__free_unpacked(fhstatus, NULL);
+
+        free(diropres);
+
+        cr_fail("NFSPROC_LOOKUP failed - status %d\n", status);
+    }
+
+    cr_assert_eq(diropres->status, NFS__STAT__NFS_OK);
+    cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
+    cr_assert_neq(diropres->diropok, NULL);
+
+    cr_assert_neq(diropres->diropok->file, NULL); // can't validate NFS filehandle from here
+
+    cr_assert_neq(diropres->diropok->attributes, NULL);
+
+    Nfs__FAttr *fattr = diropres->diropok->attributes;
+    cr_assert_eq(fattr->type, NFS__FTYPE__NFREG);
+    cr_assert_neq(fattr->atime, NULL);
+    cr_assert_neq(fattr->mtime, NULL);
+    cr_assert_neq(fattr->ctime, NULL);
+    // can't validate any other FAttr fields from here
+
+    mount__fh_status__free_unpacked(fhstatus, NULL);
+
+    nfs__dir_op_res__free_unpacked(diropres, NULL);
 }

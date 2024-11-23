@@ -35,11 +35,12 @@ void free_mount_list_entry(Mount__MountList *mount_list_entry) {
     free(mount_list_entry);
 }
 
-void cleanup_mount_list(Mount__MountList *list_head) {
-    if(list_head == NULL) {
-        return;
-    }
+void clean_up_mount_list(Mount__MountList *list_head) {
+    while(list_head != NULL) {
+        Mount__MountList *next = list_head->nextentry;
 
-    cleanup_mount_list(list_head->nextentry);
-    free_mount_list_entry(list_head);
+        free_mount_list_entry(list_head);
+
+        list_head = next;
+    }
 }
