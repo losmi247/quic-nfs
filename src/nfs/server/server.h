@@ -30,7 +30,7 @@
 #include "src/file_management/file_management.h"
 
 /*
-* Functions implemented by RPC programs.
+* Functions implemented by RPC programs (Mount and Nfs).
 */
 
 extern Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
@@ -38,12 +38,18 @@ extern Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedur
 extern Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
 /*
-* Mount+Nfs server state
+* Mount+Nfs server state.
 */
 
 extern int rpc_server_socket_fd;
 
 extern Mount__MountList *mount_list;
 extern InodeCache inode_cache;
+
+/*
+* General server functions used both in Mount and Nfs.
+*/
+
+int create_nfs_filehandle(char *absolute_path, unsigned char *nfs_filehandle, InodeCache *inode_number_cache);
 
 #endif /* server__header__INCLUDED */

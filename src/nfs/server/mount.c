@@ -42,29 +42,6 @@ int is_directory_exported(const char *absolute_path) {
 }
 
 /*
-* Creates a NFS filehandle for the given absolute path of a directory being mounted, and returns
-* it in the 'nfs_filehandle' argument.
-*
-* Returns 0 on success and > 0 on failure. TODO: concatenate to this a UNIX timestamp
-*/
-int create_nfs_filehandle(char *directory_absolute_path, unsigned char *nfs_filehandle) {
-    if(directory_absolute_path == NULL) {
-        nfs_filehandle = NULL;
-        return 1;
-    }
-
-    ino_t inode_number;
-    get_inode_number(directory_absolute_path, &inode_number);
-
-    // remember what absolute path this inode number corresponds to
-    add_inode_mapping(inode_number, directory_absolute_path, &inode_cache);
-
-    sprintf(nfs_filehandle, "%lu", inode_number);
-    
-    return 0;
-}
-
-/*
 * Runs the MOUNTPROC_NULL procedure (0).
 */
 Rpc__AcceptedReply serve_mnt_procedure_0_do_nothing(Google__Protobuf__Any *parameters) {
@@ -92,7 +69,7 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
 
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "mount/DirPath") != 0) {
-        fprintf(stderr, "serve_procedure_1_add_mount_entry: Expected mount/DirPath but received %s\n", parameters->type_url);
+        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: Expected mount/DirPath but received %s\n", parameters->type_url);
         accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
         accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
         return accepted_reply;
@@ -102,13 +79,13 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
     // if valid, this DirPath is freed at server shutdown as part of mountlist cleanup - it needs to be persisted here at server!
     Mount__DirPath *dirpath = mount__dir_path__unpack(NULL, parameters->value.len, parameters->value.data);
     if(dirpath == NULL) {
-        fprintf(stderr, "serve_procedure_1_add_mount_entry: Failed to unpack DirPath\n");
+        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: Failed to unpack DirPath\n");
         accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
         accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
         return accepted_reply;
     }
     if(dirpath->path == NULL) {
-        fprintf(stderr, "serve_procedure_1_add_mount_entry: DirPath->path is null\n");
+        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: DirPath->path is null\n");
 
         mount__dir_path__free_unpacked(dirpath, NULL);
 
@@ -119,7 +96,7 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
 
     // check the server has exported this directory for NFS
     if(!is_directory_exported(dirpath->path)) {
-        fprintf(stderr, "serve_procedure_1_add_mount_entry: directory %s not exported for NFS\n", dirpath->path);
+        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: directory %s not exported for NFS\n", dirpath->path);
 
         mount__dir_path__free_unpacked(dirpath, NULL);
 
@@ -128,13 +105,15 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
         return accepted_reply;
     }
 
-    // create a file handle for this directory
-    uint8_t *filehandle = malloc(sizeof(uint8_t) * 32);
-    int error_code = create_nfs_filehandle(dirpath->path, filehandle);
+    // create a NFS file handle for this directory
+    uint8_t *directory_nfs_filehandle = malloc(sizeof(uint8_t) * FHSIZE);
+    int error_code = create_nfs_filehandle(dirpath->path, directory_nfs_filehandle, &inode_cache);
     if(error_code > 0) {
-        fprintf(stderr, "serve_procedure_1_add_mount_entry: creation of nfs filehandle failed with error code %d \n", error_code);
+        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: creation of nfs filehandle failed with error code %d \n", error_code);
 
         mount__dir_path__free_unpacked(dirpath, NULL);
+
+        free(directory_nfs_filehandle);
 
         accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
         accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
@@ -151,8 +130,8 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
     fh_status.fhstatus_body_case = MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY;
 
     Mount__FHandle fhandle = MOUNT__FHANDLE__INIT;
-    fhandle.handle.data = filehandle;
-    fhandle.handle.len = strlen(filehandle) + 1; // +1 for the null termination!
+    fhandle.handle.data = directory_nfs_filehandle;
+    fhandle.handle.len = strlen(directory_nfs_filehandle) + 1; // +1 for the null termination!
 
     fh_status.directory = &fhandle;
 

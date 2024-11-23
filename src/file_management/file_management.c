@@ -50,8 +50,13 @@ Nfs__FType decode_file_type(mode_t st_mode) {
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
     struct stat file_stat;
     if(stat(absolute_path, &file_stat) < 0) {
-        perror("Failed retrieving file stats");
-        return 2;
+        char *msg = malloc(sizeof(char) * 100);
+        snprintf(msg, 100, "Failed retrieving file stats for file with absolute path '%s'", absolute_path);
+        perror(msg);
+
+        free(msg);
+
+        return 1;
     }
 
     fattr->type = decode_file_type(file_stat.st_mode);

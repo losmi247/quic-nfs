@@ -11,6 +11,9 @@ RUN mkdir -p /nfs_share
 # mark /nfs_share as exported
 RUN touch exports && \
     echo "/nfs_share *(rw)" >> ./exports
+# create a file inside it for testing purposes
+RUN touch /nfs_share/test_file.txt && \
+    echo "test_content" >> /nfs_share/test_file.txt
 
 RUN chmod +x ./build/mount_and_nfs_server
 CMD ["./build/mount_and_nfs_server"]

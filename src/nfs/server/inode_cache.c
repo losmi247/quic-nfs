@@ -28,3 +28,16 @@ char *get_absolute_path_from_inode_number(ino_t inode_number, InodeCache head) {
 
     return NULL;
 }
+
+/*
+* Deallocates all inode mappings in the given inode cache.
+*/
+void clean_up_inode_cache(InodeCache inode_cache) {
+    while(inode_cache != NULL) {
+        struct InodeCacheMapping *next = inode_cache->next;
+
+        free(inode_cache);
+
+        inode_cache = next;
+    }
+}
