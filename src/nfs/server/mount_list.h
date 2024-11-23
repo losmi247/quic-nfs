@@ -1,5 +1,5 @@
 #ifndef mount_list__header__INCLUDED
-#define mount_list__header__INCLUDEd
+#define mount_list__header__INCLUDED
 
 #include "src/serialization/mount/mount.pb-c.h"
 

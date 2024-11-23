@@ -4,13 +4,13 @@
 * Given the absolute path of a directory or a file, places its inode number in 
 * 'inode_number' argument. 
 *
-* Returns 0 on success, and > 0 on failure.
+* Returns 0 on success, and > 0 on failure (no such file or directory usually).
 */
 int get_inode_number(char *absolute_path, ino_t *inode_number) {
     struct stat file_stat;
     if(stat(absolute_path, &file_stat) < 0) {
         perror("Failed retrieving file stats");
-        return 2;
+        return 1;
     }
 
     *inode_number = file_stat.st_ino;

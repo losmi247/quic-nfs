@@ -1,5 +1,7 @@
 #include "server.h"
 
+#include "mount_messages.h"
+
 /*
 * Mount RPC program implementation.
 */
@@ -45,34 +47,18 @@ int is_directory_exported(const char *absolute_path) {
 * Runs the MOUNTPROC_NULL procedure (0).
 */
 Rpc__AcceptedReply serve_mnt_procedure_0_do_nothing(Google__Protobuf__Any *parameters) {
-    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
-    accepted_reply.stat = RPC__ACCEPT_STAT__SUCCESS;
-    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
-
-    // return an Any with empty buffer inside it
-    Google__Protobuf__Any *results = malloc(sizeof(Google__Protobuf__Any));
-    google__protobuf__any__init(results);
-    results->type_url = "mount/None";
-    results->value.data = NULL;
-    results->value.len = 0;
-
-    accepted_reply.results = results;
-
-    return accepted_reply;
+    return wrap_procedure_results_in_successful_accepted_reply(0, NULL, "mount/None");
 }
 
 /*
 * Runs the MOUNTPROC_MNT procedure (1).
 */
 Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *parameters) {
-    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
-
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "mount/DirPath") != 0) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: Expected mount/DirPath but received %s\n", parameters->type_url);
-        accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
-        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
-        return accepted_reply;
+        
+        return create_garbage_args_accepted_reply();
     }
 
     // deserialize parameters
@@ -80,43 +66,66 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
     Mount__DirPath *dirpath = mount__dir_path__unpack(NULL, parameters->value.len, parameters->value.data);
     if(dirpath == NULL) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: Failed to unpack DirPath\n");
-        accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
-        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
-        return accepted_reply;
+        
+        return create_garbage_args_accepted_reply();
     }
     if(dirpath->path == NULL) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: DirPath->path is null\n");
 
         mount__dir_path__free_unpacked(dirpath, NULL);
 
-        accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
-        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
-        return accepted_reply;
+        return create_garbage_args_accepted_reply();
     }
 
-    // check the server has exported this directory for NFS
     if(!is_directory_exported(dirpath->path)) {
+        // the server has not exported this directory for NFS - give a FhStatus with status > 0 to indicate to client that they can not mount this directory
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: directory %s not exported for NFS\n", dirpath->path);
+
+        Mount__FhStatus fh_status = create_default_case_fh_status(1);
+
+        // serialize the procedure results
+        size_t fh_status_size = mount__fh_status__get_packed_size(&fh_status);
+        uint8_t *fh_status_buffer = malloc(fh_status_size);
+        mount__fh_status__pack(&fh_status, fh_status_buffer);
+
+        free(fh_status.default_case);
+
+        Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
 
         mount__dir_path__free_unpacked(dirpath, NULL);
 
-        accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
-        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
         return accepted_reply;
     }
 
     // create a NFS file handle for this directory
     uint8_t *directory_nfs_filehandle = malloc(sizeof(uint8_t) * FHSIZE);
     int error_code = create_nfs_filehandle(dirpath->path, directory_nfs_filehandle, &inode_cache);
-    if(error_code > 0) {
+    if(error_code == 1) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: creation of nfs filehandle failed with error code %d \n", error_code);
 
         mount__dir_path__free_unpacked(dirpath, NULL);
 
         free(directory_nfs_filehandle);
 
-        accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
-        accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+        return create_system_error_accepted_reply();
+    }
+    if(error_code == 2) {
+        // the directory that client wants to mount does not exist
+        Mount__FhStatus fh_status = create_default_case_fh_status(2);
+
+        // serialize the procedure results
+        size_t fh_status_size = mount__fh_status__get_packed_size(&fh_status);
+        uint8_t *fh_status_buffer = malloc(fh_status_size);
+        mount__fh_status__pack(&fh_status, fh_status_buffer);
+
+        free(fh_status.default_case);
+
+        Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
+
+        mount__dir_path__free_unpacked(dirpath, NULL);
+
+        free(directory_nfs_filehandle);
+
         return accepted_reply;
     }
 
@@ -140,21 +149,9 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
     uint8_t *fh_status_buffer = malloc(fh_status_size);
     mount__fh_status__pack(&fh_status, fh_status_buffer);
 
-    // wrap procedure results into Any
-    Google__Protobuf__Any *results = malloc(sizeof(Google__Protobuf__Any));
-    google__protobuf__any__init(results);
-    results->type_url = "mount/FhStatus";
-    results->value.data = fh_status_buffer;
-    results->value.len = fh_status_size;
-
-    // complete the AcceptedReply
-    accepted_reply.stat = RPC__ACCEPT_STAT__SUCCESS;
-    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
-    accepted_reply.results = results;
-
     // do not mount__dir_path__free_unpacked(dirpath, NULL); here - it will be freed when mount list is cleaned up on shut down
 
-    return accepted_reply;
+    return wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
 }
 
 /*

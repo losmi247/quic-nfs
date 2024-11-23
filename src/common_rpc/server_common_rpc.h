@@ -8,6 +8,12 @@
 * Functions implemented in server_common_rpc.c file.
 */
 
+Rpc__AcceptedReply wrap_procedure_results_in_successful_accepted_reply(size_t results_size, uint8_t *results_buffer, char *results_type);
+
+Rpc__AcceptedReply create_garbage_args_accepted_reply(void);
+
+Rpc__AcceptedReply create_system_error_accepted_reply(void);
+
 int send_rpc_accepted_reply_message(int rpc_client_socket_fd, Rpc__AcceptedReply accepted_reply);
 
 int send_rpc_rejected_reply_message(int rpc_client_socket_fd, Rpc__ReplyStat reply_stat, Rpc__RejectStat reject_stat, Rpc__MismatchInfo *mismatch_info, Rpc__AuthStat *auth_stat);

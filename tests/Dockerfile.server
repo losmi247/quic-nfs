@@ -10,10 +10,13 @@ WORKDIR /quic-nfs
 RUN mkdir -p /nfs_share
 # mark /nfs_share as exported
 RUN touch exports && \
-    echo "/nfs_share *(rw)" >> ./exports
-# create a file inside it for testing purposes
+    echo "/nfs_share *(rw)" > ./exports
+
+# create some files and directories for testing purposes
 RUN touch /nfs_share/test_file.txt && \
     echo "test_content" >> /nfs_share/test_file.txt
+RUN mkdir -p /existent_but_non_exported_directory
+RUN echo "/exported_but_non_existent_directory *(rw)" >> ./exports
 
 RUN chmod +x ./build/mount_and_nfs_server
 CMD ["./build/mount_and_nfs_server"]
