@@ -77,7 +77,7 @@ Test(nfs_test_suite, getattr_ok, .description = "NFSPROC_GETATTR ok") {
 
     // now get file attributes
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    fhandle.handle = fhstatus->directory->handle;
+    fhandle.nfs_filehandle = fhstatus->directory->nfs_filehandle;
 
     Nfs__AttrStat *attr_stat = malloc(sizeof(Nfs__AttrStat));
     int status = nfs_procedure_1_get_file_attributes(fhandle, attr_stat);
@@ -101,11 +101,11 @@ Test(nfs_test_suite, getattr_no_such_file_or_directory, .description = "NFSPROC_
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
     // pick a nonexistent inode number in this mounted directory
-    char nfs_filehandle[FHSIZE];
-    sprintf(nfs_filehandle, "%d", 123456789);
+    NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
+    nfs_filehandle.inode_number = 12345678912345;
+
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    fhandle.handle.data = (uint8_t *) nfs_filehandle;
-    fhandle.handle.len = strlen(nfs_filehandle) + 1; // +1 for null termination
+    fhandle.nfs_filehandle = &nfs_filehandle;
 
     Nfs__AttrStat *attr_stat = malloc(sizeof(Nfs__AttrStat));
     int status = nfs_procedure_1_get_file_attributes(fhandle, attr_stat);
@@ -130,7 +130,7 @@ Test(nfs_test_suite, setattr_ok, .description = "NFSPROC_SETATTR ok") {
 
     // now update attributes of /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    fhandle.handle = fhstatus->directory->handle;
+    fhandle.nfs_filehandle = fhstatus->directory->nfs_filehandle;
 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = 0;
@@ -181,11 +181,11 @@ Test(nfs_test_suite, setattr_no_such_file_or_directory, .description = "NFSPROC_
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
     // pick a nonexistent inode number in this mounted directory and try to update its attributes
-    char nfs_filehandle[FHSIZE];
-    sprintf(nfs_filehandle, "%d", 123456789);
+    NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
+    nfs_filehandle.inode_number = 12345678912345;
+
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    fhandle.handle.data = (uint8_t *) nfs_filehandle;
-    fhandle.handle.len = strlen(nfs_filehandle) + 1; // +1 for null termination
+    fhandle.nfs_filehandle = &nfs_filehandle;
 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = 0;
@@ -227,7 +227,7 @@ Test(nfs_test_suite, lookup_ok, .description = "NFSPROC_LOOKUP ok") {
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    fhandle.handle = fhstatus->directory->handle;
+    fhandle.nfs_filehandle = fhstatus->directory->nfs_filehandle;
 
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = "test_file.txt";
@@ -250,7 +250,8 @@ Test(nfs_test_suite, lookup_ok, .description = "NFSPROC_LOOKUP ok") {
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
     cr_assert_neq(diropres->diropok, NULL);
 
-    cr_assert_neq(diropres->diropok->file, NULL); // can't validate NFS filehandle from here
+    cr_assert_neq(diropres->diropok->file, NULL);
+    cr_assert_neq(diropres->diropok->file->nfs_filehandle, NULL);     // can't validate NFS filehandle contents as a client
     validate_fattr(diropres->diropok->attributes, NFS__FTYPE__NFREG); // can't validate any other attributes
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
@@ -261,11 +262,11 @@ Test(nfs_test_suite, lookup_no_such_directory, .description = "NFSPROC_LOOKUP no
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
     // lookup a test_file.txt inside a different nonexistent directory
-    char nfs_filehandle[FHSIZE];
-    sprintf(nfs_filehandle, "%d", 123456789);
+    NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
+    nfs_filehandle.inode_number = 12345678912345;
+
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    fhandle.handle.data = (uint8_t *) nfs_filehandle;
-    fhandle.handle.len = strlen(nfs_filehandle) + 1; // +1 for null termination
+    fhandle.nfs_filehandle = &nfs_filehandle;
 
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = "test_file.txt";
@@ -297,7 +298,7 @@ Test(nfs_test_suite, lookup_no_such_file_or_directory, .description = "NFSPROC_L
 
     // lookup a nonexistent file inside a this mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    fhandle.handle = fhstatus->directory->handle;
+    fhandle.nfs_filehandle = fhstatus->directory->nfs_filehandle;
 
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = "nonexistent_file.txt";

@@ -15,6 +15,7 @@ PROTOBUF_C__BEGIN_DECLS
 #endif
 
 #include "src/serialization/google_protos/empty.pb-c.h"
+#include "src/serialization/nfs_fh/nfs_fh.pb-c.h"
 
 typedef struct _Nfs__FHandle Nfs__FHandle;
 typedef struct _Nfs__TimeVal Nfs__TimeVal;
@@ -143,11 +144,11 @@ typedef enum _Nfs__FType {
 struct  _Nfs__FHandle
 {
   ProtobufCMessage base;
-  ProtobufCBinaryData handle;
+  NfsFh__NfsFileHandle *nfs_filehandle;
 };
 #define NFS__FHANDLE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nfs__fhandle__descriptor) \
-    , {0,NULL} }
+    , NULL }
 
 
 /*

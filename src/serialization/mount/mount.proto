@@ -2,13 +2,14 @@ syntax = "proto3";
 
 package mount;
 
-import "google/protobuf/empty.proto";
+import "src/serialization/google_protos/empty.proto";
+import "src/serialization/nfs_fh/nfs_fh.proto";
 
 // Types for Mount program arguments
 
 // File Handle
 message FHandle {
-    bytes handle = 1;
+    nfs_fh.NfsFileHandle nfs_filehandle = 1;
 }
 
 message FhStatus {

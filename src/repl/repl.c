@@ -24,7 +24,7 @@ int main() {
     if(status == 0) {
         fprintf(stdout, "Successfully executed MOUNTPROC_MNT\n");
         fprintf(stdout, "Status: %d\n", fhstatus->status);
-        fprintf(stdout, "Filehandle: %s\n", (unsigned char *) fhstatus->directory->handle.data);
+        fprintf(stdout, "Filehandle: inode number - %lu\n", fhstatus->directory->nfs_filehandle->inode_number);
 
         mount__fh_status__free_unpacked(fhstatus, NULL);
     }
@@ -35,7 +35,5 @@ int main() {
     }
 
 
-    //while(1) {
-        // wait for input, parse, and translate to procedures to be called
-    //}
+    // TODO (QNFS-22) - Implement the parser app that waits for Linux file management commands and translates them to sequences of RPCs
 }

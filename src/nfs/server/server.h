@@ -24,10 +24,9 @@
 
 #include "../nfs_common.h"
 
-#include "./mount_list.h"
-#include "./inode_cache.h"
-
-#include "src/file_management/file_management.h"
+#include "mount_list.h"
+#include "inode_cache.h"
+#include "file_management.h"
 
 /*
 * Functions implemented by RPC programs (Mount and Nfs).
@@ -45,11 +44,5 @@ extern int rpc_server_socket_fd;
 
 extern Mount__MountList *mount_list;
 extern InodeCache inode_cache;
-
-/*
-* General server functions used both in Mount and Nfs.
-*/
-
-int create_nfs_filehandle(char *absolute_path, unsigned char *nfs_filehandle, InodeCache *inode_number_cache);
 
 #endif /* server__header__INCLUDED */

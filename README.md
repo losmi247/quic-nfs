@@ -21,10 +21,6 @@ and:
 
 The Nfs and Mount server are implemented as a single process, to allowed efficient sharing of the cache containing mappings of inode numbers to files/directories.
 
-# Serialization
-
-After changing ```.proto``` files, regenerate serialization code by running ```make serialization_library```. After doing this, some of the ```*.pb-c.h``` files that use Empty and Any Google protobuf messages will will need to have e.g. ```#include "google/protobuf/any.pb-c.h"``` replaced with ```#include "src/serialization/google_protos/any.pb-c.h"```.
-
 # Tests
 
 Tests are written https://github.com/Snaipe/Criterion testing framework. 

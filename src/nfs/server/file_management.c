@@ -19,6 +19,36 @@ int get_inode_number(char *absolute_path, ino_t *inode_number) {
 }
 
 /*
+* Given an initialized NfsFh__NfsFileHandle, fills its fields to make it a new filehandle for the given absolute path 
+* (either a directory or a regular file).
+* Then it adds a mapping to the inode cache to remember what absolute path the inode number corresponds to, using the 
+* inode cache given in 'inode_number_cache' argument.
+*
+* Returns 0 on success and > 0 on failure.
+*
+* TODO (QNFS-19): concatenate to this a UNIX timestamp
+*/
+int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehandle, InodeCache *inode_number_cache) {
+    if(absolute_path == NULL) {
+        return 1;
+    }
+
+    ino_t inode_number;
+    int error_code = get_inode_number(absolute_path, &inode_number);
+    if(error_code > 0) {
+        // we couldn't get inode number of file/directory at this absolute path - it doesn't exist
+        return 2;
+    }
+
+    // remember what absolute path this inode number corresponds to
+    add_inode_mapping(inode_number, absolute_path, inode_number_cache);
+
+    nfs_filehandle->inode_number = inode_number;
+    
+    return 0;
+}
+
+/*
 * Reads out the file type from the mode.
 */
 Nfs__FType decode_file_type(mode_t st_mode) {

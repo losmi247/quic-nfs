@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package nfs_fh;
+
+message NfsFileHandle {
+    uint64 inode_number = 1;     // 8 bytes
+                                 // 24 bytes, left empty for now
+}

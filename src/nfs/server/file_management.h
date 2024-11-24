@@ -16,7 +16,11 @@
 
 #include "src/serialization/nfs/nfs.pb-c.h"
 
+#include "inode_cache.h"
+
 int get_inode_number(char *absolute_path, ino_t *inode_number);
+
+int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehandle, InodeCache *inode_number_cache);
 
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr);
 

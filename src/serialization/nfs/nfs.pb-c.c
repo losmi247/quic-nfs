@@ -685,20 +685,20 @@ void   nfs__read_res__free_unpacked
 static const ProtobufCFieldDescriptor nfs__fhandle__field_descriptors[1] =
 {
   {
-    "handle",
+    "nfs_filehandle",
     1,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BYTES,
+    PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__FHandle, handle),
-    NULL,
+    offsetof(Nfs__FHandle, nfs_filehandle),
+    &nfs_fh__nfs_file_handle__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
 static const unsigned nfs__fhandle__field_indices_by_name[] = {
-  0,   /* field[0] = handle */
+  0,   /* field[0] = nfs_filehandle */
 };
 static const ProtobufCIntRange nfs__fhandle__number_ranges[1 + 1] =
 {
