@@ -15,6 +15,7 @@ PROTOBUF_C__BEGIN_DECLS
 #endif
 
 #include "src/serialization/google_protos/empty.pb-c.h"
+#include "src/serialization/nfs_fh/nfs_fh.pb-c.h"
 
 typedef struct _Mount__FHandle Mount__FHandle;
 typedef struct _Mount__FhStatus Mount__FhStatus;
@@ -36,11 +37,11 @@ typedef struct _Mount__ExportList Mount__ExportList;
 struct  _Mount__FHandle
 {
   ProtobufCMessage base;
-  ProtobufCBinaryData handle;
+  NfsFh__NfsFileHandle *nfs_filehandle;
 };
 #define MOUNT__FHANDLE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&mount__fhandle__descriptor) \
-    , {0,NULL} }
+    , NULL }
 
 
 typedef enum {

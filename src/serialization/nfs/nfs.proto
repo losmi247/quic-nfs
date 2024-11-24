@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package nfs;
 
-import "google/protobuf/empty.proto";
-
+import "src/serialization/google_protos/empty.proto";
+import "src/serialization/nfs_fh/nfs_fh.proto";
 
 /*
 * Basic NFS data types
@@ -41,7 +41,7 @@ enum FType {
 
 // File Handle
 message FHandle {
-    bytes handle = 1;
+    nfs_fh.NfsFileHandle nfs_filehandle = 1;
 }
 
 // Structure for Unix timestamp

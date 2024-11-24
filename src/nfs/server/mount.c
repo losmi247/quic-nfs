@@ -98,14 +98,12 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
     }
 
     // create a NFS file handle for this directory
-    uint8_t *directory_nfs_filehandle = malloc(sizeof(uint8_t) * FHSIZE);
-    int error_code = create_nfs_filehandle(dirpath->path, directory_nfs_filehandle, &inode_cache);
+    NfsFh__NfsFileHandle directory_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
+    int error_code = create_nfs_filehandle(dirpath->path, &directory_nfs_filehandle, &inode_cache);
     if(error_code == 1) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: creation of nfs filehandle failed with error code %d \n", error_code);
 
         mount__dir_path__free_unpacked(dirpath, NULL);
-
-        free(directory_nfs_filehandle);
 
         return create_system_error_accepted_reply();
     }
@@ -124,13 +122,11 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
 
         mount__dir_path__free_unpacked(dirpath, NULL);
 
-        free(directory_nfs_filehandle);
-
         return accepted_reply;
     }
 
     // create a new mount entry - pass *dirpath instead of dirpath so that we are able to free later
-    Mount__MountList *new_mount_entry = create_new_mount_entry(strdup("client-hostname"), *dirpath); // replace hostname with actual client hostname when available
+    Mount__MountList *new_mount_entry = create_new_mount_entry(strdup("client-hostname"), *dirpath); // TODO (QNFS-20): replace hostname with actual client hostname when available
     add_mount_entry(&mount_list, new_mount_entry);
 
     // build the procedure results
@@ -139,8 +135,7 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
     fh_status.fhstatus_body_case = MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY;
 
     Mount__FHandle fhandle = MOUNT__FHANDLE__INIT;
-    fhandle.handle.data = directory_nfs_filehandle;
-    fhandle.handle.len = strlen(directory_nfs_filehandle) + 1; // +1 for the null termination!
+    fhandle.nfs_filehandle = &directory_nfs_filehandle;
 
     fh_status.directory = &fhandle;
 
@@ -149,7 +144,7 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
     uint8_t *fh_status_buffer = malloc(fh_status_size);
     mount__fh_status__pack(&fh_status, fh_status_buffer);
 
-    // do not mount__dir_path__free_unpacked(dirpath, NULL); here - it will be freed when mount list is cleaned up on shut down
+    // do not mount__dir_path__free_unpacked(dirpath, NULL); here - it will be freed when mount list is cleaned up on server shut down
 
     return wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
 }

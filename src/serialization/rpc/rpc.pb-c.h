@@ -97,9 +97,6 @@ typedef enum _Rpc__AuthStat {
 
 /* --- messages --- */
 
-/*
- * Generic CallBody to handle any program-specific procedures
- */
 struct  _Rpc__CallBody
 {
   ProtobufCMessage base;
@@ -132,9 +129,6 @@ struct  _Rpc__CallBody
     , 0, 0, 0, 0, NULL }
 
 
-/*
- * MismatchInfo message definition (for AcceptedReply and RejectedReply)
- */
 struct  _Rpc__MismatchInfo
 {
   ProtobufCMessage base;
@@ -154,9 +148,6 @@ typedef enum {
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__ACCEPTED_REPLY__REPLY_DATA)
 } Rpc__AcceptedReply__ReplyDataCase;
 
-/*
- * AcceptedReply message definition
- */
 struct  _Rpc__AcceptedReply
 {
   ProtobufCMessage base;
@@ -192,9 +183,6 @@ typedef enum {
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__REJECTED_REPLY__REPLY_DATA)
 } Rpc__RejectedReply__ReplyDataCase;
 
-/*
- * RejectedReply message definition
- */
 struct  _Rpc__RejectedReply
 {
   ProtobufCMessage base;
@@ -223,9 +211,6 @@ typedef enum {
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__REPLY_BODY__REPLY)
 } Rpc__ReplyBody__ReplyCase;
 
-/*
- * ReplyBody message definition
- */
 struct  _Rpc__ReplyBody
 {
   ProtobufCMessage base;
@@ -254,9 +239,6 @@ typedef enum {
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__RPC_MSG__BODY)
 } Rpc__RpcMsg__BodyCase;
 
-/*
- * RpcMsg message definition
- */
 struct  _Rpc__RpcMsg
 {
   ProtobufCMessage base;

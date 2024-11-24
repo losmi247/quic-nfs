@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package rpc;
 
-import "google/protobuf/any.proto";
-import "google/protobuf/empty.proto";
+import "src/serialization/google_protos/any.proto";
+import "src/serialization/google_protos/empty.proto";
 
 
 // Message types

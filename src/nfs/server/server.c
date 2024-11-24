@@ -33,44 +33,6 @@ Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t
 }
 
 /*
-* General server functions used by both Mount and Nfs.
-*/
-
-/*
-* Creates a NFS filehandle for the given absolute path (either a directory or a regular file),
-* and returns it in the 'nfs_filehandle' argument. Adds a mapping to the inode cache to remember
-* what absolute path the inode number corresponds to, using the inode cache given in 'inode_number_cache' argument.
-*
-* For example, MOUNTPROC_MNT uses 'create_nfs_filehandle' to create a NFS filehandle for the
-* directory being mounted, and NFSPROC_LOOKUP uses 'create_nfs_filehandle' to create a NFS filehandle
-* for the file being looked up.
-*
-* Returns 0 on success. On failure, returns > 0, and 
-* TODO: concatenate to this a UNIX timestamp
-*/
-int create_nfs_filehandle(char *absolute_path, unsigned char *nfs_filehandle, InodeCache *inode_number_cache) {
-    if(absolute_path == NULL) {
-        nfs_filehandle = NULL;
-        return 1;
-    }
-
-    ino_t inode_number;
-    int error_code = get_inode_number(absolute_path, &inode_number);
-    if(error_code > 0) {
-        // we couldn't get inode number of file/directory at this absolute path - it doesn't exist
-        return 2;
-    }
-
-    // remember what absolute path this inode number corresponds to
-    add_inode_mapping(inode_number, absolute_path, inode_number_cache);
-
-    // write inode_number followed by termination character '0'
-    sprintf(nfs_filehandle, "%lu", inode_number);
-    
-    return 0;
-}
-
-/*
 * Functions used in implementation of server body
 */
 

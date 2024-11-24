@@ -14,18 +14,19 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
     Mount__FhStatus *fhstatus = malloc(sizeof(Mount__FhStatus));
     int status = mount_procedure_1_add_mount_entry(dirpath, fhstatus);
     if (status == 0) {
-        // it's hard to validate the nfs filehandle at client, so we don't do it
-        //cr_assert_str_eq((unsigned char *) fhstatus->directory->handle.data, nfs_share_inode_number);
         cr_assert_eq(fhstatus->status, 0);
         cr_assert_eq(fhstatus->fhstatus_body_case, MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY);
-        cr_assert_neq((unsigned char *) fhstatus->directory, NULL);
+
+        cr_assert_neq(fhstatus->directory, NULL);
+        cr_assert_neq(fhstatus->directory->nfs_filehandle, NULL);
+        // it's hard to validate the nfs filehandle at client, so we don't do it
 
         return fhstatus;
     } else {
         free(fhstatus);
         cr_fail("MOUNTPROC_MNT failed - status %d\n", status);
 
-        return NULL; // do we need to do this after cr_fail?
+        return NULL;
     }
 }
 
@@ -40,5 +41,5 @@ void validate_fattr(Nfs__FAttr *fattr, Nfs__FType ftype) {
     cr_assert_neq(fattr->mtime, NULL);
     cr_assert_neq(fattr->ctime, NULL);
 
-    // other fields are difficult to validate
+    // other fattr fields are difficult to validate
 }

@@ -31,16 +31,16 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
         
         return create_garbage_args_accepted_reply();
     }
-    if(fhandle->handle.data == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: FHandle->handle.data is null\n");
+    if(fhandle->nfs_filehandle == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: FHandle->nfs_filehandle is null\n");
 
         nfs__fhandle__free_unpacked(fhandle, NULL);
 
         return create_garbage_args_accepted_reply();
     }
 
-    unsigned char *nfs_filehandle = fhandle->handle.data;
-    ino_t inode_number = strtol(nfs_filehandle, NULL, 10);
+    NfsFh__NfsFileHandle *nfs_filehandle = fhandle->nfs_filehandle;
+    ino_t inode_number = nfs_filehandle->inode_number;
 
     char *file_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
     if(file_absolute_path == NULL) {
@@ -121,8 +121,8 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
         return create_garbage_args_accepted_reply();
     }
     Nfs__FHandle *fhandle = sattrargs->file;
-    if(fhandle->handle.data == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: FHandle->handle.data is null\n");
+    if(fhandle->nfs_filehandle == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: FHandle->nfs_filehandle is null\n");
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
@@ -151,8 +151,9 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
         return create_garbage_args_accepted_reply();
     }
 
-    unsigned char *nfs_filehandle = fhandle->handle.data;
-    ino_t inode_number = strtol(nfs_filehandle, NULL, 10);
+    NfsFh__NfsFileHandle *nfs_filehandle = fhandle->nfs_filehandle;
+    ino_t inode_number = nfs_filehandle->inode_number;
+
     char *file_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
     if(file_absolute_path == NULL) {
         // we couldn't decode inode number back to a file/directory - we assume the client gave us a wrong NFS filehandle, i.e. no such file or directory
@@ -174,6 +175,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     }
 
     // update file attributes - -1 means don't update this attribute
+    // TODO (QNFS-21) - change this to either update all arguments or none (don't want a partial update)
     if(sattr->mode != -1 && chmod(file_absolute_path, sattr->mode) < 0) {
         perror("serve_nfs_procedure_2_set_file_attributes - Failed to update 'mode'");
 
@@ -188,7 +190,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
 
         return create_system_error_accepted_reply();
     }
-    if(sattr->size != -1 && truncate(file_absolute_path, sattr->size)) {
+    if(sattr->size != -1 && truncate(file_absolute_path, sattr->size) < 0) {
         perror("serve_nfs_procedure_2_set_file_attributes - Failed to update 'size'");
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
@@ -270,8 +272,8 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         return create_garbage_args_accepted_reply();
     }
     Nfs__FHandle *directory_fhandle = diropargs->dir;   // we are given the NFS filehandle of the directory containing the file
-    if(directory_fhandle->handle.data == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: FHandle->handle.data is null\n");
+    if(directory_fhandle->nfs_filehandle == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: FHandle->nfs_filehandle is null\n");
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
@@ -293,8 +295,9 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         return create_garbage_args_accepted_reply();
     }
 
-    unsigned char *directory_nfs_filehandle = directory_fhandle->handle.data;
-    ino_t inode_number = strtol(directory_nfs_filehandle, NULL, 10);
+    NfsFh__NfsFileHandle *directory_nfs_filehandle = directory_fhandle->nfs_filehandle;
+    ino_t inode_number = directory_nfs_filehandle->inode_number;
+
     char *directory_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
     if(directory_absolute_path == NULL) {
         // we couldn't decode inode number back to a file/directory - we assume the client gave us a wrong NFS filehandle, i.e. no such directory
@@ -322,14 +325,12 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     concatenation_buffer = strcat(concatenation_buffer, "/"); // add a slash at end
     char *file_absolute_path = strcat(concatenation_buffer, file_name->filename);
     // create a NFS filehandle for the looked up file
-    uint8_t *file_nfs_filehandle = malloc(sizeof(uint8_t) * FHSIZE);
-    int error_code = create_nfs_filehandle(file_absolute_path, file_nfs_filehandle, &inode_cache);
+    NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
+    int error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
     if(error_code == 1) {
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: creation of nfs filehandle failed with error code %d \n", error_code);
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
-
-        free(file_nfs_filehandle);
 
         free(concatenation_buffer);
 
@@ -354,16 +355,10 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
-        free(file_nfs_filehandle);
-
         free(concatenation_buffer);
 
         return accepted_reply;
     }
-
-    Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
-    file_fhandle.handle.data = file_nfs_filehandle;
-    file_fhandle.handle.len = strlen(file_nfs_filehandle) + 1; // +1 for the null termination!
 
     // get the attributes of the looked up file
     Nfs__FAttr fattr = NFS__FATTR__INIT;
@@ -373,8 +368,6 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: Failed getting file attributes with error code %d \n", error_code);
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
-
-        free(file_nfs_filehandle);
 
         free(concatenation_buffer);
 
@@ -386,6 +379,9 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     Nfs__DirOpRes diropres = NFS__DIR_OP_RES__INIT;
     diropres.status = NFS__STAT__NFS_OK;
     diropres.body_case = NFS__DIR_OP_RES__BODY_DIROPOK;
+
+    Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
+    file_fhandle.nfs_filehandle = &file_nfs_filehandle;
 
     Nfs__DirOpOk diropok = NFS__DIR_OP_OK__INIT;
     diropok.file = &file_fhandle;
@@ -401,8 +397,6 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
 
     nfs__dir_op_args__free_unpacked(diropargs, NULL);
-
-    free(file_nfs_filehandle);
 
     free(concatenation_buffer);
 
