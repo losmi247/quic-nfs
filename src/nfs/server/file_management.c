@@ -144,3 +144,50 @@ int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
 
     return 0;
 }
+
+/*
+* Reads up to 'byte_count' bytes from 'offset' in the file given by the absolute path, and places the
+* result into 'destination_buffer' (must be allocated at least 'byte_count' bytes) and
+* puts the number of bytes read into 'bytes_read'.
+*
+* Returns 0 on success and > 0 on failure.
+*
+* TODO (QNFS-25): make this function atomic, for use by multithreaded server
+*/
+int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, uint8_t *destination_buffer, size_t *bytes_read) {
+    if (file_absolute_path == NULL) {
+        return 1;
+    }
+
+    FILE *file = fopen(file_absolute_path, "rb");
+    if(file == NULL) {
+        char *msg = malloc(sizeof(char) * 20);
+        sprintf(msg, "Failed to open file at absolute path '%s' for reading", file_absolute_path);
+        perror(msg);
+
+        return 2;
+    }
+
+    if (fseek(file, offset, SEEK_SET) < 0) {
+        char *msg = malloc(sizeof(char) * 20);
+        sprintf(msg, "Failed to seek file at absolute path '%s' at offset %ld", file_absolute_path, offset);
+        perror(msg);
+
+        fclose(file);
+        
+        return 3;
+    }
+
+    // read up to byte_count bytes
+    *bytes_read = fread(destination_buffer, 1, byte_count, file);
+    // fread doesn't distinguish between error and end-of-file so we need to check
+    if(ferror(file)) {
+        fclose(file);
+
+        return 4;
+    }
+
+    fclose(file);
+
+    return 0;
+}

@@ -51,3 +51,29 @@ Nfs__DirOpRes *create_default_case_dir_op_res(Nfs__Stat non_nfs_ok_status) {
 
     return diropres;
 }
+
+/*
+* Takes a Nfs__Stat and if it's NFS__STAT__NFS_OK, creates an ReadRes message
+* with default case and that status.
+*
+* If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
+*
+* The user of this fuction takes the responsibility to free the ReadRes and Empty 
+* allocated in this function.
+*/
+Nfs__ReadRes *create_default_case_read_res(Nfs__Stat non_nfs_ok_status) {
+    if(non_nfs_ok_status == NFS__STAT__NFS_OK) {
+        return NULL;
+    }
+
+    Nfs__ReadRes *readres = malloc(sizeof(Nfs__ReadRes));
+    nfs__read_res__init(readres);
+    readres->status = non_nfs_ok_status;
+    readres->body_case = NFS__READ_RES__BODY_DEFAULT_CASE;
+
+    Google__Protobuf__Empty *empty = malloc(sizeof(Google__Protobuf__Empty));
+    google__protobuf__empty__init(empty);
+    readres->default_case = empty;
+
+    return readres;
+}

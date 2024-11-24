@@ -403,6 +403,136 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 }
 
 /*
+* Runs the NFSPROC_READ procedure (6).
+*/
+Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *parameters) {
+    // check parameters are of expected type for this procedure
+    if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/ReadArgs") != 0) {
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Expected nfs/ReadArgs but received %s\n", parameters->type_url);
+        
+        return create_garbage_args_accepted_reply();
+    }
+
+    // deserialize parameters
+    Nfs__ReadArgs *readargs = nfs__read_args__unpack(NULL, parameters->value.len, parameters->value.data);
+    if(readargs == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed to unpack ReadArgs\n");
+        
+        return create_garbage_args_accepted_reply();
+    }
+    if(readargs->file == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: 'file' in ReadArgs is NULL \n");
+
+        nfs__read_args__free_unpacked(readargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    Nfs__FHandle *file_fhandle = readargs->file;
+    if(file_fhandle->nfs_filehandle == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: FHandle->nfs_filehandle is null\n");
+
+        nfs__read_args__free_unpacked(readargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+
+    NfsFh__NfsFileHandle *file_nfs_filehandle = file_fhandle->nfs_filehandle;
+    ino_t inode_number = file_nfs_filehandle->inode_number;
+
+    char *file_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
+    if(file_absolute_path == NULL) {
+        // we couldn't decode inode number back to a file - we assume the client gave us a wrong NFS filehandle, i.e. no such file
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed to decode inode number %ld back to a file\n", inode_number);
+
+        // build the procedure results
+        Nfs__ReadRes *readres = create_default_case_read_res(NFS__STAT__NFSERR_NOENT);
+
+        // serialize the procedure results
+        size_t readres_size = nfs__read_res__get_packed_size(readres);
+        uint8_t *readres_buffer = malloc(readres_size);
+        nfs__read_res__pack(readres, readres_buffer);
+
+        nfs__read_args__free_unpacked(readargs, NULL);
+        free(readres->default_case);
+        free(readres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
+    }
+
+    // get the attributes of the looked up file
+    Nfs__FAttr fattr = NFS__FATTR__INIT;
+    int error_code = get_attributes(file_absolute_path, &fattr);
+    if(error_code > 0) {
+        // we failed getting attributes for this file
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed getting file attributes with error code %d \n", error_code);
+
+        nfs__read_args__free_unpacked(readargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+
+    // all file types except for directories can be read as files
+    if(fattr.type == NFS__FTYPE__NFDIR) {
+        // if the file is actually directory, return ReadRes with 'directory specified in a non-directory operation' status
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: a directory '%s' was specified for 'read' which is a non-directory operation\n", file_absolute_path);
+
+        // build the procedure results
+        Nfs__ReadRes *readres = create_default_case_read_res(NFS__STAT__NFSERR_ISDIR);
+
+        // serialize the procedure results
+        size_t readres_size = nfs__read_res__get_packed_size(readres);
+        uint8_t *readres_buffer = malloc(readres_size);
+        nfs__read_res__pack(readres, readres_buffer);
+
+        nfs__read_args__free_unpacked(readargs, NULL);
+        free(readres->default_case);
+        free(readres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
+    }
+
+    // read from the file
+    uint8_t *read_data = malloc(sizeof(uint8_t) * readargs->count);
+    size_t bytes_read;
+    error_code = read_from_file(file_absolute_path, readargs->offset, readargs->count, read_data, &bytes_read);
+    if(error_code > 0) {
+        // we failed to read from this file
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed to read from file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+
+        nfs__read_args__free_unpacked(readargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+    
+    // build the procedure results
+    Nfs__ReadRes readres = NFS__READ_RES__INIT;
+    readres.status = NFS__STAT__NFS_OK;
+    readres.body_case = NFS__READ_RES__BODY_READRESBODY;
+
+    Nfs__ReadResBody readresbody = NFS__READ_RES_BODY__INIT;
+    readresbody.attributes = &fattr;
+    readresbody.nfsdata.data = read_data;
+    readresbody.nfsdata.len = bytes_read;
+
+    // serialize the procedure results
+    size_t readres_size = nfs__read_res__get_packed_size(&readres);
+    uint8_t *readres_buffer = malloc(readres_size);
+    nfs__read_res__pack(&readres, readres_buffer);
+
+    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
+
+    nfs__read_args__free_unpacked(readargs, NULL);
+
+    free(fattr.atime);
+    free(fattr.mtime);
+    free(fattr.ctime);
+
+    return accepted_reply;
+}
+
+/*
 * Calls the appropriate procedure in the Nfs RPC program based on the procedure number.
 */
 Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {

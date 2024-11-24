@@ -435,7 +435,7 @@ struct  _Nfs__ReadResBody
 {
   ProtobufCMessage base;
   Nfs__FAttr *attributes;
-  ProtobufCBinaryData data;
+  ProtobufCBinaryData nfsdata;
 };
 #define NFS__READ_RES_BODY__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nfs__read_res_body__descriptor) \
@@ -444,7 +444,7 @@ struct  _Nfs__ReadResBody
 
 typedef enum {
   NFS__READ_RES__BODY__NOT_SET = 0,
-  NFS__READ_RES__BODY_NFSDATA = 2,
+  NFS__READ_RES__BODY_READRESBODY = 2,
   NFS__READ_RES__BODY_DEFAULT_CASE = 3
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__READ_RES__BODY)
 } Nfs__ReadRes__BodyCase;
@@ -461,7 +461,7 @@ struct  _Nfs__ReadRes
     /*
      * case NFS_OK
      */
-    Nfs__ReadResBody *nfsdata;
+    Nfs__ReadResBody *readresbody;
     /*
      * default case
      */
