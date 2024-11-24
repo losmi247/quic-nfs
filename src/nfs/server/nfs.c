@@ -563,6 +563,8 @@ Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number,
         case 4:
             return serve_nfs_procedure_4_look_up_file_name(parameters);
         case 5:
+        case 6:
+            return serve_nfs_procedure_6_read_from_file(parameters);
         default:
     }
 
