@@ -38,11 +38,11 @@ To run the tests:
 |  0  | NULL           | do nothing                                   |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  1  | GETATTR        | get attributes                               |   done &#10004;     |   done &#10004;       |   done &#10004;    | 
 |  2  | SETATTR        | set attributes                               |   done &#10004;     |   done &#10004;       |   done &#10004;    |
-|  3  | ROOT           | get root NFS fhandle                         |   obsolete          |                       |                    |
+|  3  | ROOT           | get root NFS fhandle                         |     obsolete        |     obsolete          |     obsolete       |
 |  4  | LOOKUP         | get NFS fhandle and attributes of a file     |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  5  | READLINK       | read from symbolic link                      |                     |                       |                    |
-|  6  | READ           | read from file                               |                     |                       |                    |
-|  7  | WRITECACHE     | write to cache                               |    NFSv3            |                       |                    |
+|  6  | READ           | read from file                               |   done &#10004;     |   done &#10004;       |   done &#10004;    |
+|  7  | WRITECACHE     | write to cache                               |      NFSv3          |     NFSv3             |        NFSv3       |
 |  8  | WRITE          | write to file                                |                     |                       |                    |
 |  9  | CREATE         | create file                                  |                     |                       |                    |
 | 10  | REMOVE         | remove file                                  |                     |                       |                    |

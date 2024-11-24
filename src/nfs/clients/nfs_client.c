@@ -11,9 +11,11 @@
 #include "src/serialization/rpc/rpc.pb-c.h"
 
 /*
-* Performs the NFSPROC_NULL Nfs procedure.
-* On successful run, returns 0 and places procedure result in 'result' (no result here).
-* On unsuccessful run, returns error code > 0.
+* Calls the NFSPROC_NULL Nfs procedure.
+* On successful run, returns 0 and places procedure result in 'result'.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
 */
 int nfs_procedure_0_do_nothing(void) {
     // no parameters, so an empty Any
@@ -28,7 +30,7 @@ int nfs_procedure_0_do_nothing(void) {
     }
     if(procedure_results == NULL) {
         fprintf(stderr, "NFSPROC_NULL: procedure_results is NULL - This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
-        return 1;
+        return -1;
     }
 
     // check that procedure results contain the right type
@@ -36,7 +38,7 @@ int nfs_procedure_0_do_nothing(void) {
         fprintf(stderr, "NFSPROC_NULL: Expected nfs/None but received %s\n", procedure_results->type_url);
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 2;
+        return -2;
     }
 
     rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
@@ -45,9 +47,11 @@ int nfs_procedure_0_do_nothing(void) {
 }
 
 /*
-* Performs the NFSPROC_GETATTR Nfs procedure.
+* Calls the NFSPROC_GETATTR Nfs procedure.
 * On successful run, returns 0 and places procedure result in 'result'.
-* On unsuccessful run, returns error code > 0.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
 *
 * In case this function returns 0, the user of this function takes responsibility 
 * to call 'nfs__attr_stat__free_unpacked(attrstat, NULL)' on the received Nfs__AttrStat eventually.
@@ -83,7 +87,7 @@ int nfs_procedure_1_get_file_attributes(Nfs__FHandle fhandle, Nfs__AttrStat *res
     if(procedure_results == NULL) {
         fprintf(stderr, "NFSPROC_GETATTR: procedure_results is NULL - This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 1;
+        return -1;
     }
 
     // check that procedure results contain the right type
@@ -91,7 +95,7 @@ int nfs_procedure_1_get_file_attributes(Nfs__FHandle fhandle, Nfs__AttrStat *res
         fprintf(stderr, "NFSPROC_GETATTR: Expected nfs/AttrStat but received %s\n", procedure_results->type_url);
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 2;
+        return -2;
     }
 
     // now we can unpack the AttrStat from the Any message
@@ -100,7 +104,7 @@ int nfs_procedure_1_get_file_attributes(Nfs__FHandle fhandle, Nfs__AttrStat *res
         fprintf(stderr, "NFSPROC_GETATTR: Failed to unpack Nfs__AttrStat\n");
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 3;
+        return -3;
     }
 
     // place attr_stat into the result
@@ -112,9 +116,11 @@ int nfs_procedure_1_get_file_attributes(Nfs__FHandle fhandle, Nfs__AttrStat *res
 }
 
 /*
-* Performs the NFSPROC_SETATTR Nfs procedure.
+* Calls the NFSPROC_SETATTR Nfs procedure.
 * On successful run, returns 0 and places procedure result in 'result'.
-* On unsuccessful run, returns error code > 0.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
 *
 * In case this function returns 0, the user of this function takes responsibility 
 * to call 'nfs__attr_stat__free_unpacked(attrstat, NULL)' on the received Nfs__AttrStat eventually.
@@ -150,7 +156,7 @@ int nfs_procedure_2_set_file_attributes(Nfs__SAttrArgs sattrargs, Nfs__AttrStat 
     if(procedure_results == NULL) {
         fprintf(stderr, "NFSPROC_SETATTR: procedure_results is NULL - This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 1;
+        return -1;
     }
 
     // check that procedure results contain the right type
@@ -158,7 +164,7 @@ int nfs_procedure_2_set_file_attributes(Nfs__SAttrArgs sattrargs, Nfs__AttrStat 
         fprintf(stderr, "NFSPROC_SETATTR: Expected nfs/AttrStat but received %s\n", procedure_results->type_url);
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 2;
+        return -2;
     }
 
     // now we can unpack the AttrStat from the Any message
@@ -167,7 +173,7 @@ int nfs_procedure_2_set_file_attributes(Nfs__SAttrArgs sattrargs, Nfs__AttrStat 
         fprintf(stderr, "NFSPROC_SETATTR: Failed to unpack Nfs__AttrStat\n");
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 3;
+        return -3;
     }
 
     // place attr_stat into the result
@@ -179,9 +185,11 @@ int nfs_procedure_2_set_file_attributes(Nfs__SAttrArgs sattrargs, Nfs__AttrStat 
 }
 
 /*
-* Performs the NFSPROC_LOOKUP Nfs procedure.
+* Calls the NFSPROC_LOOKUP Nfs procedure.
 * On successful run, returns 0 and places procedure result in 'result'.
-* On unsuccessful run, returns error code > 0.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
 *
 * In case this function returns 0, the user of this function takes responsibility 
 * to call Nfs__dir_op_res__free_unpacked(diropres) on the received Nfs__DirOpRes eventually.
@@ -217,7 +225,7 @@ int nfs_procedure_4_look_up_file_name(Nfs__DirOpArgs diropargs, Nfs__DirOpRes *r
     if(procedure_results == NULL) {
         fprintf(stderr, "NFSPROC_LOOKUP: procedure_results is NULL - This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 1;
+        return -1;
     }
 
     // check that procedure results contain the right type
@@ -225,7 +233,7 @@ int nfs_procedure_4_look_up_file_name(Nfs__DirOpArgs diropargs, Nfs__DirOpRes *r
         fprintf(stderr, "NFSPROC_LOOKUP: Expected nfs/DirOpRes but received %s\n", procedure_results->type_url);
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 2;
+        return -2;
     }
 
     // now we can unpack the DirOpRes from the Any message
@@ -234,11 +242,80 @@ int nfs_procedure_4_look_up_file_name(Nfs__DirOpArgs diropargs, Nfs__DirOpRes *r
         fprintf(stderr, "NFSPROC_LOOKUP: Failed to unpack Nfs__DirOpRes\n");
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 3;
+        return -3;
     }
 
     // place diropres into the result
     *result = *diropres;
+
+    rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+
+    return 0;
+}
+
+/*
+* Calls the NFSPROC_READ Nfs procedure.
+* On successful run, returns 0 and places procedure result in 'result'.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
+*
+* In case this function returns 0, the user of this function takes responsibility 
+* to call Nfs__dir_op_res__free_unpacked(diropres) on the received Nfs__DirOpRes eventually.
+*/
+int nfs_procedure_6_read_from_file(Nfs__ReadArgs readargs, Nfs__ReadRes *result) {
+    // serialize the ReadArgs
+    size_t readargs_size = nfs__read_args__get_packed_size(&readargs);
+    uint8_t *readargs_buffer = malloc(readargs_size);
+    nfs__read_args__pack(&readargs, readargs_buffer);
+
+    // Any message to wrap ReadArgs
+    Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
+    parameters.type_url = "nfs/ReadArgs";
+    parameters.value.data = readargs_buffer;
+    parameters.value.len = readargs_size;
+
+    // send RPC call
+    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 6, parameters);
+    free(readargs_buffer);
+
+    // validate RPC reply
+    int error_code = validate_rpc_message_from_server(rpc_reply);
+    if(error_code > 0) {
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return error_code;
+    }
+
+    log_rpc_msg_info(rpc_reply);
+
+    // extract procedure results
+    Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
+    Google__Protobuf__Any *procedure_results = accepted_reply->results;
+    if(procedure_results == NULL) {
+        fprintf(stderr, "NFSPROC_READ: procedure_results is NULL - This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -1;
+    }
+
+    // check that procedure results contain the right type
+    if(procedure_results->type_url == NULL || strcmp(procedure_results->type_url, "nfs/ReadRes") != 0) {
+        fprintf(stderr, "NFSPROC_READ: Expected nfs/ReadRes but received %s\n", procedure_results->type_url);
+
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -2;
+    }
+
+    // now we can unpack the ReadRes from the Any message
+    Nfs__ReadRes *readres = nfs__read_res__unpack(NULL, procedure_results->value.len, procedure_results->value.data);
+    if(readres == NULL) {
+        fprintf(stderr, "NFSPROC_READ: Failed to unpack Nfs__ReadRes\n");
+
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -3;
+    }
+
+    // place readres into the result
+    *result = *readres;
 
     rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
 

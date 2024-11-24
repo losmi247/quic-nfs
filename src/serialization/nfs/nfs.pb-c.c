@@ -1594,12 +1594,12 @@ static const ProtobufCFieldDescriptor nfs__read_res_body__field_descriptors[2] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "data",
+    "nfsdata",
     2,
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_BYTES,
     0,   /* quantifier_offset */
-    offsetof(Nfs__ReadResBody, data),
+    offsetof(Nfs__ReadResBody, nfsdata),
     NULL,
     NULL,
     0,             /* flags */
@@ -1608,7 +1608,7 @@ static const ProtobufCFieldDescriptor nfs__read_res_body__field_descriptors[2] =
 };
 static const unsigned nfs__read_res_body__field_indices_by_name[] = {
   0,   /* field[0] = attributes */
-  1,   /* field[1] = data */
+  1,   /* field[1] = nfsdata */
 };
 static const ProtobufCIntRange nfs__read_res_body__number_ranges[1 + 1] =
 {
@@ -1645,12 +1645,12 @@ static const ProtobufCFieldDescriptor nfs__read_res__field_descriptors[3] =
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "nfsdata",
+    "readresbody",
     2,
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     offsetof(Nfs__ReadRes, body_case),
-    offsetof(Nfs__ReadRes, nfsdata),
+    offsetof(Nfs__ReadRes, readresbody),
     &nfs__read_res_body__descriptor,
     NULL,
     0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
@@ -1671,7 +1671,7 @@ static const ProtobufCFieldDescriptor nfs__read_res__field_descriptors[3] =
 };
 static const unsigned nfs__read_res__field_indices_by_name[] = {
   2,   /* field[2] = default_case */
-  1,   /* field[1] = nfsdata */
+  1,   /* field[1] = readresbody */
   0,   /* field[0] = status */
 };
 static const ProtobufCIntRange nfs__read_res__number_ranges[1 + 1] =

@@ -16,4 +16,6 @@ int nfs_procedure_2_set_file_attributes(Nfs__SAttrArgs sattrargs, Nfs__AttrStat 
 
 int nfs_procedure_4_look_up_file_name(Nfs__DirOpArgs diropargs, Nfs__DirOpRes *result);
 
+int nfs_procedure_6_read_from_file(Nfs__ReadArgs readargs, Nfs__ReadRes *result);
+
 #endif /* nfs_client__header__INCLUDED */

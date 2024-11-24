@@ -27,4 +27,6 @@ char *get_file_absolute_path(char *directory_absolute_path, char *file_name);
 
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr);
 
+int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, uint8_t *destination_buffer, size_t *bytes_read);
+
 #endif /* file_management__header__INCLUDED */

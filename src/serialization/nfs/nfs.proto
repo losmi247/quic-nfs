@@ -151,13 +151,13 @@ message ReadArgs {
 
     uint32 offset = 2;
     uint32 count = 3;
-    uint32 totalcount = 4;
+    uint32 totalcount = 4;  // unused
 }
 
 // Data read from a file, and file's attributes
 message ReadResBody {
     FAttr attributes = 1;
-    bytes data = 2;
+    bytes nfsdata = 2;
 }
 
 // Used for NFSPROC_READ results, to return the read data in case of NFS_OK
@@ -165,7 +165,7 @@ message ReadRes {
     Stat status = 1;
 
     oneof body {
-        ReadResBody nfsdata = 2;                // case NFS_OK
+        ReadResBody readresbody = 2;            // case NFS_OK
         google.protobuf.Empty default_case = 3; // default case
     }
 }

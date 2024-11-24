@@ -12,8 +12,10 @@
 
 /*
 * Performs the MOUNTPROC_NULL Mount procedure.
-* On successful run, returns 0 and places procedure result in 'result' (no result here).
-* On unsuccessful run, returns error code > 0.
+* On successful run, returns 0 and places procedure result in 'result'.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
 */
 int mount_procedure_0_do_nothing(void) {
     // no parameters, so an empty Any
@@ -28,7 +30,7 @@ int mount_procedure_0_do_nothing(void) {
     }
     if(procedure_results == NULL) {
         fprintf(stderr, "This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
-        return 1;
+        return -1;
     }
 
     // check that procedure results contain the right type
@@ -36,7 +38,7 @@ int mount_procedure_0_do_nothing(void) {
         fprintf(stderr, "MOUNTPROC_NULL: Expected mount/None but received %s\n", procedure_results->type_url);
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 2;
+        return -2;
     }
 
     rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
@@ -47,7 +49,9 @@ int mount_procedure_0_do_nothing(void) {
 /*
 * Performs the MOUNTPROC_MNT Mount procedure.
 * On successful run, returns 0 and places procedure result in 'result'.
-* On unsuccessful run, returns error code > 0.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
 *
 * In case this function returns 0, the user of this function takes responsibility 
 * to call 'mount__fh_status__free_unpacked(fh_status, NULL)' on the received Mount__FhStatus eventually.
@@ -83,7 +87,7 @@ int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *r
     if(procedure_results == NULL) {
         fprintf(stderr, "MOUNTPROC_MNT: This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 1;
+        return -1;
     }
 
     // check that procedure results contain the right type
@@ -91,7 +95,7 @@ int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *r
         fprintf(stderr, "MOUNTPROC_MNT: Expected mount/FhStatus but received %s\n", procedure_results->type_url);
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 2;
+        return -2;
     }
 
     // now we can unpack the FhStatus from the Any message
@@ -100,7 +104,7 @@ int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *r
         fprintf(stderr, "MOUNTPROC_MNT: Failed to unpack Mount__FhStatus\n");
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
-        return 3;
+        return -3;
     }
 
     // place fh_status into the result
@@ -110,29 +114,3 @@ int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *r
 
     return 0;
 }
-
-/*
-* Function to deep copy a protobuf FhStatus message.
-*
-* Returns a new instance of Mount__FhStatus (at different memory), identical to original
-* at all field values. Deep copying means recursive, so original->directory which is a pointer
-* (Mount_FHandle *) is also deep copied to a new Mount__FHandle instance, so that when 'original'
-* is freed, the deep copy continues living independently.
-*
-* The user of this deep copy takes the responsibility to call 'mount__fh_status__free_unpacked' on it eventually.
-*/
-// DEEP COPY TRICK - 1 SERIALIZATION + 1 DESERIALIZATION
-/*
-/*
-Mount__FhStatus* deep_copy_fh_status(const Mount__FhStatus *original) {
-    size_t packed_size = mount__fh_status__get_packed_size(original);
-    uint8_t *buffer = malloc(packed_size);
-    mount__fh_status__pack(original, buffer);
-
-    Mount__FhStatus *deep_copy = mount__fh_status__unpack(NULL, packed_size, buffer);
-
-    free(buffer);
-
-    return deep_copy;
-}
-*/
