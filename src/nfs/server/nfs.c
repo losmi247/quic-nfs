@@ -318,12 +318,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
 
-    // absolute path of the looked up file is directory_path/file_name
-    int file_absolute_path_length = strlen(directory_absolute_path) + 1 + strlen(file_name->filename);
-    char *concatenation_buffer = malloc(file_absolute_path_length + 1);   // create a string with enough space, +1 for termination character
-    strcpy(concatenation_buffer, directory_absolute_path);    // move the directory absolute path to concatenation_buffer
-    concatenation_buffer = strcat(concatenation_buffer, "/"); // add a slash at end
-    char *file_absolute_path = strcat(concatenation_buffer, file_name->filename);
+    char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
     // create a NFS filehandle for the looked up file
     NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
     int error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
@@ -332,7 +327,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
-        free(concatenation_buffer);
+        free(file_absolute_path);
 
         return create_system_error_accepted_reply();
     }
@@ -355,7 +350,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
-        free(concatenation_buffer);
+        free(file_absolute_path);
 
         return accepted_reply;
     }
@@ -369,7 +364,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
-        free(concatenation_buffer);
+        free(file_absolute_path);
 
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've created a NFS filehandle for this file (we successfully read stat.st_ino)
         return create_system_error_accepted_reply();
@@ -398,7 +393,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
     nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
-    free(concatenation_buffer);
+    free(file_absolute_path);
 
     free(fattr.atime);
     free(fattr.mtime);

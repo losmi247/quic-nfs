@@ -25,8 +25,6 @@ int get_inode_number(char *absolute_path, ino_t *inode_number) {
 * inode cache given in 'inode_number_cache' argument.
 *
 * Returns 0 on success and > 0 on failure.
-*
-* TODO (QNFS-19): concatenate to this a UNIX timestamp
 */
 int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehandle, InodeCache *inode_number_cache) {
     if(absolute_path == NULL) {
@@ -43,9 +41,33 @@ int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehan
     // remember what absolute path this inode number corresponds to
     add_inode_mapping(inode_number, absolute_path, inode_number_cache);
 
+    time_t unix_timestamp = time(NULL);
+
     nfs_filehandle->inode_number = inode_number;
+    nfs_filehandle->timestamp = unix_timestamp;
     
     return 0;
+}
+
+/*
+* Given the absolute path of the containing directory, and a file name of the file inside it,
+* returns the absolute path of that file.
+* The absolute path of the desired file is 'directory_absolute_path/file_name'.
+*
+* Returns NULL on failure.
+*/
+char *get_file_absolute_path(char *directory_absolute_path, char *file_name) {
+    if(directory_absolute_path == NULL || file_name == NULL) {
+        return NULL;
+    }
+
+    int file_absolute_path_length = strlen(directory_absolute_path) + 1 + strlen(file_name);
+    char *concatenation_buffer = malloc(file_absolute_path_length + 1);   // create a string with enough space, +1 for termination character
+
+    strcpy(concatenation_buffer, directory_absolute_path);    // move the directory absolute path to concatenation_buffer
+    concatenation_buffer = strcat(concatenation_buffer, "/"); // add a slash at end
+
+    return strcat(concatenation_buffer, file_name);
 }
 
 /*

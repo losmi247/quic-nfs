@@ -3,6 +3,7 @@ syntax = "proto3";
 package nfs_fh;
 
 message NfsFileHandle {
-    uint64 inode_number = 1;     // 8 bytes
-                                 // 24 bytes, left empty for now
+    uint64 inode_number = 1;    // 8 bytes
+    int64 timestamp = 2;        // 8 bytes
+                                // 16 bytes, left empty for now
 }
