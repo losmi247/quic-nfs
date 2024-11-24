@@ -36,6 +36,7 @@ void clean_up_inode_cache(InodeCache inode_cache) {
     while(inode_cache != NULL) {
         struct InodeCacheMapping *next = inode_cache->next;
 
+        free(inode_cache->absolute_path);
         free(inode_cache);
 
         inode_cache = next;

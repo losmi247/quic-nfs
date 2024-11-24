@@ -66,7 +66,7 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file - we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
-        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: Failed getting file attributes with error code %d \n", error_code);
+        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__fhandle__free_unpacked(fhandle, NULL);
 
@@ -217,7 +217,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file - we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
-        fprintf(stderr, "serve_procedure_2_set_file_attributes: Failed getting file attributes with error code %d \n", error_code);
+        fprintf(stderr, "serve_procedure_2_set_file_attributes: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
@@ -333,7 +333,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     }
     if(error_code == 2) {
         // the file that the client wants to look up in this directory does not exist
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: Failed getting file attributes with error code %d \n", error_code);
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         // build the procedure results
         Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_NOENT);
@@ -360,7 +360,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: Failed getting file attributes with error code %d \n", error_code);
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
@@ -393,7 +393,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
     nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
-    free(file_absolute_path);
+    // do not free(file_absolute_path) here - it is in the inode cache and will be freed when inode cache is freed on server shut down
 
     free(fattr.atime);
     free(fattr.mtime);
@@ -459,12 +459,12 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
         return wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
     }
 
-    // get the attributes of the looked up file
+    // get the attributes of the looked up file before the read
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed getting file attributes with error code %d \n", error_code);
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__read_args__free_unpacked(readargs, NULL);
 
@@ -505,6 +505,19 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
         return create_system_error_accepted_reply();
     }
+
+    // get the attributes of the looked up file after the read - this is what we return to client
+    Nfs__FAttr fattr_after_read = NFS__FATTR__INIT;
+    error_code = get_attributes(file_absolute_path, &fattr_after_read);
+    if(error_code > 0) {
+        // we failed getting attributes for this file
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+
+        nfs__read_args__free_unpacked(readargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
+        return create_system_error_accepted_reply();
+    }
     
     // build the procedure results
     Nfs__ReadRes readres = NFS__READ_RES__INIT;
@@ -512,9 +525,11 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     readres.body_case = NFS__READ_RES__BODY_READRESBODY;
 
     Nfs__ReadResBody readresbody = NFS__READ_RES_BODY__INIT;
-    readresbody.attributes = &fattr;
+    readresbody.attributes = &fattr_after_read;
     readresbody.nfsdata.data = read_data;
     readresbody.nfsdata.len = bytes_read;
+
+    readres.readresbody = &readresbody;
 
     // serialize the procedure results
     size_t readres_size = nfs__read_res__get_packed_size(&readres);

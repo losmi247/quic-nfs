@@ -168,7 +168,7 @@ int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, ui
         return 2;
     }
 
-    if (fseek(file, offset, SEEK_SET) < 0) {
+    if(fseek(file, offset, SEEK_SET) < 0) {
         char *msg = malloc(sizeof(char) * 20);
         sprintf(msg, "Failed to seek file at absolute path '%s' at offset %ld", file_absolute_path, offset);
         perror(msg);
