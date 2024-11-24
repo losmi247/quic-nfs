@@ -13,6 +13,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdint.h>
+#include <time.h>
 
 #include "src/serialization/nfs/nfs.pb-c.h"
 

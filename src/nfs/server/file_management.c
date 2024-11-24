@@ -25,8 +25,6 @@ int get_inode_number(char *absolute_path, ino_t *inode_number) {
 * inode cache given in 'inode_number_cache' argument.
 *
 * Returns 0 on success and > 0 on failure.
-*
-* TODO (QNFS-19): concatenate to this a UNIX timestamp
 */
 int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehandle, InodeCache *inode_number_cache) {
     if(absolute_path == NULL) {
@@ -43,7 +41,10 @@ int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehan
     // remember what absolute path this inode number corresponds to
     add_inode_mapping(inode_number, absolute_path, inode_number_cache);
 
+    time_t unix_timestamp = time(NULL);
+
     nfs_filehandle->inode_number = inode_number;
+    nfs_filehandle->timestamp = unix_timestamp;
     
     return 0;
 }
