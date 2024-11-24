@@ -49,6 +49,27 @@ int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehan
 }
 
 /*
+* Given the absolute path of the containing directory, and a file name of the file inside it,
+* returns the absolute path of that file.
+* The absolute path of the desired file is 'directory_absolute_path/file_name'.
+*
+* Returns NULL on failure.
+*/
+char *get_file_absolute_path(char *directory_absolute_path, char *file_name) {
+    if(directory_absolute_path == NULL || file_name == NULL) {
+        return NULL;
+    }
+
+    int file_absolute_path_length = strlen(directory_absolute_path) + 1 + strlen(file_name);
+    char *concatenation_buffer = malloc(file_absolute_path_length + 1);   // create a string with enough space, +1 for termination character
+
+    strcpy(concatenation_buffer, directory_absolute_path);    // move the directory absolute path to concatenation_buffer
+    concatenation_buffer = strcat(concatenation_buffer, "/"); // add a slash at end
+
+    return strcat(concatenation_buffer, file_name);
+}
+
+/*
 * Reads out the file type from the mode.
 */
 Nfs__FType decode_file_type(mode_t st_mode) {

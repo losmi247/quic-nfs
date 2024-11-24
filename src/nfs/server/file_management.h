@@ -22,6 +22,8 @@ int get_inode_number(char *absolute_path, ino_t *inode_number);
 
 int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehandle, InodeCache *inode_number_cache);
 
+char *get_file_absolute_path(char *directory_absolute_path, char *file_name);
+
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr);
 
 #endif /* file_management__header__INCLUDED */
