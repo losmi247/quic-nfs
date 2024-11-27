@@ -32,6 +32,11 @@ typedef struct _Nfs__ReadLinkRes Nfs__ReadLinkRes;
 typedef struct _Nfs__ReadArgs Nfs__ReadArgs;
 typedef struct _Nfs__ReadResBody Nfs__ReadResBody;
 typedef struct _Nfs__ReadRes Nfs__ReadRes;
+typedef struct _Nfs__NfsCookie Nfs__NfsCookie;
+typedef struct _Nfs__ReadDirArgs Nfs__ReadDirArgs;
+typedef struct _Nfs__DirectoryEntriesList Nfs__DirectoryEntriesList;
+typedef struct _Nfs__ReadDirOk Nfs__ReadDirOk;
+typedef struct _Nfs__ReadDirRes Nfs__ReadDirRes;
 
 
 /* --- enums --- */
@@ -421,6 +426,9 @@ struct  _Nfs__ReadArgs
   Nfs__FHandle *file;
   uint32_t offset;
   uint32_t count;
+  /*
+   * unused
+   */
   uint32_t totalcount;
 };
 #define NFS__READ_ARGS__INIT \
@@ -471,6 +479,86 @@ struct  _Nfs__ReadRes
 #define NFS__READ_RES__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nfs__read_res__descriptor) \
     , NFS__STAT__NFS_OK, NFS__READ_RES__BODY__NOT_SET, {0} }
+
+
+/*
+ * Cookie used for positioning in the directory stream
+ */
+struct  _Nfs__NfsCookie
+{
+  ProtobufCMessage base;
+  uint64_t value;
+};
+#define NFS__NFS_COOKIE__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__nfs_cookie__descriptor) \
+    , 0 }
+
+
+/*
+ * Used for NFSPROC_READDIR arguments
+ */
+struct  _Nfs__ReadDirArgs
+{
+  ProtobufCMessage base;
+  Nfs__FHandle *dir;
+  Nfs__NfsCookie *cookie;
+  uint32_t count;
+};
+#define NFS__READ_DIR_ARGS__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__read_dir_args__descriptor) \
+    , NULL, NULL, 0 }
+
+
+struct  _Nfs__DirectoryEntriesList
+{
+  ProtobufCMessage base;
+  uint64_t fileid;
+  Nfs__FileName *name;
+  Nfs__NfsCookie *cookie;
+  Nfs__DirectoryEntriesList *nextentry;
+};
+#define NFS__DIRECTORY_ENTRIES_LIST__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__directory_entries_list__descriptor) \
+    , 0, NULL, NULL, NULL }
+
+
+struct  _Nfs__ReadDirOk
+{
+  ProtobufCMessage base;
+  Nfs__DirectoryEntriesList *entries;
+  protobuf_c_boolean eof;
+};
+#define NFS__READ_DIR_OK__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__read_dir_ok__descriptor) \
+    , NULL, 0 }
+
+
+typedef enum {
+  NFS__READ_DIR_RES__BODY__NOT_SET = 0,
+  NFS__READ_DIR_RES__BODY_READDIROK = 2,
+  NFS__READ_DIR_RES__BODY_DEFAULT_CASE = 3
+    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__READ_DIR_RES__BODY)
+} Nfs__ReadDirRes__BodyCase;
+
+struct  _Nfs__ReadDirRes
+{
+  ProtobufCMessage base;
+  Nfs__Stat status;
+  Nfs__ReadDirRes__BodyCase body_case;
+  union {
+    /*
+     * case NFS_OK
+     */
+    Nfs__ReadDirOk *readdirok;
+    /*
+     * default case
+     */
+    Google__Protobuf__Empty *default_case;
+  };
+};
+#define NFS__READ_DIR_RES__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__read_dir_res__descriptor) \
+    , NFS__STAT__NFS_OK, NFS__READ_DIR_RES__BODY__NOT_SET, {0} }
 
 
 /* Nfs__FHandle methods */
@@ -758,6 +846,101 @@ Nfs__ReadRes *
 void   nfs__read_res__free_unpacked
                      (Nfs__ReadRes *message,
                       ProtobufCAllocator *allocator);
+/* Nfs__NfsCookie methods */
+void   nfs__nfs_cookie__init
+                     (Nfs__NfsCookie         *message);
+size_t nfs__nfs_cookie__get_packed_size
+                     (const Nfs__NfsCookie   *message);
+size_t nfs__nfs_cookie__pack
+                     (const Nfs__NfsCookie   *message,
+                      uint8_t             *out);
+size_t nfs__nfs_cookie__pack_to_buffer
+                     (const Nfs__NfsCookie   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__NfsCookie *
+       nfs__nfs_cookie__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__nfs_cookie__free_unpacked
+                     (Nfs__NfsCookie *message,
+                      ProtobufCAllocator *allocator);
+/* Nfs__ReadDirArgs methods */
+void   nfs__read_dir_args__init
+                     (Nfs__ReadDirArgs         *message);
+size_t nfs__read_dir_args__get_packed_size
+                     (const Nfs__ReadDirArgs   *message);
+size_t nfs__read_dir_args__pack
+                     (const Nfs__ReadDirArgs   *message,
+                      uint8_t             *out);
+size_t nfs__read_dir_args__pack_to_buffer
+                     (const Nfs__ReadDirArgs   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__ReadDirArgs *
+       nfs__read_dir_args__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__read_dir_args__free_unpacked
+                     (Nfs__ReadDirArgs *message,
+                      ProtobufCAllocator *allocator);
+/* Nfs__DirectoryEntriesList methods */
+void   nfs__directory_entries_list__init
+                     (Nfs__DirectoryEntriesList         *message);
+size_t nfs__directory_entries_list__get_packed_size
+                     (const Nfs__DirectoryEntriesList   *message);
+size_t nfs__directory_entries_list__pack
+                     (const Nfs__DirectoryEntriesList   *message,
+                      uint8_t             *out);
+size_t nfs__directory_entries_list__pack_to_buffer
+                     (const Nfs__DirectoryEntriesList   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__DirectoryEntriesList *
+       nfs__directory_entries_list__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__directory_entries_list__free_unpacked
+                     (Nfs__DirectoryEntriesList *message,
+                      ProtobufCAllocator *allocator);
+/* Nfs__ReadDirOk methods */
+void   nfs__read_dir_ok__init
+                     (Nfs__ReadDirOk         *message);
+size_t nfs__read_dir_ok__get_packed_size
+                     (const Nfs__ReadDirOk   *message);
+size_t nfs__read_dir_ok__pack
+                     (const Nfs__ReadDirOk   *message,
+                      uint8_t             *out);
+size_t nfs__read_dir_ok__pack_to_buffer
+                     (const Nfs__ReadDirOk   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__ReadDirOk *
+       nfs__read_dir_ok__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__read_dir_ok__free_unpacked
+                     (Nfs__ReadDirOk *message,
+                      ProtobufCAllocator *allocator);
+/* Nfs__ReadDirRes methods */
+void   nfs__read_dir_res__init
+                     (Nfs__ReadDirRes         *message);
+size_t nfs__read_dir_res__get_packed_size
+                     (const Nfs__ReadDirRes   *message);
+size_t nfs__read_dir_res__pack
+                     (const Nfs__ReadDirRes   *message,
+                      uint8_t             *out);
+size_t nfs__read_dir_res__pack_to_buffer
+                     (const Nfs__ReadDirRes   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__ReadDirRes *
+       nfs__read_dir_res__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__read_dir_res__free_unpacked
+                     (Nfs__ReadDirRes *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*Nfs__FHandle_Closure)
@@ -805,6 +988,21 @@ typedef void (*Nfs__ReadResBody_Closure)
 typedef void (*Nfs__ReadRes_Closure)
                  (const Nfs__ReadRes *message,
                   void *closure_data);
+typedef void (*Nfs__NfsCookie_Closure)
+                 (const Nfs__NfsCookie *message,
+                  void *closure_data);
+typedef void (*Nfs__ReadDirArgs_Closure)
+                 (const Nfs__ReadDirArgs *message,
+                  void *closure_data);
+typedef void (*Nfs__DirectoryEntriesList_Closure)
+                 (const Nfs__DirectoryEntriesList *message,
+                  void *closure_data);
+typedef void (*Nfs__ReadDirOk_Closure)
+                 (const Nfs__ReadDirOk *message,
+                  void *closure_data);
+typedef void (*Nfs__ReadDirRes_Closure)
+                 (const Nfs__ReadDirRes *message,
+                  void *closure_data);
 
 /* --- services --- */
 
@@ -828,6 +1026,11 @@ extern const ProtobufCMessageDescriptor nfs__read_link_res__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_res_body__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_res__descriptor;
+extern const ProtobufCMessageDescriptor nfs__nfs_cookie__descriptor;
+extern const ProtobufCMessageDescriptor nfs__read_dir_args__descriptor;
+extern const ProtobufCMessageDescriptor nfs__directory_entries_list__descriptor;
+extern const ProtobufCMessageDescriptor nfs__read_dir_ok__descriptor;
+extern const ProtobufCMessageDescriptor nfs__read_dir_res__descriptor;
 
 PROTOBUF_C__END_DECLS
 

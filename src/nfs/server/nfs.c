@@ -1,3 +1,5 @@
+#include <dirent.h>
+
 #include "server.h"
 
 #include "nfs_messages.h"
@@ -65,8 +67,8 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
-        // we failed getting attributes for this file - we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
-        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        // we failed getting attributes for this file/directory - we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
+        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__fhandle__free_unpacked(fhandle, NULL);
 
@@ -217,7 +219,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file - we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
-        fprintf(stderr, "serve_procedure_2_set_file_attributes: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_procedure_2_set_file_attributes: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
@@ -333,7 +335,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     }
     if(error_code == 2) {
         // the file that the client wants to look up in this directory does not exist
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         // build the procedure results
         Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_NOENT);
@@ -360,7 +362,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
@@ -459,19 +461,18 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
         return wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
     }
 
-    // get the attributes of the looked up file before the read
+    // get the attributes of the looked up file before the read, to check that the file is not a directory
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__read_args__free_unpacked(readargs, NULL);
 
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
         return create_system_error_accepted_reply();
     }
-
     // all file types except for directories can be read as files
     if(fattr.type == NFS__FTYPE__NFDIR) {
         // if the file is actually directory, return ReadRes with 'directory specified in a non-directory operation' status
@@ -511,7 +512,7 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     error_code = get_attributes(file_absolute_path, &fattr_after_read);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed getting file attributes for file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__read_args__free_unpacked(readargs, NULL);
 
@@ -543,6 +544,158 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     free(fattr.atime);
     free(fattr.mtime);
     free(fattr.ctime);
+
+    return accepted_reply;
+}
+
+/*
+* Runs the NFSPROC_READDIR procedure (16).
+*/
+Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__Any *parameters) {
+    // check parameters are of expected type for this procedure
+    if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/ReadDirArgs") != 0) {
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: Expected nfs/ReadDirArgs but received %s\n", parameters->type_url);
+        
+        return create_garbage_args_accepted_reply();
+    }
+
+    // deserialize parameters
+    Nfs__ReadDirArgs *readdirargs = nfs__read_dir_args__unpack(NULL, parameters->value.len, parameters->value.data);
+    if(readdirargs == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: Failed to unpack ReadDirArgs\n");
+        
+        return create_garbage_args_accepted_reply();
+    }
+    if(readdirargs->dir == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: 'dir' in ReadDirArgs is NULL \n");
+
+        nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    if(readdirargs->cookie == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: 'cookie' in ReadDirArgs is NULL \n");
+
+        nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    Nfs__FHandle *directory_fhandle = readdirargs->dir;
+    if(directory_fhandle->nfs_filehandle == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: FHandle->nfs_filehandle is null\n");
+
+        nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+
+    NfsFh__NfsFileHandle *directory_nfs_filehandle = directory_fhandle->nfs_filehandle;
+    ino_t inode_number = directory_nfs_filehandle->inode_number;
+
+    char *directory_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
+    if(directory_absolute_path == NULL) {
+        // we couldn't decode inode number back to a file/directory - we assume the client gave us a wrong NFS filehandle, i.e. no such directory
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed to decode inode number %ld back to a directory\n", inode_number);
+
+        // build the procedure results
+        Nfs__ReadDirRes *readdirres = create_default_case_read_dir_res(NFS__STAT__NFSERR_NOENT);
+
+        // serialize the procedure results
+        size_t readdirres_size = nfs__read_dir_res__get_packed_size(readdirres);
+        uint8_t *readdirres_buffer = malloc(readdirres_size);
+        nfs__read_dir_res__pack(readdirres, readdirres_buffer);
+
+        nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+        free(readdirres->default_case);
+        free(readdirres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
+    }
+
+    // get the attributes of this directory before the read, to check that it is actually a directory
+    Nfs__FAttr fattr = NFS__FATTR__INIT;
+    int error_code = get_attributes(directory_absolute_path, &fattr);
+    if(error_code > 0) {
+        // we failed getting attributes for this file
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed getting file attributes for file at absolute path '%s' with error code %d \n", directory_absolute_path, error_code);
+
+        nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+    // only directories can be read using READDIR
+    if(fattr.type != NFS__FTYPE__NFDIR) {
+        // if the file is not a directory, return ReadDirRes with 'non-directory specified in a directory operation' status
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: a non-directory '%s' was specified for 'readdir' which is a directory operation\n", directory_absolute_path);
+
+        // build the procedure results
+        Nfs__ReadDirRes *readdirres = create_default_case_read_dir_res(NFS__STAT__NFSERR_NOTDIR);
+
+        // serialize the procedure results
+        size_t readdirres_size = nfs__read_dir_res__get_packed_size(readdirres);
+        uint8_t *readdirres_buffer = malloc(readdirres_size);
+        nfs__read_dir_res__pack(readdirres, readdirres_buffer);
+
+        nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+        free(readdirres->default_case);
+        free(readdirres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
+    }
+
+    // open the directory
+    DIR *directory_stream = opendir(directory_absolute_path);
+    if(directory_stream == NULL) {
+        char *msg = malloc(sizeof(char) * 100);
+        sprintf(msg, "Failed to open the directory at absolute path %s", directory_absolute_path);
+        perror(msg);
+        free(msg);
+
+        nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+
+    // set the position within directory stream to the cookie specified in readdirargs
+    seekdir(directory_stream, readdirargs->cookie->value);
+
+    // read entries from the directory
+    Nfs__DirectoryEntriesList *directory_entries;
+    int end_of_stream = 0;
+    error_code = read_from_directory(directory_stream, readdirargs->count, directory_absolute_path, &directory_entries, &end_of_stream);
+    if(error_code > 0) {
+        // we failed reading directory entries
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed reading directory entries for directory at absolute path '%s' with error code %d \n", directory_absolute_path, error_code);
+
+        nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+    
+    // build the procedure results
+    Nfs__ReadDirRes readdirres = NFS__DIR_OP_RES__INIT;
+    readdirres.status = NFS__STAT__NFS_OK;
+    readdirres.body_case = NFS__READ_DIR_RES__BODY_READDIROK;
+
+    Nfs__ReadDirOk readdirok = NFS__READ_DIR_OK__INIT;
+    readdirok.entries = directory_entries;
+    readdirok.eof = end_of_stream;
+
+    readdirres.readdirok = &readdirok;
+
+    // serialize the procedure results
+    size_t readdirres_size = nfs__read_dir_res__get_packed_size(&readdirres);
+    uint8_t *readdirres_buffer = malloc(readdirres_size);
+    nfs__read_dir_res__pack(&readdirres, readdirres_buffer);
+
+    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
+
+    nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+
+    clean_up_directory_entries_list(directory_entries);
 
     return accepted_reply;
 }
@@ -580,6 +733,18 @@ Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number,
         case 5:
         case 6:
             return serve_nfs_procedure_6_read_from_file(parameters);
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+            return serve_nfs_procedure_16_read_from_directory(parameters);
+        case 17:
         default:
     }
 

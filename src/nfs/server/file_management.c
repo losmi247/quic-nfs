@@ -123,7 +123,7 @@ int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
     fattr->rdev = file_stat.st_rdev;
     fattr->blocks = file_stat.st_blocks;
     fattr->fsid = file_stat.st_dev;
-    fattr->fileid = file_stat.st_ino;
+    fattr->fileid = file_stat.st_ino;  // we use file's inode number as fileid (unique identifier on this device)
 
     Nfs__TimeVal *atime = malloc(sizeof(Nfs__TimeVal));
     nfs__time_val__init(atime);
@@ -190,4 +190,98 @@ int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, ui
     fclose(file);
 
     return 0;
+}
+
+/*
+* Given an open 'directory_stream', reads directory entries from it, creates a list of them, and places 
+* the list in the 'head' argument. It will read as many directory entries as possible, while their total 
+* size does not exceed 'byte_count'.
+* In case end of directory stream was reached, 'end_of_stream' is set to 1.
+*
+* Returns 0 on success and > 0 on failure. The 'directory_absolute_path' is only used for printing in
+* case of an error.
+*
+* The user of this function takes the responsibility to free all directory entries, Nfs__FileName's,
+* and Nfs__NfsCookie's inside them.
+*/
+int read_from_directory(DIR *directory_stream, size_t byte_count, char *directory_absolute_path, Nfs__DirectoryEntriesList **head, int *end_of_stream) {
+    uint32_t total_size = 0;
+    Nfs__DirectoryEntriesList *directory_entries_list_head = NULL, *directory_entries_list_tail = NULL;
+    do {
+        errno = 0;
+        struct dirent *directory_entry = readdir(directory_stream); // man page of 'readdir' says not to free this
+        if(directory_entry == NULL) {
+            if(errno == 0) {
+                // end of the directory stream reached
+                *end_of_stream = 1;
+                break;
+            }
+            else{
+                char *msg = malloc(sizeof(char) * 100);
+                sprintf(msg, "Error occured while reading entries of directory at absolute path %s", directory_absolute_path);
+                perror(msg);
+                free(msg);
+
+                return 1;
+            }
+        }
+
+        // check we're not exceeding limit on bytes read
+        size_t entry_size = sizeof(Nfs__DirectoryEntriesList);  // use sizeof(Nfs__DirectoryEntriesList) as upper bound on entry size
+        if(total_size + entry_size > byte_count) {
+            break;
+        }
+        total_size += entry_size;
+
+        // construct a new directory entry
+        Nfs__DirectoryEntriesList *new_directory_entry = malloc(sizeof(Nfs__DirectoryEntriesList));
+        nfs__directory_entries_list__init(new_directory_entry);
+        new_directory_entry->fileid = directory_entry->d_ino;  // fileid in FAttr is inode number, so this fileid should also be inode number
+
+        Nfs__FileName *file_name = malloc(sizeof(Nfs__FileName));
+        nfs__file_name__init(file_name);
+        file_name->filename = directory_entry->d_name;
+        new_directory_entry->name = file_name;
+
+        long posix_cookie = telldir(directory_stream);
+        if(posix_cookie < 0) {
+            char *msg = malloc(sizeof(char) * 100);
+            sprintf(msg, "Failed getting current location in directory stream of directory at absolute path %s", directory_absolute_path);
+            perror(msg);
+            free(msg);
+
+            return 2;
+        }
+        Nfs__NfsCookie *nfs_cookie = malloc(sizeof(Nfs__NfsCookie));
+        nfs_cookie->value = posix_cookie;
+        new_directory_entry->cookie = nfs_cookie;
+
+        new_directory_entry->nextentry = NULL;
+
+        // append the new directory entry to the end of the list
+        if(directory_entries_list_tail != NULL) {
+            directory_entries_list_tail->nextentry = new_directory_entry;
+            directory_entries_list_tail = new_directory_entry;
+        }
+        else {
+            directory_entries_list_head = directory_entries_list_tail = new_directory_entry;
+        }
+    } while(total_size < byte_count);
+
+    *head = directory_entries_list_head;
+
+    return 0;
+}
+
+void clean_up_directory_entries_list(Nfs__DirectoryEntriesList *directory_entries_list_head) {
+    while(directory_entries_list_head != NULL) {
+        Nfs__DirectoryEntriesList *next = directory_entries_list_head->nextentry;
+
+        free(directory_entries_list_head->name);
+        free(directory_entries_list_head->cookie);
+
+        free(directory_entries_list_head);
+
+        directory_entries_list_head = next;
+    }
 }

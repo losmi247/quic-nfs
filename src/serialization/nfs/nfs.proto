@@ -129,11 +129,19 @@ message DirOpRes {
 * Procedure-specific data types
 */
 
+/*
+* SETATTR (2) 
+*/
+
 // Used for NFSPROC_SETATTR arguments for updating file attributes
 message SAttrArgs {
     FHandle file = 1;
     SAttr attributes = 2;
 }
+
+/*
+* READLINK (5)
+*/
 
 // Used for NFSPROC_READLINK results, to return the path of the file that this symbolic link refers to
 message ReadLinkRes {
@@ -144,6 +152,10 @@ message ReadLinkRes {
         google.protobuf.Empty default_case = 3; // default case
     }
 }
+
+/*
+* READ (6)
+*/
 
 // Used for NFSPROC_READ arguments, 'totalcount' is unused
 message ReadArgs {
@@ -166,6 +178,43 @@ message ReadRes {
 
     oneof body {
         ReadResBody readresbody = 2;            // case NFS_OK
+        google.protobuf.Empty default_case = 3; // default case
+    }
+}
+
+/*
+* READDIR (16)
+*/
+
+// Cookie used for positioning in the directory stream
+message NfsCookie {
+    uint64 value = 1;
+}
+
+// Used for NFSPROC_READDIR arguments
+message ReadDirArgs {
+    FHandle dir = 1;
+    NfsCookie cookie = 2;
+    uint32 count = 3;
+}
+
+message DirectoryEntriesList {
+    uint64 fileid = 1; // fileid here should be same as fileid in FAttr
+    FileName name = 2;
+    NfsCookie cookie = 3;
+    DirectoryEntriesList nextentry = 4;
+}
+
+message ReadDirOk {
+    DirectoryEntriesList entries = 1;
+    bool eof = 2;
+}
+
+message ReadDirRes {
+    Stat status = 1;
+
+    oneof body {
+        ReadDirOk readdirok = 2;                // case NFS_OK
         google.protobuf.Empty default_case = 3; // default case
     }
 }
