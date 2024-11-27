@@ -18,4 +18,6 @@ int nfs_procedure_4_look_up_file_name(Nfs__DirOpArgs diropargs, Nfs__DirOpRes *r
 
 int nfs_procedure_6_read_from_file(Nfs__ReadArgs readargs, Nfs__ReadRes *result);
 
+int nfs_procedure_16_read_from_directory(Nfs__ReadDirArgs readdirargs, Nfs__ReadDirRes *result);
+
 #endif /* nfs_client__header__INCLUDED */
