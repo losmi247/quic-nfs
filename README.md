@@ -51,5 +51,5 @@ To run the tests:
 | 13  | SYMLINK        | create symbolic link to file                 |                     |                       |                    |
 | 14  | MKDIR          | create directory                             |                     |                       |                    |
 | 15  | RMDIR          | remove directory                             |                     |                       |                    |
-| 16  | READDIR        | read from directory                          |      started        |       started         |      started       |
+| 16  | READDIR        | read from directory                          |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 17  | STATFS         | get filesystem attributes                    |                     |                       |                    |
