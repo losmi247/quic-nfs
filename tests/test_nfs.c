@@ -9,6 +9,7 @@
 
 TestSuite(mount_test_suite);
 
+// MOUNTPROC_NULL (0)
 Test(mount_test_suite, null, .description = "MOUNTPROC_NULL") {
     int status = mount_procedure_0_do_nothing();
     if (status != 0) {
@@ -16,6 +17,7 @@ Test(mount_test_suite, null, .description = "MOUNTPROC_NULL") {
     }
 }
 
+// MOUNTPROC_MNT (1)
 Test(mount_test_suite, mnt_ok, .description = "MOUNTPROC_MNT ok") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
     mount__fh_status__free_unpacked(fhstatus, NULL);
@@ -65,6 +67,7 @@ Test(mount_test_suite, mnt_no_such_directory, .description = "MOUNTPROC_MNT no s
 
 TestSuite(nfs_test_suite);
 
+// NFSPROC_NULL (0)
 Test(nfs_test_suite, null, .description = "NFSPROC_NULL") {
     int status = nfs_procedure_0_do_nothing();
     if (status != 0) {
@@ -72,6 +75,7 @@ Test(nfs_test_suite, null, .description = "NFSPROC_NULL") {
     }
 }
 
+// NFSPROC_GETATTR (1)
 Test(nfs_test_suite, getattr_ok, .description = "NFSPROC_GETATTR ok") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
@@ -125,6 +129,7 @@ Test(nfs_test_suite, getattr_no_such_file_or_directory, .description = "NFSPROC_
     nfs__attr_stat__free_unpacked(attr_stat, NULL);
 }
 
+// NFSPROC_SETATTR (2)
 Test(nfs_test_suite, setattr_ok, .description = "NFSPROC_SETATTR ok") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
@@ -222,6 +227,7 @@ Test(nfs_test_suite, setattr_no_such_file_or_directory, .description = "NFSPROC_
     nfs__attr_stat__free_unpacked(attr_stat, NULL);
 }
 
+// NFSPROC_LOOKUP (4)
 Test(nfs_test_suite, lookup_ok, .description = "NFSPROC_LOOKUP ok") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
@@ -325,6 +331,7 @@ Test(nfs_test_suite, lookup_no_such_file_or_directory, .description = "NFSPROC_L
     nfs__dir_op_res__free_unpacked(diropres, NULL);
 }
 
+// NFSPROC_READ (6)
 Test(nfs_test_suite, read_ok, .description = "NFSPROC_READ ok") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
@@ -470,4 +477,68 @@ Test(nfs_test_suite, read_is_directory, .description = "NFSPROC_READ directory s
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
     nfs__read_res__free_unpacked(readres, NULL);
+}
+
+// NFSPROC_READDIR (16)
+Test(nfs_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
+    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+
+    // read from the /nfs_share directory
+    Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
+    fhandle.nfs_filehandle = fhstatus->directory->nfs_filehandle;
+
+    Nfs__NfsCookie cookie = NFS__NFS_COOKIE__INIT;
+    cookie.value = 0; // start from beginning of the directory stream
+
+    Nfs__ReadDirArgs readdirargs = NFS__READ_DIR_ARGS__INIT;
+    readdirargs.dir = &fhandle;
+    readdirargs.cookie = &cookie;
+    readdirargs.count = 1000;
+
+    Nfs__ReadDirRes *readdirres = malloc(sizeof(Nfs__ReadDirRes));
+    int status = nfs_procedure_16_read_from_directory(readdirargs, readdirres);
+    if(status != 0) {
+        mount__fh_status__free_unpacked(fhstatus, NULL);
+
+        free(readdirres);
+
+        cr_fail("NFSPROC_LOOKUP failed - status %d\n", status);
+    }
+
+    // validate ReadDirRes
+    cr_assert_eq(readdirres->status, NFS__STAT__NFS_OK);
+    cr_assert_eq(readdirres->body_case, NFS__READ_DIR_RES__BODY_READDIROK);
+    cr_assert_not_null(readdirres->readdirok);
+
+    cr_assert_not_null(readdirres->readdirok->entries);
+    cr_assert_eq(readdirres->readdirok->eof, 1);    // we try and read all directory entries in this test
+
+    Nfs__DirectoryEntriesList *directory_entries = readdirres->readdirok->entries;
+    Nfs__DirectoryEntriesList *directory_entries_head = directory_entries;
+    cr_assert_not_null(directory_entries_head->name);
+    cr_assert_str_eq(directory_entries_head->name->filename, "..", "Expected '..' but found %s", directory_entries_head->name->filename);
+    cr_assert_not_null(directory_entries_head->nextentry);
+
+    directory_entries_head = directory_entries_head->nextentry;
+    cr_assert_not_null(directory_entries_head->name);
+    cr_assert_str_eq(directory_entries_head->name->filename, ".", "Expected '.' but found %s", directory_entries_head->name->filename);
+    cr_assert_not_null(directory_entries_head->nextentry);
+
+    directory_entries_head = directory_entries_head->nextentry;
+    cr_assert_not_null(directory_entries_head->name);
+    cr_assert_str_eq(directory_entries_head->name->filename, "dir1", "Expected 'dir1' but found %s", directory_entries_head->name->filename);
+    cr_assert_not_null(directory_entries_head->nextentry);
+
+    directory_entries_head = directory_entries_head->nextentry;
+    cr_assert_not_null(directory_entries_head->name);
+    cr_assert_str_eq(directory_entries_head->name->filename, "a.txt", "Expected 'a.txt' but found %s", directory_entries_head->name->filename);
+    cr_assert_not_null(directory_entries_head->nextentry);
+
+    directory_entries_head = directory_entries_head->nextentry;
+    cr_assert_not_null(directory_entries_head->name);
+    cr_assert_str_eq(directory_entries_head->name->filename, "test_file.txt", "Expected 'test_file.txt' but found %s", directory_entries_head->name->filename);
+    cr_assert_null(directory_entries_head->nextentry);
+
+    mount__fh_status__free_unpacked(fhstatus, NULL);
+    nfs__read_dir_res__free_unpacked(readdirres, NULL);
 }

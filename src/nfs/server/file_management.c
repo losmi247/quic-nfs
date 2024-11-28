@@ -9,7 +9,7 @@
 int get_inode_number(char *absolute_path, ino_t *inode_number) {
     struct stat file_stat;
     if(stat(absolute_path, &file_stat) < 0) {
-        perror("Failed retrieving file stats");
+        perror_msg("Failed retrieving file stats for file/directory at absolute path %s", absolute_path);
         return 1;
     }
 
@@ -102,12 +102,7 @@ Nfs__FType decode_file_type(mode_t st_mode) {
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
     struct stat file_stat;
     if(stat(absolute_path, &file_stat) < 0) {
-        char *msg = malloc(sizeof(char) * 100);
-        snprintf(msg, 100, "Failed retrieving file stats for file with absolute path '%s'", absolute_path);
-        perror(msg);
-
-        free(msg);
-
+        perror_msg("Failed retrieving file stats for file/directory at absolute path %s", absolute_path);
         return 1;
     }
 
@@ -161,17 +156,12 @@ int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, ui
 
     FILE *file = fopen(file_absolute_path, "rb");
     if(file == NULL) {
-        char *msg = malloc(sizeof(char) * 20);
-        sprintf(msg, "Failed to open file at absolute path '%s' for reading", file_absolute_path);
-        perror(msg);
-
+        perror_msg("Failed to open file at absolute path '%s' for reading", file_absolute_path);
         return 2;
     }
 
     if(fseek(file, offset, SEEK_SET) < 0) {
-        char *msg = malloc(sizeof(char) * 20);
-        sprintf(msg, "Failed to seek file at absolute path '%s' at offset %ld", file_absolute_path, offset);
-        perror(msg);
+        perror_msg("Failed to seek file at absolute path '%s' at offset %ld", file_absolute_path, offset);
 
         fclose(file);
         
@@ -183,7 +173,6 @@ int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, ui
     // fread doesn't distinguish between error and end-of-file so we need to check
     if(ferror(file)) {
         fclose(file);
-
         return 4;
     }
 
@@ -193,18 +182,32 @@ int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, ui
 }
 
 /*
-* Given an open 'directory_stream', reads directory entries from it, creates a list of them, and places 
-* the list in the 'head' argument. It will read as many directory entries as possible, while their total 
-* size does not exceed 'byte_count'.
+* Given a 'directory_stream' opened with opendir(), reads directory entries from it, creates a list of 
+* them, and places the list in the 'head' argument. It will read as many directory entries as possible, 
+* such that their total size does not exceed 'byte_count'.
 * In case end of directory stream was reached, 'end_of_stream' is set to 1.
 *
 * Returns 0 on success and > 0 on failure. The 'directory_absolute_path' is only used for printing in
 * case of an error.
 *
-* The user of this function takes the responsibility to free all directory entries, Nfs__FileName's,
-* and Nfs__NfsCookie's inside them.
+* In case of successful execution, the user of this function takes the responsibility to free all 
+* directory entries, Nfs__FileName's, Nfs__FileName.filename's, and Nfs__NfsCookie's inside them
+* using the clean_up_directory_entries_list() function.
 */
-int read_from_directory(DIR *directory_stream, size_t byte_count, char *directory_absolute_path, Nfs__DirectoryEntriesList **head, int *end_of_stream) {
+int read_from_directory(char *directory_absolute_path, long offset_cookie, size_t byte_count, Nfs__DirectoryEntriesList **head, int *end_of_stream) {
+    // open the directory
+    DIR *directory_stream = opendir(directory_absolute_path);
+    if(directory_stream == NULL) {
+        perror_msg("Failed to open the directory at absolute path %s", directory_absolute_path);
+        return 1;
+    }
+
+    // 0 is a special cookie value meaning client wants to start from beginning of directory stream, so don't 'seekdir' in this case
+    if(offset_cookie != 0) {
+        // set the position within directory stream to the specified cookie
+        seekdir(directory_stream, offset_cookie);
+    }
+
     uint32_t total_size = 0;
     Nfs__DirectoryEntriesList *directory_entries_list_head = NULL, *directory_entries_list_tail = NULL;
     do {
@@ -217,12 +220,12 @@ int read_from_directory(DIR *directory_stream, size_t byte_count, char *director
                 break;
             }
             else{
-                char *msg = malloc(sizeof(char) * 100);
-                sprintf(msg, "Error occured while reading entries of directory at absolute path %s", directory_absolute_path);
-                perror(msg);
-                free(msg);
+                perror_msg("Error occured while reading entries of directory at absolute path %s", directory_absolute_path);
 
-                return 1;
+                // clean up the directory entries allocated so far
+                clean_up_directory_entries_list(directory_entries_list_head);
+
+                return 2;
             }
         }
 
@@ -240,35 +243,46 @@ int read_from_directory(DIR *directory_stream, size_t byte_count, char *director
 
         Nfs__FileName *file_name = malloc(sizeof(Nfs__FileName));
         nfs__file_name__init(file_name);
-        file_name->filename = directory_entry->d_name;
+        file_name->filename = malloc(sizeof(char) * NFS_MAXNAMLEN); // make a copy of the file name to persist after this dirent is deallocated by closedir()
+        strcpy(file_name->filename, directory_entry->d_name);
         new_directory_entry->name = file_name;
 
         long posix_cookie = telldir(directory_stream);
         if(posix_cookie < 0) {
-            char *msg = malloc(sizeof(char) * 100);
-            sprintf(msg, "Failed getting current location in directory stream of directory at absolute path %s", directory_absolute_path);
-            perror(msg);
-            free(msg);
+            perror_msg("Failed getting current location in directory stream of directory at absolute path %s", directory_absolute_path);
 
-            return 2;
+            // clean up the directory entries allocated so far
+            clean_up_directory_entries_list(directory_entries_list_head);
+
+            return 3;
         }
         Nfs__NfsCookie *nfs_cookie = malloc(sizeof(Nfs__NfsCookie));
+        nfs__nfs_cookie__init(nfs_cookie);
         nfs_cookie->value = posix_cookie;
         new_directory_entry->cookie = nfs_cookie;
 
         new_directory_entry->nextentry = NULL;
 
         // append the new directory entry to the end of the list
-        if(directory_entries_list_tail != NULL) {
+        if(directory_entries_list_tail == NULL) {
+            directory_entries_list_head = directory_entries_list_tail = new_directory_entry;
+            // set 'head' argument to head of the list of entries
+            *head = directory_entries_list_head;
+        }
+        else {
             directory_entries_list_tail->nextentry = new_directory_entry;
             directory_entries_list_tail = new_directory_entry;
         }
-        else {
-            directory_entries_list_head = directory_entries_list_tail = new_directory_entry;
-        }
     } while(total_size < byte_count);
 
-    *head = directory_entries_list_head;
+    if(closedir(directory_stream) < 0) {
+        perror_msg("Failed closing the directory stream of directory at absolute path %s\n", directory_absolute_path);
+
+        // clean up the directory entries allocated so far
+        clean_up_directory_entries_list(directory_entries_list_head);
+
+        return 4;
+    }
 
     return 0;
 }
@@ -277,6 +291,7 @@ void clean_up_directory_entries_list(Nfs__DirectoryEntriesList *directory_entrie
     while(directory_entries_list_head != NULL) {
         Nfs__DirectoryEntriesList *next = directory_entries_list_head->nextentry;
 
+        free(directory_entries_list_head->name->filename);
         free(directory_entries_list_head->name);
         free(directory_entries_list_head->cookie);
 

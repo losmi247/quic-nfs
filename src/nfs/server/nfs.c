@@ -1,5 +1,3 @@
-#include <dirent.h>
-
 #include "server.h"
 
 #include "nfs_messages.h"
@@ -644,27 +642,10 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
         return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
     }
 
-    // open the directory
-    DIR *directory_stream = opendir(directory_absolute_path);
-    if(directory_stream == NULL) {
-        char *msg = malloc(sizeof(char) * 100);
-        sprintf(msg, "Failed to open the directory at absolute path %s", directory_absolute_path);
-        perror(msg);
-        free(msg);
-
-        nfs__read_dir_args__free_unpacked(readdirargs, NULL);
-
-        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
-        return create_system_error_accepted_reply();
-    }
-
-    // set the position within directory stream to the cookie specified in readdirargs
-    seekdir(directory_stream, readdirargs->cookie->value);
-
     // read entries from the directory
-    Nfs__DirectoryEntriesList *directory_entries;
+    Nfs__DirectoryEntriesList *directory_entries = NULL;
     int end_of_stream = 0;
-    error_code = read_from_directory(directory_stream, readdirargs->count, directory_absolute_path, &directory_entries, &end_of_stream);
+    error_code = read_from_directory(directory_absolute_path, readdirargs->cookie->value, readdirargs->count, &directory_entries, &end_of_stream);
     if(error_code > 0) {
         // we failed reading directory entries
         fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed reading directory entries for directory at absolute path '%s' with error code %d \n", directory_absolute_path, error_code);
@@ -676,7 +657,7 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
     }
     
     // build the procedure results
-    Nfs__ReadDirRes readdirres = NFS__DIR_OP_RES__INIT;
+    Nfs__ReadDirRes readdirres = NFS__READ_DIR_RES__INIT;
     readdirres.status = NFS__STAT__NFS_OK;
     readdirres.body_case = NFS__READ_DIR_RES__BODY_READDIROK;
 

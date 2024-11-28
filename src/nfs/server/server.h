@@ -22,6 +22,8 @@
 #include "src/serialization/nfs/nfs.pb-c.h"
 #include "src/serialization/mount/mount.pb-c.h"
 
+#include "src/error_handling/error_handling.h"
+
 #include "../nfs_common.h"
 
 #include "mount_list.h"

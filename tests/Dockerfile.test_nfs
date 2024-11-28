@@ -6,5 +6,5 @@ WORKDIR /quic-nfs
 RUN ./install_dependencies
 
 WORKDIR /quic-nfs
-RUN chmod +x ./build/test_nfs
-CMD ["./build/test_nfs"]
+RUN chmod +x ./build/test
+CMD ["./build/test"]

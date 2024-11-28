@@ -21,7 +21,7 @@ uint32_t generate_rpc_xid(void) {
 Rpc__RpcMsg *deserialize_rpc_msg(uint8_t *rpc_msg_buffer, size_t bytes_received) {
     Rpc__RpcMsg *rpc_msg = rpc__rpc_msg__unpack(NULL, bytes_received, rpc_msg_buffer);
     if(rpc_msg == NULL) {
-        fprintf(stderr, "Error unpacking received message");
+        fprintf(stderr, "Error unpacking received message\n");
         return NULL;
     }
 
