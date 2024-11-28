@@ -229,13 +229,6 @@ int read_from_directory(char *directory_absolute_path, long offset_cookie, size_
             }
         }
 
-        // check we're not exceeding limit on bytes read
-        size_t entry_size = sizeof(Nfs__DirectoryEntriesList);  // use sizeof(Nfs__DirectoryEntriesList) as upper bound on entry size
-        if(total_size + entry_size > byte_count) {
-            break;
-        }
-        total_size += entry_size;
-
         // construct a new directory entry
         Nfs__DirectoryEntriesList *new_directory_entry = malloc(sizeof(Nfs__DirectoryEntriesList));
         nfs__directory_entries_list__init(new_directory_entry);
@@ -262,6 +255,13 @@ int read_from_directory(char *directory_absolute_path, long offset_cookie, size_
         new_directory_entry->cookie = nfs_cookie;
 
         new_directory_entry->nextentry = NULL;
+
+        // check we're not exceeding limit on bytes read, using Protobuf get_packed_size
+        size_t directory_entry_packed_size = nfs__directory_entries_list__get_packed_size(new_directory_entry);
+        if(total_size + directory_entry_packed_size > byte_count) {
+            break;
+        }
+        total_size += directory_entry_packed_size;
 
         // append the new directory entry to the end of the list
         if(directory_entries_list_tail == NULL) {
