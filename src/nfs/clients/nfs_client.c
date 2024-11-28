@@ -321,3 +321,72 @@ int nfs_procedure_6_read_from_file(Nfs__ReadArgs readargs, Nfs__ReadRes *result)
 
     return 0;
 }
+
+/*
+* Calls the NFSPROC_READDIR Nfs procedure.
+* On successful run, returns 0 and places procedure result in 'result'.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
+*
+* In case this function returns 0, the user of this function takes responsibility 
+* to call Nfs__read_dir_res__free_unpacked(readdirres) on the received Nfs__ReadDirRes eventually.
+*/
+int nfs_procedure_16_read_from_directory(Nfs__ReadDirArgs readdirargs, Nfs__ReadDirRes *result) {
+    // serialize the ReadDirArgs
+    size_t readdirargs_size = nfs__read_dir_args__get_packed_size(&readdirargs);
+    uint8_t *readdirargs_buffer = malloc(readdirargs_size);
+    nfs__read_dir_args__pack(&readdirargs, readdirargs_buffer);
+
+    // Any message to wrap ReadDirArgs
+    Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
+    parameters.type_url = "nfs/ReadDirArgs";
+    parameters.value.data = readdirargs_buffer;
+    parameters.value.len = readdirargs_size;
+
+    // send RPC call
+    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 16, parameters);
+    free(readdirargs_buffer);
+
+    // validate RPC reply
+    int error_code = validate_rpc_message_from_server(rpc_reply);
+    if(error_code > 0) {
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return error_code;
+    }
+
+    log_rpc_msg_info(rpc_reply);
+
+    // extract procedure results
+    Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
+    Google__Protobuf__Any *procedure_results = accepted_reply->results;
+    if(procedure_results == NULL) {
+        fprintf(stderr, "NFSPROC_READDIR: procedure_results is NULL - This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -1;
+    }
+
+    // check that procedure results contain the right type
+    if(procedure_results->type_url == NULL || strcmp(procedure_results->type_url, "nfs/ReadDirRes") != 0) {
+        fprintf(stderr, "NFSPROC_READDIR: Expected nfs/ReadDirRes but received %s\n", procedure_results->type_url);
+
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -2;
+    }
+
+    // now we can unpack the ReadDirRes from the Any message
+    Nfs__ReadDirRes *readdirres = nfs__read_dir_res__unpack(NULL, procedure_results->value.len, procedure_results->value.data);
+    if(readdirres == NULL) {
+        fprintf(stderr, "NFSPROC_READDIR: Failed to unpack Nfs__ReadDirRes\n");
+
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -3;
+    }
+
+    // place readdirres into the result
+    *result = *readdirres;
+
+    rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+
+    return 0;
+}

@@ -11,6 +11,10 @@
 
 Mount__FhStatus *mount_directory(char *directory_absolute_path);
 
+Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *filename, Nfs__FType expected_ftype);
+
+NfsFh__NfsFileHandle deep_copy_nfs_filehandle(NfsFh__NfsFileHandle *nfs_filehandle);
+
 void validate_fattr(Nfs__FAttr *fattr, Nfs__FType ftype);
 
 uint64_t get_time(Nfs__TimeVal *timeval);

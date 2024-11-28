@@ -6,6 +6,8 @@ apt-get update && \
         build-essential \
         git \
         curl \
+        libasan6 \
+        libubsan1 \
         ca-certificates \
         autoconf \
         automake \

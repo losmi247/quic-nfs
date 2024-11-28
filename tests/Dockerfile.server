@@ -15,6 +15,9 @@ RUN touch exports && \
 # create some files and directories for testing purposes
 RUN touch /nfs_share/test_file.txt && \
     echo "test_content" >> /nfs_share/test_file.txt
+RUN touch /nfs_share/a.txt && \
+    echo "a" >> /nfs_share/a.txt
+RUN mkdir /nfs_share/dir1
 RUN mkdir -p /existent_but_non_exported_directory
 RUN echo "/exported_but_non_existent_directory *(rw)" >> ./exports
 
