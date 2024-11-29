@@ -1,6 +1,9 @@
 #ifndef test_common__header__INCLUDED
 #define test_common__header__INCLUDED
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "criterion/criterion.h"
 #include <criterion/new/assert.h>
 

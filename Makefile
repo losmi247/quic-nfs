@@ -30,7 +30,14 @@ MOUNT_AND_NFS_SERVER_SRCS = ./src/nfs/server/mount.c ./src/nfs/server/nfs.c \
 	${SERIALIZATION_SRCS} ${RPC_PROGRAM_COMMON_SERVER_SRCS} ${ERROR_HANDLING_SRCS}
 
 # files used by the Tests
-TESTS_SRCS = ./tests/test_common.c \
+TESTS_SRCS = ./tests/procedures/test_mnt.c \
+	./tests/procedures/test_null.c \
+	./tests/procedures/test_getattr.c \
+	./tests/procedures/test_setattr.c \
+	./tests/procedures/test_lookup.c \
+	./tests/procedures/test_read.c \
+	./tests/procedures/test_readdir.c \
+	./tests/test_common.c \
 	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS} ${ERROR_HANDLING_SRCS}
 
 # files used by the Repl
@@ -60,8 +67,8 @@ mount-and-nfs-server: ./src/nfs/server/server.c ${MOUNT_AND_NFS_SERVER_SRCS}
 # $< is the first prerequisite (./src/nfs/server/server.c), $@ is the name of the rule
 	gcc $< ${MOUNT_AND_NFS_SERVER_SRCS} ${CFLAGS} -o ./build/mount_and_nfs_server ${LDFLAGS}
 
-test: ./tests/test_nfs.c ${TESTS_SRCS}
-	gcc $< ${TESTS_SRCS} ${CFLAGS} -o ./build/$@ ${LDFLAGS} -l criterion
+test: ${TESTS_SRCS}
+	gcc ${TESTS_SRCS} ${CFLAGS} -o ./build/$@ ${LDFLAGS} -l criterion
 
 repl: ./src/repl/repl.c ${REPL_SRCS}
 	gcc $< ${REPL_SRCS} ${CFLAGS} -o ./build/$@ ${LDFLAGS}
@@ -69,8 +76,8 @@ repl: ./src/repl/repl.c ${REPL_SRCS}
 mount-and-nfs-server-debug: ./src/nfs/server/server.c ${MOUNT_AND_NFS_SERVER_SRCS}
 	gcc $< ${MOUNT_AND_NFS_SERVER_SRCS} ${CFLAGS} -o ./build/mount_and_nfs_server ${DEBUG_LDFLAGS}
 
-test-debug: ./tests/test_nfs.c ${TESTS_SRCS}
-	gcc $< ${TESTS_SRCS} ${CFLAGS} -o ./build/test ${DEBUG_LDFLAGS} -l criterion
+test-debug: ${TESTS_SRCS}
+	gcc ${TESTS_SRCS} ${CFLAGS} -o ./build/test ${DEBUG_LDFLAGS} -l criterion
 
 repl-debug: ./src/repl/repl.c ${REPL_SRCS}
 	gcc $< ${REPL_SRCS} ${CFLAGS} -o ./build/repl ${DEBUG_LDFLAGS}
