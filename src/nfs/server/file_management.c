@@ -168,7 +168,7 @@ int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, ui
         return 3;
     }
 
-    // read up to byte_count bytes
+    // read up to 'byte_count' bytes
     *bytes_read = fread(destination_buffer, 1, byte_count, file);
     // fread doesn't distinguish between error and end-of-file so we need to check
     if(ferror(file)) {
@@ -178,6 +178,56 @@ int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, ui
 
     fclose(file);
 
+    return 0;
+}
+
+/*
+* Writes 'byte_count' bytes from 'offset' in the file given by the absolute path.
+*
+* Returns 0 on success and > 0 on failure.
+*
+* TODO (QNFS-25): make this function atomic, for use by multithreaded server
+*/
+int write_to_file(char *file_absolute_path, off_t offset, size_t byte_count, uint8_t *source_buffer) {
+    if(file_absolute_path == NULL) {
+        return 1;
+    }
+
+    FILE *file = fopen(file_absolute_path, "r+b");
+    if(file == NULL) {
+        perror_msg("Failed to open file at absolute path '%s' for writing", file_absolute_path);
+        return 2;
+    }
+
+    if(fseek(file, offset, SEEK_SET) < 0) {
+        perror_msg("Failed to seek file at absolute path '%s' at offset %ld", file_absolute_path, offset);
+
+        fclose(file);
+
+        return 3;
+    }
+
+    // write 'byte_count' bytes from the source buffer to the file
+    size_t bytes_written = fwrite(source_buffer, 1, byte_count, file);
+    if (bytes_written != byte_count) {
+        perror_msg("Failed to write %d bytes to file at absolute path '%s', only wrote %d bytes", byte_count, file_absolute_path, bytes_written);
+        
+        fclose(file);
+
+        switch(errno) {
+            case EFBIG:     // attempted write that exceeds file system limits
+                return 4;
+            case EIO:       // physical IO error
+                return 5;
+            case ENOSPC:    // no space left on device
+            case ENOMEM:
+                return 6;
+            default:
+                return 7;
+        }
+    }
+
+    fclose(file);
     return 0;
 }
 

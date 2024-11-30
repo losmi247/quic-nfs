@@ -43,6 +43,12 @@ int get_attributes(char *absolute_path, Nfs__FAttr *fattr);
 int read_from_file(char *file_absolute_path, off_t offset, size_t byte_count, uint8_t *destination_buffer, size_t *bytes_read);
 
 /*
+* File management functions used by NFSPROC_WRITE
+*/
+
+int write_to_file(char *file_absolute_path, off_t offset, size_t byte_count, uint8_t *source_buffer);
+
+/*
 * File management functions used by NFSPROC_READDIR
 */
 

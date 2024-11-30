@@ -682,6 +682,51 @@ void   nfs__read_res__free_unpacked
   assert(message->base.descriptor == &nfs__read_res__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   nfs__write_args__init
+                     (Nfs__WriteArgs         *message)
+{
+  static const Nfs__WriteArgs init_value = NFS__WRITE_ARGS__INIT;
+  *message = init_value;
+}
+size_t nfs__write_args__get_packed_size
+                     (const Nfs__WriteArgs *message)
+{
+  assert(message->base.descriptor == &nfs__write_args__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t nfs__write_args__pack
+                     (const Nfs__WriteArgs *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &nfs__write_args__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t nfs__write_args__pack_to_buffer
+                     (const Nfs__WriteArgs *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &nfs__write_args__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Nfs__WriteArgs *
+       nfs__write_args__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Nfs__WriteArgs *)
+     protobuf_c_message_unpack (&nfs__write_args__descriptor,
+                                allocator, len, data);
+}
+void   nfs__write_args__free_unpacked
+                     (Nfs__WriteArgs *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &nfs__write_args__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   nfs__nfs_cookie__init
                      (Nfs__NfsCookie         *message)
 {
@@ -1917,6 +1962,96 @@ const ProtobufCMessageDescriptor nfs__read_res__descriptor =
   nfs__read_res__field_indices_by_name,
   1,  nfs__read_res__number_ranges,
   (ProtobufCMessageInit) nfs__read_res__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor nfs__write_args__field_descriptors[5] =
+{
+  {
+    "file",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__WriteArgs, file),
+    &nfs__fhandle__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "beginoffset",
+    2,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_UINT32,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__WriteArgs, beginoffset),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "offset",
+    3,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_UINT32,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__WriteArgs, offset),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "totalcount",
+    4,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_UINT32,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__WriteArgs, totalcount),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "nfsdata",
+    5,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_BYTES,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__WriteArgs, nfsdata),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned nfs__write_args__field_indices_by_name[] = {
+  1,   /* field[1] = beginoffset */
+  0,   /* field[0] = file */
+  4,   /* field[4] = nfsdata */
+  2,   /* field[2] = offset */
+  3,   /* field[3] = totalcount */
+};
+static const ProtobufCIntRange nfs__write_args__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 5 }
+};
+const ProtobufCMessageDescriptor nfs__write_args__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "nfs.WriteArgs",
+  "WriteArgs",
+  "Nfs__WriteArgs",
+  "nfs",
+  sizeof(Nfs__WriteArgs),
+  5,
+  nfs__write_args__field_descriptors,
+  nfs__write_args__field_indices_by_name,
+  1,  nfs__write_args__number_ranges,
+  (ProtobufCMessageInit) nfs__write_args__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor nfs__nfs_cookie__field_descriptors[1] =

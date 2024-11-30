@@ -318,42 +318,10 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
 
-    // get the attributes of this directory before the looku[], to check that it is actually a directory
-    Nfs__FAttr directory_fattr = NFS__FATTR__INIT;
-    int error_code = get_attributes(directory_absolute_path, &directory_fattr);
-    if(error_code > 0) {
-        // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting file attributes for file at absolute path '%s' with error code %d \n", directory_absolute_path, error_code);
-
-        nfs__dir_op_args__free_unpacked(diropargs, NULL);
-
-        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
-        return create_system_error_accepted_reply();
-    }
-    // only directories can be looked up using LOOKUP
-    if(directory_fattr.type != NFS__FTYPE__NFDIR) {
-        // if the file is not a directory, return DirOpRes with 'non-directory specified in a directory operation' status
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'lookup' procedure called on a non-directory '%s'\n", directory_absolute_path);
-
-        // build the procedure results
-        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_NOTDIR);
-
-        // serialize the procedure results
-        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
-        uint8_t *diropres_buffer = malloc(diropres_size);
-        nfs__dir_op_res__pack(diropres, diropres_buffer);
-
-        nfs__dir_op_args__free_unpacked(diropargs, NULL);
-        free(diropres->default_case);
-        free(diropres);
-
-        return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
-    }
-
     char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
     // create a NFS filehandle for the looked up file
     NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
-    error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
+    int error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
     if(error_code == 1) {
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: creation of nfs filehandle failed with error code %d \n", error_code);
 
@@ -522,6 +490,9 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
 
         return wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
     }
+    free(fattr.atime);
+    free(fattr.mtime);
+    free(fattr.ctime);
 
     // read from the file
     uint8_t *read_data = malloc(sizeof(uint8_t) * readargs->count);
@@ -571,9 +542,198 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
 
     nfs__read_args__free_unpacked(readargs, NULL);
 
+    free(fattr_after_read.atime);
+    free(fattr_after_read.mtime);
+    free(fattr_after_read.ctime);
+
+    return accepted_reply;
+}
+
+/*
+* Runs the NFSPROC_WRITE procedure (8).
+*/
+Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *parameters) {
+    // check parameters are of expected type for this procedure
+    if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/WriteArgs") != 0) {
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: Expected nfs/WriteArgs but received %s\n", parameters->type_url);
+        
+        return create_garbage_args_accepted_reply();
+    }
+
+    // deserialize parameters
+    Nfs__WriteArgs *writeargs = nfs__write_args__unpack(NULL, parameters->value.len, parameters->value.data);
+    if(writeargs == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: Failed to unpack WriteArgs\n");
+        
+        return create_garbage_args_accepted_reply();
+    }
+    if(writeargs->file == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: 'file' in WriteArgs is NULL \n");
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    Nfs__FHandle *file_fhandle = writeargs->file;
+    if(file_fhandle->nfs_filehandle == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: FHandle->nfs_filehandle is null\n");
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    if(writeargs->nfsdata.data == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: nfsdata.data is null\n");
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+
+    NfsFh__NfsFileHandle *file_nfs_filehandle = file_fhandle->nfs_filehandle;
+    ino_t inode_number = file_nfs_filehandle->inode_number;
+
+    char *file_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
+    if(file_absolute_path == NULL) {
+        // we couldn't decode inode number back to a file - we assume the client gave us a wrong NFS filehandle, i.e. no such file
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed to decode inode number %ld back to a file\n", inode_number);
+
+        // build the procedure results
+        Nfs__AttrStat *attr_stat = create_default_case_attr_stat(NFS__STAT__NFSERR_NOENT);
+
+        // serialize the procedure results
+        size_t attr_stat_size = nfs__attr_stat__get_packed_size(attr_stat);
+        uint8_t *attr_stat_buffer = malloc(attr_stat_size);
+        nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+        free(attr_stat->default_case);
+        free(attr_stat);
+
+        return wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
+    }
+
+    // get the attributes of the looked up file before the write, to check that the file is not a directory
+    Nfs__FAttr fattr = NFS__FATTR__INIT;
+    int error_code = get_attributes(file_absolute_path, &fattr);
+    if(error_code > 0) {
+        // we failed getting attributes for this file
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+    // all file types except for directories can be written to as files
+    if(fattr.type == NFS__FTYPE__NFDIR) {
+        // if the file is actually directory, return AttrStat with 'directory specified in a non-directory operation' status
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: a directory '%s' was specified for 'write' which is a non-directory operation\n", file_absolute_path);
+
+        // build the procedure results
+        Nfs__AttrStat *attr_stat = create_default_case_attr_stat(NFS__STAT__NFSERR_ISDIR);
+
+        // serialize the procedure results
+        size_t attr_stat_size = nfs__attr_stat__get_packed_size(attr_stat);
+        uint8_t *attr_stat_buffer = malloc(attr_stat_size);
+        nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+        free(attr_stat->default_case);
+        free(attr_stat);
+
+        return wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
+    }
     free(fattr.atime);
     free(fattr.mtime);
     free(fattr.ctime);
+
+    // check if client requested to write too much data in a single RPC
+    if(writeargs->nfsdata.len > NFS_MAXDATA) {
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: 'write' of %ld bytes attempted to file at absolute path '%s', but max write allowed is %d bytes\n", writeargs->nfsdata.len, file_absolute_path, NFS_MAXDATA);
+
+        // build the procedure results
+        Nfs__AttrStat *attr_stat = create_default_case_attr_stat(NFS__STAT__NFSERR_FBIG);
+
+        // serialize the procedure results
+        size_t attr_stat_size = nfs__attr_stat__get_packed_size(attr_stat);
+        uint8_t *attr_stat_buffer = malloc(attr_stat_size);
+        nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+        free(attr_stat->default_case);
+        free(attr_stat);
+
+        return wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
+    }
+
+    // write to the file
+    error_code = write_to_file(file_absolute_path, writeargs->offset, writeargs->nfsdata.len, writeargs->nfsdata.data);
+    if(error_code == 4 || error_code == 5 || error_code == 6) {
+        Nfs__Stat nfs_stat;
+        switch(error_code) {
+            case 4:
+                nfs_stat = NFS__STAT__NFSERR_FBIG;
+            case 5:
+                nfs_stat = NFS__STAT__NFSERR_IO;
+            case 6:
+                nfs_stat = NFS__STAT__NFSERR_NOSPC;
+        }
+
+        // build the procedure results
+        Nfs__AttrStat *attr_stat = create_default_case_attr_stat(nfs_stat);
+
+        // serialize the procedure results
+        size_t attr_stat_size = nfs__attr_stat__get_packed_size(attr_stat);
+        uint8_t *attr_stat_buffer = malloc(attr_stat_size);
+        nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+        free(attr_stat->default_case);
+        free(attr_stat);
+
+        return wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
+    }
+    if(error_code > 0) {
+        // we failed writing to this file
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed writing to file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+
+        return create_system_error_accepted_reply();
+    }
+
+    // get the attributes of the file after the write - this is what we return to client
+    Nfs__FAttr fattr_after_write = NFS__FATTR__INIT;
+    error_code = get_attributes(file_absolute_path, &fattr_after_write);
+    if(error_code > 0) {
+        // we failed getting attributes for this file
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+
+        nfs__write_args__free_unpacked(writeargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+
+    // build the procedure results
+    Nfs__AttrStat attr_stat = NFS__ATTR_STAT__INIT;
+    attr_stat.status = NFS__STAT__NFS_OK;
+    attr_stat.body_case = NFS__ATTR_STAT__BODY_ATTRIBUTES;
+    attr_stat.attributes = &fattr_after_write;
+
+    // serialize the procedure results
+    size_t attr_stat_size = nfs__attr_stat__get_packed_size(&attr_stat);
+    uint8_t *attr_stat_buffer = malloc(attr_stat_size);
+    nfs__attr_stat__pack(&attr_stat, attr_stat_buffer);
+
+    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
+
+    nfs__write_args__free_unpacked(writeargs, NULL);
+
+    free(fattr_after_write.atime);
+    free(fattr_after_write.mtime);
+    free(fattr_after_write.ctime);
 
     return accepted_reply;
 }
@@ -673,6 +833,9 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
 
         return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
     }
+    free(fattr.atime);
+    free(fattr.mtime);
+    free(fattr.ctime);
 
     // read entries from the directory
     Nfs__DirectoryEntriesList *directory_entries = NULL;
