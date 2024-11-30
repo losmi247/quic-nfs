@@ -37,7 +37,7 @@ TESTS_SRCS = ./tests/procedures/test_mnt.c \
 	./tests/procedures/test_lookup.c \
 	./tests/procedures/test_read.c \
 	./tests/procedures/test_readdir.c \
-	./tests/test_common.c \
+	./tests/test_common.c ./tests/validation/common_validation.c ./tests/validation/procedure_validation.c\
 	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS} ${ERROR_HANDLING_SRCS}
 
 # files used by the Repl

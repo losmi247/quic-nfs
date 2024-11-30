@@ -1,29 +1,41 @@
 #include "tests/test_common.h"
 
 /*
-* NFSPROC_READ (6) tests
+* NFSPROC_WRITE (8) tests
 */
 
-TestSuite(nfs_read_test_suite);
+TestSuite(nfs_write_test_suite);
 
-Test(nfs_read_test_suite, read_ok, .description = "NFSPROC_READ ok") {
+Test(nfs_write_test_suite, write_ok, .description = "NFSPROC_WRITE ok") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
-    // lookup the test_file.txt inside the mounted directory
+    // lookup the write_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *diropres = lookup_file_or_directory(&fhandle, "test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *write_test_dir_diropres = lookup_file_or_directory(&fhandle, "write_test", NFS__FTYPE__NFDIR);
 
-    // read from this test_file.txt
+    // lookup the write_test_file.txt inside this /nfs_share/write_test directory
+    Nfs__FHandle write_test_dir_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle write_test_dir_nfs_filehandle_copy = deep_copy_nfs_filehandle(write_test_dir_diropres->diropok->file->nfs_filehandle);
+    nfs__dir_op_res__free_unpacked(write_test_dir_diropres, NULL);
+    write_test_dir_fhandle.nfs_filehandle = &write_test_dir_nfs_filehandle_copy;
+
+    Nfs__DirOpRes *diropres = lookup_file_or_directory(&write_test_dir_fhandle, "write_test_file.txt", NFS__FTYPE__NFREG);
+
+    // write to this write_test_file.txt
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle file_nfs_filehandle_copy = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
     file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
 
-    Nfs__ReadRes *readres = read_from_file(&file_fhandle, 2, 10, diropres->diropok->attributes);
+    Nfs__AttrStat *attrstat = write_to_file(&file_fhandle, 6, 4, "write");
+
+    // read from write_test_file.txt
+    Nfs__ReadRes *readres = read_from_file(&file_fhandle, 0, 20, attrstat);
     nfs__dir_op_res__free_unpacked(diropres, NULL);
+    nfs__attr_stat__free_unpacked(attrstat, NULL);
 
     // validate read content
     ProtobufCBinaryData read_content = readres->readresbody->nfsdata;
@@ -31,13 +43,16 @@ Test(nfs_read_test_suite, read_ok, .description = "NFSPROC_READ ok") {
     memcpy(read_content_as_string, read_content.data, read_content.len);
     read_content_as_string[read_content.len] = 0;   // null terminate the string
 
-    char *test_file_content = "test_content";
-    cr_assert_str_eq(read_content_as_string, test_file_content + 2);
+    char *new_test_file_content = "write_write";
+    cr_assert_str_eq(read_content_as_string, new_test_file_content, "Expected %s, but found %s", new_test_file_content, read_content_as_string);
+
+    free(read_content_as_string);
 
     nfs__read_res__free_unpacked(readres, NULL);
 }
 
-Test(nfs_read_test_suite, read_no_such_file, .description = "NFSPROC_READ no such file") {
+/*
+Test(nfs_write_test_suite, read_no_such_file, .description = "NFSPROC_READ no such file") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
     // try to read from a nonexistent file
@@ -71,7 +86,7 @@ Test(nfs_read_test_suite, read_no_such_file, .description = "NFSPROC_READ no suc
     nfs__read_res__free_unpacked(readres, NULL);
 }
 
-Test(nfs_read_test_suite, read_is_directory, .description = "NFSPROC_READ directory specified for a non directory operation") {
+Test(nfs_write_test_suite, read_is_directory, .description = "NFSPROC_READ directory specified for a non directory operation") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
     // try to read from the mounted directory
@@ -100,3 +115,4 @@ Test(nfs_read_test_suite, read_is_directory, .description = "NFSPROC_READ direct
     mount__fh_status__free_unpacked(fhstatus, NULL);
     nfs__read_res__free_unpacked(readres, NULL);
 }
+*/
