@@ -69,7 +69,7 @@ Test(nfs_test_suite, readdir_no_such_directory, .description = "NFSPROC_READDIR 
 
     // try to read from a nonexistent directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
-    nfs_filehandle.inode_number = 12345678912345;
+    nfs_filehandle.inode_number = NONEXISTENT_INODE_NUMBER;
 
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = &nfs_filehandle;

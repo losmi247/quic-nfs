@@ -318,7 +318,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
 
-    // get the attributes of this directory before the looku[], to check that it is actually a directory
+    // get the attributes of this directory before the lookup, to check that it is actually a directory
     Nfs__FAttr directory_fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(directory_absolute_path, &directory_fattr);
     if(error_code > 0) {

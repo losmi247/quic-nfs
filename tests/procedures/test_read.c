@@ -22,7 +22,7 @@ Test(nfs_read_test_suite, read_ok, .description = "NFSPROC_READ ok") {
     NfsFh__NfsFileHandle file_nfs_filehandle_copy = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
     file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
 
-    Nfs__ReadRes *readres = read_from_file(&file_fhandle, 2, 10, diropres->diropok->attributes);
+    Nfs__ReadRes *readres = read_from_file(&file_fhandle, 2, 10, diropres->diropok->attributes, NFS__FTYPE__NFREG);
     nfs__dir_op_res__free_unpacked(diropres, NULL);
 
     // validate read content
@@ -42,7 +42,7 @@ Test(nfs_read_test_suite, read_no_such_file, .description = "NFSPROC_READ no suc
 
     // try to read from a nonexistent file
     NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
-    file_nfs_filehandle.inode_number = 12345678912345;
+    file_nfs_filehandle.inode_number = NONEXISTENT_INODE_NUMBER;
     file_nfs_filehandle.timestamp = 0;
 
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -71,7 +71,7 @@ Test(nfs_read_test_suite, read_no_such_file, .description = "NFSPROC_READ no suc
     nfs__read_res__free_unpacked(readres, NULL);
 }
 
-Test(nfs_read_test_suite, read_is_directory, .description = "NFSPROC_READ directory specified for a non directory operation") {
+Test(nfs_read_test_suite, read_is_directory, .description = "NFSPROC_READ directory specified for a non-directory operation") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
     // try to read from the mounted directory

@@ -79,6 +79,8 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
 /*
 * Given the Nfs__FHandle of a file, calls NFSPROC_READ to read up to 'byte_count' from 'offset' in the
 * specified file.
+* The resulting AttrStat returned by READ procedure are validated using the 'ftype' provided as argument 
+* (we can read from many file types - regular files, symbolic links, block-special devices, etc.).
 * 
 * Returns the Nfs__ReadRes returned by READ procedure.
 *
@@ -88,7 +90,7 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadRes
 * and always call 'nfs__read_res__free_unpacked()' on it at some point.
 */
-Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read) {
+Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read, Nfs__FType ftype) {
     Nfs__ReadArgs readargs = NFS__READ_ARGS__INIT;
     readargs.file = file_fhandle;
     readargs.count = byte_count;
@@ -110,7 +112,7 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
     // validate attributes
     cr_assert_not_null(readres->readresbody->attributes);
     Nfs__FAttr *read_fattr = readres->readresbody->attributes;
-    validate_fattr(read_fattr, NFS__FTYPE__NFREG);
+    validate_fattr(read_fattr, ftype);
     check_equal_fattr(attributes_before_read, read_fattr);
     // this is a famous problem - atime is going to be flushed to disk by the kernel only after 24hrs, we can't synchronously update it
     cr_assert(get_time(attributes_before_read->atime) <= get_time(read_fattr->atime));   // file was accessed
@@ -127,8 +129,9 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 
 /*
 * Given the Nfs__FHandle of a file, calls NFSPROC_WRITE to write the given 'byte_count' at 'offset' in
-* that file, from the specified source buffer.
-* inside the given directory. Checks that the looked up file has the given 'expected_ftype' file type.
+* that file, from the specified source buffer. 
+* The resulting AttrStat returned by WRITE procedure are validated using the 'ftype' provided as argument 
+* (we can write to many file types - regular files, symbolic links, block-special devices, etc.).
 * 
 * Returns the Nfs__AttrStat returned by WRITE procedure.
 *
@@ -138,12 +141,15 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer) {
+Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__FType ftype) {
     Nfs__WriteArgs writeargs = NFS__WRITE_ARGS__INIT;
     writeargs.file = file_fhandle;
     writeargs.beginoffset = 0; // unused
     writeargs.offset = offset;
     writeargs.totalcount = 0;  // unused
+
+    writeargs.nfsdata.data = source_buffer;
+    writeargs.nfsdata.len = byte_count;
 
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
     int status = nfs_procedure_8_write_to_file(writeargs, attrstat);
@@ -154,7 +160,7 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 
     cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
-    validate_fattr(attrstat->attributes, NFS__FTYPE__NFDIR);
+    validate_fattr(attrstat->attributes, ftype);
 
     return attrstat;
 }

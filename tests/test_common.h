@@ -1,6 +1,8 @@
 #ifndef test_common__header__INCLUDED
 #define test_common__header__INCLUDED
 
+#define NONEXISTENT_INODE_NUMBER 1234567891235
+
 #include "criterion/criterion.h"
 #include <criterion/new/assert.h>
 
