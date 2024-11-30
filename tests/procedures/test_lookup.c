@@ -27,7 +27,7 @@ Test(nfs_lookup_test_suite, lookup_no_such_directory, .description = "NFSPROC_LO
 
     // lookup a test_file.txt inside a different nonexistent directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
-    nfs_filehandle.inode_number = 12345678912345;
+    nfs_filehandle.inode_number = NONEXISTENT_INODE_NUMBER;
     nfs_filehandle.timestamp = time(NULL);
 
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;

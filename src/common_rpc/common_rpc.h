@@ -4,7 +4,7 @@
 #include <protobuf-c/protobuf-c.h>
 #include "src/serialization/rpc/rpc.pb-c.h"
 
-#define RPC_MSG_BUFFER_SIZE 500
+#define RPC_MSG_BUFFER_SIZE 20000
 
 /*
 * Functions used in both client and server RPC program implementations.

@@ -183,6 +183,19 @@ message ReadRes {
 }
 
 /*
+* WRITE (8)
+*/
+
+message WriteArgs {
+    FHandle file = 1;
+
+    uint32 beginoffset = 2;  // unused
+    uint32 offset = 3;     
+    uint32 totalcount = 4;   // unused
+    bytes nfsdata = 5;
+}
+
+/*
 * READDIR (16)
 */
 
