@@ -318,10 +318,42 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
 
+    // get the attributes of this directory before the looku[], to check that it is actually a directory
+    Nfs__FAttr directory_fattr = NFS__FATTR__INIT;
+    int error_code = get_attributes(directory_absolute_path, &directory_fattr);
+    if(error_code > 0) {
+        // we failed getting attributes for this file
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting file attributes for file at absolute path '%s' with error code %d \n", directory_absolute_path, error_code);
+
+        nfs__dir_op_args__free_unpacked(diropargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+    // only directories can be looked up using LOOKUP
+    if(directory_fattr.type != NFS__FTYPE__NFDIR) {
+        // if the file is not a directory, return DirOpRes with 'non-directory specified in a directory operation' status
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'lookup' procedure called on a non-directory '%s'\n", directory_absolute_path);
+
+        // build the procedure results
+        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_NOTDIR);
+
+        // serialize the procedure results
+        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+        uint8_t *diropres_buffer = malloc(diropres_size);
+        nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+        nfs__dir_op_args__free_unpacked(diropargs, NULL);
+        free(diropres->default_case);
+        free(diropres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+    }
+
     char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
     // create a NFS filehandle for the looked up file
     NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
-    int error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
+    error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
     if(error_code == 1) {
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: creation of nfs filehandle failed with error code %d \n", error_code);
 
