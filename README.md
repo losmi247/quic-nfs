@@ -43,7 +43,7 @@ To run the tests:
 |  5  | READLINK       | read from symbolic link                      |                     |                       |                    |
 |  6  | READ           | read from file                               |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  7  | WRITECACHE     | write to cache                               |      NFSv3          |     NFSv3             |        NFSv3       |
-|  8  | WRITE          | write to file                                |                     |                       |                    |
+|  8  | WRITE          | write to file                                |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  9  | CREATE         | create file                                  |                     |                       |                    |
 | 10  | REMOVE         | remove file                                  |                     |                       |                    |
 | 11  | RENAME         | rename file                                  |                     |                       |                    |
