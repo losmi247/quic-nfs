@@ -911,6 +911,7 @@ Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number,
             return serve_nfs_procedure_6_read_from_file(parameters);
         case 7:
         case 8:
+            return serve_nfs_procedure_8_write_to_file(parameters);
         case 9:
         case 10:
         case 11:
