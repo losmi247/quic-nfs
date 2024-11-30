@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "common_rpc.h"
 
@@ -51,6 +52,8 @@ void log_rpc_msg_info(Rpc__RpcMsg *rpc_msg) {
     fprintf(stdout, "Received RPC message:\nxid: %u\nmessage type: %s\nbody case: %d\n", 
         rpc_msg->xid, msg_type, rpc_msg->body_case);
     fflush(stdout);
+
+    free(msg_type);
 }
 
 /*

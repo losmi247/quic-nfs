@@ -11,6 +11,8 @@
 
 #include "tests/validation/procedure_validation.h"
 
+#include "src/nfs/nfs_common.h"
+
 NfsFh__NfsFileHandle deep_copy_nfs_filehandle(NfsFh__NfsFileHandle *nfs_filehandle);
 
 #endif /* test_common__header__INCLUDED */
