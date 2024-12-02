@@ -60,7 +60,7 @@ Mount__FhStatus *mount_directory_success(char *directory_absolute_path) {
 /*
 * Mounts the directory given by absolute path.
 *
-* The procedure results are validated assuming a non-MOUNT__STAT__MNT_OK Mount status, given in argument 'non-nfs-ok-status'.
+* The procedure results are validated assuming a non-MOUNT__STAT__MNT_OK Mount status, given in argument 'non_mnt_ok_status'.
 */
 void mount_directory_fail(char *directory_absolute_path, Mount__Stat non_mnt_ok_status) {
     Mount__FhStatus *fhstatus = mount_directory(directory_absolute_path);
@@ -73,9 +73,69 @@ void mount_directory_fail(char *directory_absolute_path, Mount__Stat non_mnt_ok_
 }
 
 /*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_GETATTR to get its attributes.
+* 
+* Returns the Nfs__AttrStat returned by GETATTR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__attr_stat__free_unpacked()'
+* with the obtained AttrStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
+* and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
+*/
+Nfs__AttrStat *get_attributes(Nfs__FHandle file_fhandle) {
+    Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
+    int status = nfs_procedure_1_get_file_attributes(file_fhandle, attrstat);
+    if(status != 0) {
+        free(attrstat);
+        cr_fail("NFSPROC_GETATTR failed - status %d\n", status);
+    }
+
+    return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_GETATTR to get its attributes.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* The file attributes received in procedure results are validated assuming the file has type given in 'expected_ftype'.
+*
+* Returns the Nfs__AttrStat returned by GETATTR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__attr_stat__free_unpacked()'
+* with the obtained AttrStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
+* and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
+*/
+Nfs__AttrStat *get_attributes_success(Nfs__FHandle file_fhandle, Nfs__FType expected_ftype) {
+    Nfs__AttrStat *attrstat = get_attributes(file_fhandle);
+
+    cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
+    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
+    validate_fattr(attrstat->attributes, NFS__FTYPE__NFDIR);
+
+    return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_GETATTR to get its attributes.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void get_attributes_fail(Nfs__FHandle file_fhandle, Nfs__Stat non_nfs_ok_status) {
+    Nfs__AttrStat *attrstat = get_attributes(file_fhandle);
+
+    cr_assert_eq(attrstat->status, non_nfs_ok_status);
+    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
+    cr_assert_not_null(attrstat->default_case);
+
+    nfs__attr_stat__free_unpacked(attrstat, NULL);
+}
+
+/*
 * Given the Nfs__FHandle of a file or a directory, calls NFSPROC_SETATTR to update the attributes of
-* the given file to the values given in 'mode', 'uid', 'gid,' 'size', 'atime', 'mtime' arguments.
-* The new file attributes are validated assuming the file has type given in 'ftype'.
+* the given file to the values given in the sattr argument.
 * 
 * Returns the Nfs__AttrStat returned by SETATTR procedure.
 *
@@ -85,18 +145,10 @@ void mount_directory_fail(char *directory_absolute_path, Mount__Stat non_mnt_ok_
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) {
-    Nfs__SAttr sattr = NFS__SATTR__INIT;
-    sattr.mode = mode;
-    sattr.uid = uid;
-    sattr.gid = gid;
-    sattr.size = size;
-    sattr.atime = atime;
-    sattr.mtime = mtime;
-
+Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, Nfs__SAttr *sattr) {
     Nfs__SAttrArgs sattrargs = NFS__SATTR_ARGS__INIT;
     sattrargs.file = file_fhandle;
-    sattrargs.attributes = &sattr;
+    sattrargs.attributes = sattr;
 
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
     int status = nfs_procedure_2_set_file_attributes(sattrargs, attrstat);
@@ -105,11 +157,39 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid
         cr_fail("NFSPROC_SETATTR failed - status %d\n", status);
     }
 
+    return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_SETATTR to update the attributes of
+* the given file to the values given in 'mode', 'uid', 'gid,' 'size', 'atime', 'mtime' arguments.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* The new file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
+* 
+* Returns the Nfs__AttrStat returned by SETATTR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__attr_stat__free_unpacked()'
+* with the obtained AttrStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
+* and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
+*/
+Nfs__AttrStat *set_attributes_success(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) {
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = mode;
+    sattr.uid = uid;
+    sattr.gid = gid;
+    sattr.size = size;
+    sattr.atime = atime;
+    sattr.mtime = mtime;
+
+    Nfs__AttrStat *attrstat = set_attributes(file_fhandle, &sattr);
+
     // validate AttrStat
     cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
     
-
     // validate attributes
     cr_assert_not_null(attrstat->attributes);
     Nfs__FAttr *fattr = attrstat->attributes;
@@ -117,6 +197,30 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid
     check_fattr_update(fattr, &sattr);
 
     return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_SETATTR to update the attributes of
+* the given file to the values given in 'mode', 'uid', 'gid,' 'size', 'atime', 'mtime' arguments.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void set_attributes_fail(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = mode;
+    sattr.uid = uid;
+    sattr.gid = gid;
+    sattr.size = size;
+    sattr.atime = atime;
+    sattr.mtime = mtime;
+
+    Nfs__AttrStat *attrstat = set_attributes(file_fhandle, &sattr);
+
+    cr_assert_eq(attrstat->status, NFS__STAT__NFSERR_NOENT);
+    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
+    cr_assert_not_null(attrstat->default_case);
+
+    nfs__attr_stat__free_unpacked(attrstat, NULL);
 }
 
 /*
@@ -337,8 +441,7 @@ Nfs__DirOpRes *create_file_success(Nfs__FHandle *directory_fhandle, char *filena
 * inside the given directory. The file is created with initial attributes specified in mode, uid, gid
 * arguments.
 *
-* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non-nfs-ok-status'.
-* The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
 void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
     Nfs__SAttr sattr = NFS__SATTR__INIT;

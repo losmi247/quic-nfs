@@ -9,25 +9,14 @@ TestSuite(nfs_getattr_test_suite);
 Test(nfs_getattr_test_suite, getattr_ok, .description = "NFSPROC_GETATTR ok") {
     Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
-    // now get file attributes
+    // now get file attributes for the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    fhandle.nfs_filehandle = fhstatus->directory->nfs_filehandle;
-
-    Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
-    int status = nfs_procedure_1_get_file_attributes(fhandle, attrstat);
-    if(status != 0) {
-        mount__fh_status__free_unpacked(fhstatus, NULL);
-
-        free(attrstat);
-
-        cr_fail("NFSPROC_GETATTR failed - status %d\n", status);
-    }
-
-    cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
-    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
-    validate_fattr(attrstat->attributes, NFS__FTYPE__NFDIR);
-
+    NfsFh__NfsFileHandle nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
     mount__fh_status__free_unpacked(fhstatus, NULL);
+    fhandle.nfs_filehandle = &nfs_filehandle_copy;
+
+    Nfs__AttrStat *attrstat = get_attributes_success(fhandle, NFS__FTYPE__NFDIR);
+
     nfs__attr_stat__free_unpacked(attrstat, NULL);
 }
 
@@ -41,21 +30,8 @@ Test(nfs_getattr_test_suite, getattr_no_such_file_or_directory, .description = "
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = &nfs_filehandle;
 
-    Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
-    int status = nfs_procedure_1_get_file_attributes(fhandle, attrstat);
-    if(status != 0) {
-        mount__fh_status__free_unpacked(fhstatus, NULL);
-
-        free(attrstat);
-
-        cr_fail("NFSPROC_GETATTR failed - status %d\n", status);
-    }
-
-    cr_assert_eq(attrstat->status, NFS__STAT__NFSERR_NOENT);
-    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
-    cr_assert_not_null(attrstat->default_case);
+    get_attributes_fail(fhandle, NFS__STAT__NFSERR_NOENT);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
-    nfs__attr_stat__free_unpacked(attrstat, NULL);
 }
 
