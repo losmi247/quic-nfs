@@ -366,10 +366,10 @@ static const ProtobufCFieldDescriptor mount__fh_status__field_descriptors[3] =
     "status",
     1,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_ENUM,
     0,   /* quantifier_offset */
     offsetof(Mount__FhStatus, status),
-    NULL,
+    &mount__stat__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -678,4 +678,38 @@ const ProtobufCMessageDescriptor mount__export_list__descriptor =
   1,  mount__export_list__number_ranges,
   (ProtobufCMessageInit) mount__export_list__init,
   NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCEnumValue mount__stat__enum_values_by_number[5] =
+{
+  { "MNT_OK", "MOUNT__STAT__MNT_OK", 0 },
+  { "MNTERR_NOENT", "MOUNT__STAT__MNTERR_NOENT", 2 },
+  { "MNTERR_NOTEXP", "MOUNT__STAT__MNTERR_NOTEXP", 3 },
+  { "MNTERR_IO", "MOUNT__STAT__MNTERR_IO", 5 },
+  { "NFSERR_NOTDIR", "MOUNT__STAT__NFSERR_NOTDIR", 20 },
+};
+static const ProtobufCIntRange mount__stat__value_ranges[] = {
+{0, 0},{2, 1},{5, 3},{20, 4},{0, 5}
+};
+static const ProtobufCEnumValueIndex mount__stat__enum_values_by_name[5] =
+{
+  { "MNTERR_IO", 3 },
+  { "MNTERR_NOENT", 1 },
+  { "MNTERR_NOTEXP", 2 },
+  { "MNT_OK", 0 },
+  { "NFSERR_NOTDIR", 4 },
+};
+const ProtobufCEnumDescriptor mount__stat__descriptor =
+{
+  PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
+  "mount.Stat",
+  "Stat",
+  "Mount__Stat",
+  "mount",
+  5,
+  mount__stat__enum_values_by_number,
+  5,
+  mount__stat__enum_values_by_name,
+  4,
+  mount__stat__value_ranges,
+  NULL,NULL,NULL,NULL   /* reserved[1234] */
 };

@@ -28,6 +28,26 @@ typedef struct _Mount__ExportList Mount__ExportList;
 
 /* --- enums --- */
 
+typedef enum _Mount__Stat {
+  MOUNT__STAT__MNT_OK = 0,
+  /*
+   * no such file or directory
+   */
+  MOUNT__STAT__MNTERR_NOENT = 2,
+  /*
+   * the file is not exported for NFS
+   */
+  MOUNT__STAT__MNTERR_NOTEXP = 3,
+  /*
+   * hard error e.g. disk error
+   */
+  MOUNT__STAT__MNTERR_IO = 5,
+  /*
+   * not a directory - caller specified a non-directory in a directory operation 
+   */
+  MOUNT__STAT__NFSERR_NOTDIR = 20
+    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(MOUNT__STAT)
+} Mount__Stat;
 
 /* --- messages --- */
 
@@ -57,7 +77,7 @@ struct  _Mount__FhStatus
   /*
    * 0 for success, non-zero for error
    */
-  uint32_t status;
+  Mount__Stat status;
   Mount__FhStatus__FhstatusBodyCase fhstatus_body_case;
   union {
     /*
@@ -72,7 +92,7 @@ struct  _Mount__FhStatus
 };
 #define MOUNT__FH_STATUS__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&mount__fh_status__descriptor) \
-    , 0, MOUNT__FH_STATUS__FHSTATUS_BODY__NOT_SET, {0} }
+    , MOUNT__STAT__MNT_OK, MOUNT__FH_STATUS__FHSTATUS_BODY__NOT_SET, {0} }
 
 
 /*
@@ -316,6 +336,7 @@ typedef void (*Mount__ExportList_Closure)
 
 /* --- descriptors --- */
 
+extern const ProtobufCEnumDescriptor    mount__stat__descriptor;
 extern const ProtobufCMessageDescriptor mount__fhandle__descriptor;
 extern const ProtobufCMessageDescriptor mount__fh_status__descriptor;
 extern const ProtobufCMessageDescriptor mount__dir_path__descriptor;

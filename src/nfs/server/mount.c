@@ -76,12 +76,84 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
 
         return create_garbage_args_accepted_reply();
     }
+    char *directory_absolute_path = dirpath->path;
 
-    if(!is_directory_exported(dirpath->path)) {
-        // the server has not exported this directory for NFS - give a FhStatus with status > 0 to indicate to client that they can not mount this directory
-        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: directory %s not exported for NFS\n", dirpath->path);
+    // check that the directory client wants to mount exists
+    int error_code = access(directory_absolute_path, F_OK);
+    if(error_code < 0) {
+        if(errno == EIO || errno == ENOENT) {
+            Mount__Stat mount_stat;
+            switch(errno) {
+                case EIO:
+                    mount_stat = MOUNT__STAT__MNTERR_IO;
+                    fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: physical IO error occurred while checking if directory at absolute path '%s' exists\n", directory_absolute_path);
+                case ENOENT:
+                    mount_stat = MOUNT__STAT__MNTERR_NOENT;
+                    fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: attempted to mount a directory at absolute path '%s' which does not exist\n", directory_absolute_path);
+            }
 
-        Mount__FhStatus fh_status = create_default_case_fh_status(1);
+            // build the procedure results
+            Mount__FhStatus fh_status = create_default_case_fh_status(mount_stat);
+
+            // serialize the procedure results
+            size_t fh_status_size = mount__fh_status__get_packed_size(&fh_status);
+            uint8_t *fh_status_buffer = malloc(fh_status_size);
+            mount__fh_status__pack(&fh_status, fh_status_buffer);
+
+            Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
+
+            mount__dir_path__free_unpacked(dirpath, NULL);
+            free(fh_status.default_case);
+
+            return accepted_reply;
+        }
+        else{
+            perror_msg("serve_mnt_procedure_1_add_mount_entry: failed checking if directory to be mounted at absolute path '%s' exists", directory_absolute_path);
+
+            mount__dir_path__free_unpacked(dirpath, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+    }
+
+    // get the attributes of this directory, to check that it is actually a directory
+    Nfs__FAttr directory_fattr = NFS__FATTR__INIT;
+    error_code = get_attributes(directory_absolute_path, &directory_fattr);
+    if(error_code > 0) {
+        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: failed getting file attributes for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
+
+        mount__dir_path__free_unpacked(dirpath, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've checked this file/directory exists
+        return create_system_error_accepted_reply();
+    }
+    // only directories can be mounted using MNT
+    if(directory_fattr.type != NFS__FTYPE__NFDIR) {
+        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: 'mnt' procedure called on a non-directory '%s'\n", directory_absolute_path);
+
+        // build the procedure results
+        Mount__FhStatus fh_status = create_default_case_fh_status(MOUNT__STAT__NFSERR_NOTDIR);
+
+        // serialize the procedure results
+        size_t fh_status_size = mount__fh_status__get_packed_size(&fh_status);
+        uint8_t *fh_status_buffer = malloc(fh_status_size);
+        mount__fh_status__pack(&fh_status, fh_status_buffer);
+
+        Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
+
+        mount__dir_path__free_unpacked(dirpath, NULL);
+        free(fh_status.default_case);
+
+        return accepted_reply;
+    }
+    free(directory_fattr.atime);
+    free(directory_fattr.mtime);
+    free(directory_fattr.ctime);
+
+    if(!is_directory_exported(directory_absolute_path)) {
+        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: directory at absolute path '%s' not exported for Nfs\n", directory_absolute_path);
+
+        Mount__FhStatus fh_status = create_default_case_fh_status(MOUNT__STAT__MNTERR_NOTEXP);
 
         // serialize the procedure results
         size_t fh_status_size = mount__fh_status__get_packed_size(&fh_status);
@@ -99,39 +171,23 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
 
     // create a NFS file handle for this directory
     NfsFh__NfsFileHandle directory_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
-    int error_code = create_nfs_filehandle(dirpath->path, &directory_nfs_filehandle, &inode_cache);
-    if(error_code == 1) {
-        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: creation of nfs filehandle failed with error code %d \n", error_code);
+    error_code = create_nfs_filehandle(directory_absolute_path, &directory_nfs_filehandle, &inode_cache);
+    if(error_code > 0) {
+        fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: failed creating a NFS filehandle for directory at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
         mount__dir_path__free_unpacked(dirpath, NULL);
 
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've checked that the looked up file exists
         return create_system_error_accepted_reply();
     }
-    if(error_code == 2) {
-        // the directory that client wants to mount does not exist
-        Mount__FhStatus fh_status = create_default_case_fh_status(2);
 
-        // serialize the procedure results
-        size_t fh_status_size = mount__fh_status__get_packed_size(&fh_status);
-        uint8_t *fh_status_buffer = malloc(fh_status_size);
-        mount__fh_status__pack(&fh_status, fh_status_buffer);
-
-        free(fh_status.default_case);
-
-        Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
-
-        mount__dir_path__free_unpacked(dirpath, NULL);
-
-        return accepted_reply;
-    }
-
-    // create a new mount entry - pass *dirpath instead of dirpath so that we are able to free later
+    // create a new mount entry - pass *dirpath instead of dirpath so that we are able to free it later from the mount list
     Mount__MountList *new_mount_entry = create_new_mount_entry(strdup("client-hostname"), *dirpath); // TODO (QNFS-20): replace hostname with actual client hostname when available
     add_mount_entry(&mount_list, new_mount_entry);
 
     // build the procedure results
     Mount__FhStatus fh_status = MOUNT__FH_STATUS__INIT;
-    fh_status.status = 0;
+    fh_status.status = MOUNT__STAT__MNT_OK;
     fh_status.fhstatus_body_case = MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY;
 
     Mount__FHandle fhandle = MOUNT__FHANDLE__INIT;

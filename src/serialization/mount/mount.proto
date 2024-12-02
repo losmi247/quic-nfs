@@ -12,8 +12,16 @@ message FHandle {
     nfs_fh.NfsFileHandle nfs_filehandle = 1;
 }
 
+enum Stat {
+    MNT_OK = 0;
+    MNTERR_NOENT = 2;           // no such file or directory
+    MNTERR_NOTEXP = 3;           // the file is not exported for NFS
+    MNTERR_IO = 5;              // hard error e.g. disk error
+    NFSERR_NOTDIR = 20;         // not a directory - caller specified a non-directory in a directory operation 
+}
+
 message FhStatus {
-    uint32 status = 1; // 0 for success, non-zero for error
+    Stat status = 1; // 0 for success, non-zero for error
     oneof fhstatus_body {
         FHandle directory = 2;                  // case status is 0
         google.protobuf.Empty default_case = 3; // default case (status > 0)

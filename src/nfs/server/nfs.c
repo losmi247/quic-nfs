@@ -65,11 +65,11 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
-        // we failed getting attributes for this file/directory - we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
         fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__fhandle__free_unpacked(fhandle, NULL);
 
+        // we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
         return create_system_error_accepted_reply();
     }
 
@@ -216,11 +216,11 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
-        // we failed getting attributes for this file - we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
         fprintf(stderr, "serve_procedure_2_set_file_attributes: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
+        // we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
         return create_system_error_accepted_reply();
     }
 
@@ -322,7 +322,6 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     Nfs__FAttr directory_fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(directory_absolute_path, &directory_fattr);
     if(error_code > 0) {
-        // we failed getting attributes for this file
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting file attributes for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
@@ -332,7 +331,6 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     }
     // only directories can be looked up using LOOKUP
     if(directory_fattr.type != NFS__FTYPE__NFDIR) {
-        // if the file is not a directory, return DirOpRes with 'non-directory specified in a directory operation' status
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'lookup' procedure called on a non-directory '%s'\n", directory_absolute_path);
 
         // build the procedure results
@@ -353,39 +351,56 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     free(directory_fattr.mtime);
     free(directory_fattr.ctime);
 
+    // check that the file client wants to lookup exists
     char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
+    error_code = access(file_absolute_path, F_OK);
+    if(error_code < 0) {
+        if(errno == EIO || errno == ENOENT) {
+            Nfs__Stat nfs_stat;
+            switch(errno) {
+                case EIO:
+                    nfs_stat = NFS__STAT__NFSERR_IO;
+                    fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
+                case ENOENT:
+                    nfs_stat = NFS__STAT__NFSERR_NOENT;
+                    fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: attempted 'lookup' on a file at absolute path '%s' which does not exist\n", file_absolute_path);
+            }
+
+            // build the procedure results
+            Nfs__DirOpRes *diropres = create_default_case_dir_op_res(nfs_stat);
+
+            // serialize the procedure results
+            size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+            uint8_t *diropres_buffer = malloc(diropres_size);
+            nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+            free(file_absolute_path);
+            nfs__dir_op_args__free_unpacked(diropargs, NULL);
+            free(diropres->default_case);
+            free(diropres);
+
+            return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+        }
+        else{
+            perror_msg("serve_nfs_procedure_4_look_up_file_name: failed checking if file to be created at absolute path '%s' already exists", file_absolute_path);
+
+            free(file_absolute_path);
+            nfs__dir_op_args__free_unpacked(diropargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+    }
+
     // create a NFS filehandle for the looked up file
     NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
     error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
-    if(error_code == 1) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: creation of nfs filehandle for file at absolute path '%s' failed with error code %d \n",file_absolute_path ,error_code);
+    if(error_code > 0) {
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed creating a NFS filehandle for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
-        free(file_absolute_path);
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've checked that the looked up file exists
         return create_system_error_accepted_reply();
-    }
-    if(error_code == 2) {
-        // the file that the client wants to look up in this directory does not exist
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
-
-        // build the procedure results
-        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_NOENT);
-
-        // serialize the procedure results
-        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
-        uint8_t *diropres_buffer = malloc(diropres_size);
-        nfs__dir_op_res__pack(diropres, diropres_buffer);
-
-        free(diropres->default_case);
-        free(diropres);
-
-        Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
-
-        free(file_absolute_path);
-        nfs__dir_op_args__free_unpacked(diropargs, NULL);
-
-        return accepted_reply;
     }
 
     // get the attributes of the looked up file
@@ -648,7 +663,6 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
-        // we failed getting attributes for this file
         fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__write_args__free_unpacked(writeargs, NULL);
@@ -705,10 +719,13 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
         switch(error_code) {
             case 4:
                 nfs_stat = NFS__STAT__NFSERR_FBIG;
+                fprintf(stderr, "serve_nfs_procedure_8_write_to_file: attempted write that would exceed file size limits, to file at absolute path '%s'\n", file_absolute_path);
             case 5:
                 nfs_stat = NFS__STAT__NFSERR_IO;
+                fprintf(stderr, "serve_nfs_procedure_8_write_to_file: physical IO error occurred while trying to write to file at absolute path '%s'\n", file_absolute_path);
             case 6:
                 nfs_stat = NFS__STAT__NFSERR_NOSPC;
+                fprintf(stderr, "serve_nfs_procedure_8_write_to_file: no space left on device to write to file at absolute path '%s'\n", file_absolute_path);
         }
 
         // build the procedure results
@@ -945,17 +962,11 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
 
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
-    else if(errno == EACCES || errno == EIO) {
-        Nfs__Stat nfs_stat;
-        switch(errno) {
-            case EACCES: // the file client wants to create already exists
-                nfs_stat = NFS__STAT__NFSERR_EXIST;
-            case EIO:    // physical IO error ocurred during access()
-                nfs_stat = NFS__STAT__NFSERR_IO;
-        }
+    else if(errno == EIO) {
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
 
         // build the procedure results
-        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(nfs_stat);
+        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_IO);
 
         // serialize the procedure results
         size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
@@ -978,12 +989,12 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
 
         return create_system_error_accepted_reply();
     }
+    // now we know we got a ENOENT from access() i.e. the file client wants to create does not exist
 
     // create the file
     int fd; 
-    // with O_CREAT flag, open() has no effect if file already exists, and just opens it
     if(sattr->mode != -1) {
-        fd = open(file_absolute_path, O_CREAT, sattr->mode); 
+        fd = open(file_absolute_path, O_CREAT, sattr->mode);    // with O_CREAT flag, open() has no effect if file already exists, and just opens it
     }
     else{
         fd = open(file_absolute_path, O_CREAT); 
@@ -992,14 +1003,18 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
         if(errno == EIO || errno == ENAMETOOLONG || errno == ENOSPC || errno == ENXIO) {
             Nfs__Stat nfs_stat;
             switch(errno) {
-                case EIO:          // physical IO error ocurred during open()
+                case EIO:
                     nfs_stat = NFS__STAT__NFSERR_IO;
-                case ENAMETOOLONG: // file name is longer than file system limit
+                    fprintf(stderr, "serve_nfs_procedure_9_create_file: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
+                case ENAMETOOLONG:
                     nfs_stat = NFS__STAT__NFSERR_NAMETOOLONG;
-                case ENOSPC:       // no space to add an entry to the containing directory
+                    fprintf(stderr, "serve_nfs_procedure_9_create_file: attempted to create a file exceeding file system limit on filename length, at absolute path '%s' \n", file_absolute_path);
+                case ENOSPC: 
                     nfs_stat = NFS__STAT__NFSERR_NOSPC;
-                case ENXIO:        // file to be created is a character/block special device and the device associated with it does not exist
+                    fprintf(stderr, "serve_nfs_procedure_9_create_file: no space left to add a new entry '%s' to directory '%s'\n", file_absolute_path, directory_absolute_path);
+                case ENXIO:
                     nfs_stat = NFS__STAT__NFSERR_NXIO;
+                    fprintf(stderr, "serve_nfs_procedure_9_create_file: device associated with character/block special device '%s' does not exist\n", file_absolute_path);
             }
 
             // build the procedure results
@@ -1066,7 +1081,7 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
     NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
     error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
     if(error_code > 0) {
-        fprintf(stderr, "serve_nfs_procedure_9_create_file: creation of nfs filehandle for file at absolute path '%s' failed with error code %d\n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: failed creating a NFS filehandle for file at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         free(file_absolute_path);
         nfs__create_args__free_unpacked(createargs, NULL);

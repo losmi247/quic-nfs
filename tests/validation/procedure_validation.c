@@ -222,8 +222,44 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 
 /*
 * Given the Nfs__FHandle of a directory, calls NFSPROC_CREATE to create a file with the given filename
+* inside the given directory. The file is created with initial attributes specified in sattr argument.
+* 
+* Returns the Nfs__DirOpRes returned by CREATE procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__dir_op_res__free_unpacked()'
+* with the obtained DirOpRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
+* and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
+*/
+Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, Nfs__SAttr *sattr) {
+    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
+    file_name.filename = filename;
+
+    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
+    diropargs.dir = directory_fhandle;
+    diropargs.name = &file_name;
+
+    Nfs__CreateArgs createargs = NFS__CREATE_ARGS__INIT;
+    createargs.where = &diropargs;
+    createargs.attributes = sattr;
+
+    Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
+    int status = nfs_procedure_9_create_file(createargs, diropres);
+    if(status != 0) {
+        free(diropres);
+        cr_fail("NFSPROC_CREATE failed - status %d\n", status);
+    }
+
+    return diropres;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_CREATE to create a file with the given filename
 * inside the given directory. The file is created with initial attributes specified in mode, uid, gid
 * arguments.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
 * 
 * Returns the Nfs__DirOpRes returned by CREATE procedure.
@@ -234,14 +270,7 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
 * and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
 */
-Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) {
-    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
-    file_name.filename = filename;
-
-    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
-    diropargs.dir = directory_fhandle;
-    diropargs.name = &file_name;
-
+Nfs__DirOpRes *create_file_success(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) { 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = mode;
     sattr.uid = uid;
@@ -249,17 +278,8 @@ Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, mode
     sattr.size = size;
     sattr.atime = atime;
     sattr.mtime = mtime;
-
-    Nfs__CreateArgs createargs = NFS__CREATE_ARGS__INIT;
-    createargs.where = &diropargs;
-    createargs.attributes = &sattr;
-
-    Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_9_create_file(createargs, diropres);
-    if(status != 0) {
-        free(diropres);
-        cr_fail("NFSPROC_CREATE failed - status %d\n", status);
-    }
+    
+    Nfs__DirOpRes *diropres = create_file(directory_fhandle, filename, &sattr);
 
     cr_assert_eq(diropres->status, NFS__STAT__NFS_OK);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
@@ -276,4 +296,30 @@ Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, mode
     check_fattr_update(fattr, &sattr);
 
     return diropres;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_CREATE to create a file with the given filename
+* inside the given directory. The file is created with initial attributes specified in mode, uid, gid
+* arguments.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non-nfs-ok-status'.
+* The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
+*/
+void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = mode;
+    sattr.uid = uid;
+    sattr.gid = gid;
+    sattr.size = size;
+    sattr.atime = atime;
+    sattr.mtime = mtime;
+
+    Nfs__DirOpRes *diropres = create_file(directory_fhandle, filename, &sattr);
+
+    cr_assert_eq(diropres->status, non_nfs_ok_status);
+    cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
+    cr_assert_not_null(diropres->default_case);
+
+    nfs__dir_op_res__free_unpacked(diropres, NULL);
 }
