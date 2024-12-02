@@ -727,6 +727,51 @@ void   nfs__write_args__free_unpacked
   assert(message->base.descriptor == &nfs__write_args__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   nfs__create_args__init
+                     (Nfs__CreateArgs         *message)
+{
+  static const Nfs__CreateArgs init_value = NFS__CREATE_ARGS__INIT;
+  *message = init_value;
+}
+size_t nfs__create_args__get_packed_size
+                     (const Nfs__CreateArgs *message)
+{
+  assert(message->base.descriptor == &nfs__create_args__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t nfs__create_args__pack
+                     (const Nfs__CreateArgs *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &nfs__create_args__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t nfs__create_args__pack_to_buffer
+                     (const Nfs__CreateArgs *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &nfs__create_args__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Nfs__CreateArgs *
+       nfs__create_args__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Nfs__CreateArgs *)
+     protobuf_c_message_unpack (&nfs__create_args__descriptor,
+                                allocator, len, data);
+}
+void   nfs__create_args__free_unpacked
+                     (Nfs__CreateArgs *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &nfs__create_args__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   nfs__nfs_cookie__init
                      (Nfs__NfsCookie         *message)
 {
@@ -2052,6 +2097,57 @@ const ProtobufCMessageDescriptor nfs__write_args__descriptor =
   nfs__write_args__field_indices_by_name,
   1,  nfs__write_args__number_ranges,
   (ProtobufCMessageInit) nfs__write_args__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor nfs__create_args__field_descriptors[2] =
+{
+  {
+    "where",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__CreateArgs, where),
+    &nfs__dir_op_args__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "attributes",
+    2,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__CreateArgs, attributes),
+    &nfs__sattr__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned nfs__create_args__field_indices_by_name[] = {
+  1,   /* field[1] = attributes */
+  0,   /* field[0] = where */
+};
+static const ProtobufCIntRange nfs__create_args__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor nfs__create_args__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "nfs.CreateArgs",
+  "CreateArgs",
+  "Nfs__CreateArgs",
+  "nfs",
+  sizeof(Nfs__CreateArgs),
+  2,
+  nfs__create_args__field_descriptors,
+  nfs__create_args__field_indices_by_name,
+  1,  nfs__create_args__number_ranges,
+  (ProtobufCMessageInit) nfs__create_args__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor nfs__nfs_cookie__field_descriptors[1] =
