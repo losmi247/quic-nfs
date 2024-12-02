@@ -10,7 +10,7 @@
 TestSuite(nfs_create_test_suite);
 
 Test(nfs_create_test_suite, create_ok, .description = "NFSPROC_CREATE ok") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup the create_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -37,7 +37,7 @@ Test(nfs_create_test_suite, create_ok, .description = "NFSPROC_CREATE ok") {
 }
 
 Test(nfs_create_test_suite, create_no_such_directory, .description = "NFSPROC_CREATE no such directory") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // try to create a file 'create_test.txt' inside a nonexistent directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -58,7 +58,7 @@ Test(nfs_create_test_suite, create_no_such_directory, .description = "NFSPROC_CR
 }
 
 Test(nfs_create_test_suite, create_file_in_a_non_directory, .description = "NFSPROC_CREATE create file in a non-directory") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -83,7 +83,7 @@ Test(nfs_create_test_suite, create_file_in_a_non_directory, .description = "NFSP
 }
 
 Test(nfs_create_test_suite, create_file_name_too_long, .description = "NFSPROC_CREATE file name too long") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup the create_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -111,7 +111,7 @@ Test(nfs_create_test_suite, create_file_name_too_long, .description = "NFSPROC_C
 }
 
 Test(nfs_create_test_suite, create_already_existing_file, .description = "NFSPROC_CREATE create already existing file") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup the create_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;

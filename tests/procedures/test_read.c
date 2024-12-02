@@ -7,7 +7,7 @@
 TestSuite(nfs_read_test_suite);
 
 Test(nfs_read_test_suite, read_ok, .description = "NFSPROC_READ ok") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -38,7 +38,7 @@ Test(nfs_read_test_suite, read_ok, .description = "NFSPROC_READ ok") {
 }
 
 Test(nfs_read_test_suite, read_no_such_file, .description = "NFSPROC_READ no such file") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // try to read from a nonexistent file
     NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -72,7 +72,7 @@ Test(nfs_read_test_suite, read_no_such_file, .description = "NFSPROC_READ no suc
 }
 
 Test(nfs_read_test_suite, read_is_directory, .description = "NFSPROC_READ directory specified for a non-directory operation") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // try to read from the mounted directory
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;

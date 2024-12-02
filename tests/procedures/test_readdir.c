@@ -8,7 +8,7 @@
 */
 
 Test(nfs_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     int expected_number_of_entries = 6;
     char *expected_file_names[6] = {"..", ".", "create_test", "write_test", "a.txt", "test_file.txt"};
@@ -65,7 +65,7 @@ Test(nfs_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
 }
 
 Test(nfs_test_suite, readdir_no_such_directory, .description = "NFSPROC_READDIR no such directory") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // try to read from a nonexistent directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -102,7 +102,7 @@ Test(nfs_test_suite, readdir_no_such_directory, .description = "NFSPROC_READDIR 
 }
 
 Test(nfs_test_suite, readdir_not_a_directory, .description = "NFSPROC_READDIR not a directory") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle root_fhandle = NFS__FHANDLE__INIT;
@@ -145,7 +145,7 @@ Test(nfs_test_suite, readdir_not_a_directory, .description = "NFSPROC_READDIR no
 }
 
 Test(nfs_test_suite, readdir_ok_lookup_then_readdir, .description = "NFSPROC_READDIR ok lookup then readdir") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup directory write_test inside the mounted directory
     Nfs__FHandle root_fhandle = NFS__FHANDLE__INIT;
@@ -212,7 +212,7 @@ Test(nfs_test_suite, readdir_ok_lookup_then_readdir, .description = "NFSPROC_REA
 }
 
 Test(nfs_test_suite, readdir_ok_read_only_first_directory_entry, .description = "NFSPROC_READDIR ok read only first directory entry") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // read from the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -256,7 +256,7 @@ Test(nfs_test_suite, readdir_ok_read_only_first_directory_entry, .description = 
 }
 
 Test(nfs_test_suite, readdir_ok_read_directory_entries_in_batches, .description = "NFSPROC_READDIR ok read directory entries in batches") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // read from the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;

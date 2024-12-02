@@ -9,7 +9,7 @@
 TestSuite(nfs_write_test_suite);
 
 Test(nfs_write_test_suite, write_ok, .description = "NFSPROC_WRITE ok") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup the write_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -54,7 +54,7 @@ Test(nfs_write_test_suite, write_ok, .description = "NFSPROC_WRITE ok") {
 }
 
 Test(nfs_write_test_suite, write_no_such_file, .description = "NFSPROC_WRITE no such file") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // try to write to a nonexistent file
     NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -89,7 +89,7 @@ Test(nfs_write_test_suite, write_no_such_file, .description = "NFSPROC_WRITE no 
 }
 
 Test(nfs_write_test_suite, write_is_directory, .description = "NFSPROC_WRITE directory specified for a non-directory operation") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // try to write to the mounted directory
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -123,7 +123,7 @@ Test(nfs_write_test_suite, write_is_directory, .description = "NFSPROC_WRITE dir
 }
 
 Test(nfs_write_test_suite, write_too_much_data, .description = "NFSPROC_WRITE more than NFS_MAXDATA bytes in nfsdata") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup the write_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;

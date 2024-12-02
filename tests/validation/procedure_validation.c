@@ -7,7 +7,7 @@ uint64_t get_time(Nfs__TimeVal *timeval) {
 }
 
 /*
-* Mounts the directory given by absolute path. Returns the Mount__FhStatus.
+* Mounts the directory given by absolute path.
 *
 * Returns the Mount__FhStatus returned by MOUNT procedure.
 *
@@ -28,7 +28,26 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
         cr_fail("MOUNTPROC_MNT failed - status %d\n", status);
     }
 
-    cr_assert_eq(fhstatus->status, 0);
+    return fhstatus;
+}
+
+/*
+* Mounts the directory given by absolute path.
+*
+* The procedure results are validated assuming MOUNT__STAT__MNT_OK Mount status.
+*
+* Returns the Mount__FhStatus returned by MOUNT procedure.
+*
+* The user of this function takes on the responsibility to call 'mount_fh_status_free_unpacked()'
+* with the obtained FhStatus. 
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Mount__FhStatus
+* and always call 'mount_fh_status_free_unpacked()' on it at some point.
+*/
+Mount__FhStatus *mount_directory_success(char *directory_absolute_path) {
+    Mount__FhStatus *fhstatus = mount_directory(directory_absolute_path);
+
+    cr_assert_eq(fhstatus->status, MOUNT__STAT__MNT_OK);
     cr_assert_eq(fhstatus->fhstatus_body_case, MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY);
 
     cr_assert_not_null(fhstatus->directory);
@@ -36,6 +55,21 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
     // it's hard to validate the nfs filehandle at client, so we don't do it
 
     return fhstatus;
+}
+
+/*
+* Mounts the directory given by absolute path.
+*
+* The procedure results are validated assuming a non-MOUNT__STAT__MNT_OK Mount status, given in argument 'non-nfs-ok-status'.
+*/
+void mount_directory_fail(char *directory_absolute_path, Mount__Stat non_mnt_ok_status) {
+    Mount__FhStatus *fhstatus = mount_directory(directory_absolute_path);
+
+    cr_assert_eq(fhstatus->status, non_mnt_ok_status);
+    cr_assert_eq(fhstatus->fhstatus_body_case, MOUNT__FH_STATUS__FHSTATUS_BODY_DEFAULT_CASE);
+    cr_assert_not_null(fhstatus->default_case);
+
+    mount__fh_status__free_unpacked(fhstatus, NULL);
 }
 
 /*

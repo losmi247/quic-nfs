@@ -7,7 +7,7 @@
 TestSuite(nfs_getattr_test_suite);
 
 Test(nfs_getattr_test_suite, getattr_ok, .description = "NFSPROC_GETATTR ok") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // now get file attributes
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -32,7 +32,7 @@ Test(nfs_getattr_test_suite, getattr_ok, .description = "NFSPROC_GETATTR ok") {
 }
 
 Test(nfs_getattr_test_suite, getattr_no_such_file_or_directory, .description = "NFSPROC_GETATTR no such file or directory") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // pick a nonexistent inode number in this mounted directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;

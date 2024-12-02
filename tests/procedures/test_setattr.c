@@ -7,7 +7,7 @@
 TestSuite(nfs_setattr_test_suite);
 
 Test(nfs_setattr_test_suite, setattr_ok, .description = "NFSPROC_SETATTR ok") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // now update attributes of /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -26,7 +26,7 @@ Test(nfs_setattr_test_suite, setattr_ok, .description = "NFSPROC_SETATTR ok") {
 }
 
 Test(nfs_setattr_test_suite, setattr_no_such_file_or_directory, .description = "NFSPROC_SETATTR no such file or directory") {
-    Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // pick a nonexistent inode number in this mounted directory and try to update its attributes
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
