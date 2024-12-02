@@ -397,6 +397,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     if(error_code > 0) {
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed creating a NFS filehandle for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
+        free(file_absolute_path);
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've checked that the looked up file exists
@@ -411,6 +412,9 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
+        free(file_absolute_path);
+        // remove the inode cache mapping for this file/directory that we added when creating the NFS filehandle, as LOOKUP was unsuccessful
+        remove_inode_mapping(file_nfs_filehandle.inode_number, &inode_cache);
 
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've created a NFS filehandle for this file (we successfully read stat.st_ino)
         return create_system_error_accepted_reply();
@@ -438,8 +442,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
 
     nfs__dir_op_args__free_unpacked(diropargs, NULL);
-
-    // do not free(file_absolute_path) here - it is in the inode cache and will be freed when inode cache is freed on server shut down
+    free(file_absolute_path);
 
     free(fattr.atime);
     free(fattr.mtime);
@@ -1098,6 +1101,9 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
         fprintf(stderr, "serve_nfs_procedure_9_create_file: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(file_absolute_path);
+        // remove the inode cache mapping for the created file that we created when creating the NFS filehandle, as CREATE was unsuccessful
+        remove_inode_mapping(file_nfs_filehandle.inode_number, &inode_cache);
 
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
         return create_system_error_accepted_reply();
@@ -1129,6 +1135,8 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
     free(fattr.atime);
     free(fattr.mtime);
     free(fattr.ctime);
+
+    free(file_absolute_path);
 
     // do not free(file_absolute_path) here - it is in the inode cache and will be freed when inode cache is freed on server shut down
 

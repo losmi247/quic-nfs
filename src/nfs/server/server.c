@@ -48,6 +48,8 @@ void handle_signal(int signal) {
         clean_up_inode_cache(inode_cache);
         clean_up_mount_list(mount_list);
 
+        fprintf(stdout, "Server shutdown successfull\n");
+
         exit(0);
     }
 }

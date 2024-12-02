@@ -182,8 +182,7 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
     }
 
     // create a new mount entry - pass *dirpath instead of dirpath so that we are able to free it later from the mount list
-    Mount__MountList *new_mount_entry = create_new_mount_entry(strdup("client-hostname"), *dirpath); // TODO (QNFS-20): replace hostname with actual client hostname when available
-    add_mount_entry(&mount_list, new_mount_entry);
+    add_mount_list_entry("client-hostname", directory_absolute_path, &mount_list); // TODO (QNFS-20): replace 'client-hostname' with actual client hostname when available
 
     // build the procedure results
     Mount__FhStatus fh_status = MOUNT__FH_STATUS__INIT;
@@ -200,7 +199,7 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
     uint8_t *fh_status_buffer = malloc(fh_status_size);
     mount__fh_status__pack(&fh_status, fh_status_buffer);
 
-    // do not mount__dir_path__free_unpacked(dirpath, NULL); here - it will be freed when mount list is cleaned up on server shut down
+    mount__dir_path__free_unpacked(dirpath, NULL);
 
     return wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
 }

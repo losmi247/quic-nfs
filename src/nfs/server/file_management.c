@@ -21,8 +21,9 @@ int get_inode_number(char *absolute_path, ino_t *inode_number) {
 /*
 * Given an initialized NfsFh__NfsFileHandle, fills its fields to make it a new filehandle for the given absolute path 
 * (either a directory or a regular file).
-* Then it adds a mapping to the inode cache to remember what absolute path the inode number corresponds to, using the 
-* inode cache given in 'inode_number_cache' argument.
+*
+* On successful exection, it adds a mapping to the inode cache given in 'inode_number_cache' argument, to remember 
+* what absolute path this file's inode number corresponds to.
 *
 * Returns 0 on success and > 0 on failure.
 */

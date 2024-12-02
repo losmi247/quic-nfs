@@ -3,6 +3,7 @@
 
 #include <sys/types.h> 
 #include <stdlib.h>
+#include <string.h>
 
 struct InodeCacheMapping {
     ino_t inode_number;
@@ -12,6 +13,8 @@ struct InodeCacheMapping {
 typedef struct InodeCacheMapping *InodeCache;
 
 void add_inode_mapping(ino_t inode_number, char *absolute_path, InodeCache *head);
+
+int remove_inode_mapping(ino_t inode_number, InodeCache *head);
 
 char *get_absolute_path_from_inode_number(ino_t inode_number, InodeCache head);
 
