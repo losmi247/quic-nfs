@@ -442,11 +442,12 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
 
     nfs__dir_op_args__free_unpacked(diropargs, NULL);
-    free(file_absolute_path);
 
     free(fattr.atime);
     free(fattr.mtime);
     free(fattr.ctime);
+
+    free(file_absolute_path);
 
     return accepted_reply;
 }
@@ -966,7 +967,7 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
     else if(errno == EIO) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
 
         // build the procedure results
         Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_IO);
@@ -1137,8 +1138,6 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
     free(fattr.ctime);
 
     free(file_absolute_path);
-
-    // do not free(file_absolute_path) here - it is in the inode cache and will be freed when inode cache is freed on server shut down
 
     return accepted_reply;
 }
