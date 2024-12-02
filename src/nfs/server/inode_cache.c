@@ -37,7 +37,12 @@ int remove_inode_mapping(ino_t inode_number, InodeCache *head) {
 
     // the entry we want to remove is the first in the list
     if((*head)->inode_number == inode_number) {
-        *head = (*head)->next;
+        struct InodeCacheMapping *new_head = (*head)->next;
+
+        free_inode_cache_mapping(*head);
+
+        *head = new_head;
+
         return 0;
     }
 
@@ -56,7 +61,7 @@ int remove_inode_mapping(ino_t inode_number, InodeCache *head) {
         curr_mapping = curr_mapping->next;
     }
 
-    return 1;
+    return 2;
 }
 
 /*
