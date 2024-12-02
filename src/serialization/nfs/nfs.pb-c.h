@@ -33,6 +33,7 @@ typedef struct _Nfs__ReadArgs Nfs__ReadArgs;
 typedef struct _Nfs__ReadResBody Nfs__ReadResBody;
 typedef struct _Nfs__ReadRes Nfs__ReadRes;
 typedef struct _Nfs__WriteArgs Nfs__WriteArgs;
+typedef struct _Nfs__CreateArgs Nfs__CreateArgs;
 typedef struct _Nfs__NfsCookie Nfs__NfsCookie;
 typedef struct _Nfs__ReadDirArgs Nfs__ReadDirArgs;
 typedef struct _Nfs__DirectoryEntriesList Nfs__DirectoryEntriesList;
@@ -486,10 +487,10 @@ struct  _Nfs__WriteArgs
 {
   ProtobufCMessage base;
   Nfs__FHandle *file;
-  uint32_t beginoffset;
   /*
    * unused
    */
+  uint32_t beginoffset;
   uint32_t offset;
   /*
    * unused
@@ -500,6 +501,17 @@ struct  _Nfs__WriteArgs
 #define NFS__WRITE_ARGS__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nfs__write_args__descriptor) \
     , NULL, 0, 0, 0, {0,NULL} }
+
+
+struct  _Nfs__CreateArgs
+{
+  ProtobufCMessage base;
+  Nfs__DirOpArgs *where;
+  Nfs__SAttr *attributes;
+};
+#define NFS__CREATE_ARGS__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__create_args__descriptor) \
+    , NULL, NULL }
 
 
 /*
@@ -889,6 +901,25 @@ Nfs__WriteArgs *
 void   nfs__write_args__free_unpacked
                      (Nfs__WriteArgs *message,
                       ProtobufCAllocator *allocator);
+/* Nfs__CreateArgs methods */
+void   nfs__create_args__init
+                     (Nfs__CreateArgs         *message);
+size_t nfs__create_args__get_packed_size
+                     (const Nfs__CreateArgs   *message);
+size_t nfs__create_args__pack
+                     (const Nfs__CreateArgs   *message,
+                      uint8_t             *out);
+size_t nfs__create_args__pack_to_buffer
+                     (const Nfs__CreateArgs   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__CreateArgs *
+       nfs__create_args__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__create_args__free_unpacked
+                     (Nfs__CreateArgs *message,
+                      ProtobufCAllocator *allocator);
 /* Nfs__NfsCookie methods */
 void   nfs__nfs_cookie__init
                      (Nfs__NfsCookie         *message);
@@ -1034,6 +1065,9 @@ typedef void (*Nfs__ReadRes_Closure)
 typedef void (*Nfs__WriteArgs_Closure)
                  (const Nfs__WriteArgs *message,
                   void *closure_data);
+typedef void (*Nfs__CreateArgs_Closure)
+                 (const Nfs__CreateArgs *message,
+                  void *closure_data);
 typedef void (*Nfs__NfsCookie_Closure)
                  (const Nfs__NfsCookie *message,
                   void *closure_data);
@@ -1073,6 +1107,7 @@ extern const ProtobufCMessageDescriptor nfs__read_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_res_body__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_res__descriptor;
 extern const ProtobufCMessageDescriptor nfs__write_args__descriptor;
+extern const ProtobufCMessageDescriptor nfs__create_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__nfs_cookie__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_dir_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__directory_entries_list__descriptor;

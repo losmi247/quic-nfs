@@ -19,7 +19,7 @@ Rpc__AcceptedReply serve_nfs_procedure_0_do_nothing(Google__Protobuf__Any *param
 Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/FHandle") != 0) {
-        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: Expected nfs/FHandle but received %s\n", parameters->type_url);
+        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: expected nfs/FHandle but received %s\n", parameters->type_url);
         
         return create_garbage_args_accepted_reply();
     }
@@ -27,7 +27,7 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
     // deserialize parameters
     Nfs__FHandle *fhandle = nfs__fhandle__unpack(NULL, parameters->value.len, parameters->value.data);
     if(fhandle == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: Failed to unpack FHandle\n");
+        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: failed to unpack FHandle\n");
         
         return create_garbage_args_accepted_reply();
     }
@@ -65,11 +65,11 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
-        // we failed getting attributes for this file/directory - we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
-        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_1_get_file_attributes: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__fhandle__free_unpacked(fhandle, NULL);
 
+        // we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
         return create_system_error_accepted_reply();
     }
 
@@ -101,7 +101,7 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
 Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/SAttrArgs") != 0) {
-        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: Expected nfs/SAttrArgs but received %s\n", parameters->type_url);
+        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: expected nfs/SAttrArgs but received %s\n", parameters->type_url);
         
         return create_garbage_args_accepted_reply();
     }
@@ -109,12 +109,12 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     // deserialize parameters
     Nfs__SAttrArgs *sattrargs = nfs__sattr_args__unpack(NULL, parameters->value.len, parameters->value.data);
     if(sattrargs == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: Failed to unpack SAttrArgs\n");
+        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: failed to unpack SAttrArgs\n");
         
         return create_garbage_args_accepted_reply();
     }
     if(sattrargs->file == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: 'file' in SAttrArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: 'file' in SAttrArgs is null\n");
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
@@ -129,7 +129,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
         return create_garbage_args_accepted_reply();
     }
     if(sattrargs->attributes == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: 'attributes' in SAttrArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: 'attributes' in SAttrArgs is null\n");
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
@@ -137,14 +137,14 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     }
     Nfs__SAttr *sattr = sattrargs->attributes;
     if(sattr->atime == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: 'atime' in SAttrArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: 'atime' in SAttrArgs is null\n");
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
         return create_garbage_args_accepted_reply();
     }
     if(sattr->mtime == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: 'mtime' in SAttrArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: 'mtime' in SAttrArgs is null\n");
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
@@ -177,21 +177,21 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     // update file attributes - -1 means don't update this attribute
     // TODO (QNFS-21) - change this to either update all arguments or none (don't want a partial update)
     if(sattr->mode != -1 && chmod(file_absolute_path, sattr->mode) < 0) {
-        perror("serve_nfs_procedure_2_set_file_attributes - Failed to update 'mode'");
+        perror_msg("serve_nfs_procedure_2_set_file_attributes: failed to update 'mode' attribute of file/directory at absolute path '%s'\n", file_absolute_path);
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
         return create_system_error_accepted_reply();
     }
     if(chown(file_absolute_path, sattr->uid, sattr->gid) < 0) { // don't need to check if uid/gid is -1, as chown ignores uid or gid if it's -1
-        perror("serve_nfs_procedure_2_set_file_attributes - Failed to update 'uid' and 'gid'");
+        perror_msg("serve_nfs_procedure_2_set_file_attributes: failed to update 'uid' and 'gid' attributes of file/directory at absolute path '%s'\n", file_absolute_path);
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
         return create_system_error_accepted_reply();
     }
     if(sattr->size != -1 && truncate(file_absolute_path, sattr->size) < 0) {
-        perror("serve_nfs_procedure_2_set_file_attributes - Failed to update 'size'");
+        perror_msg("serve_nfs_procedure_2_set_file_attributes: failed to update 'size' attributes of file/directory at absolute path '%s'\n", file_absolute_path);
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
@@ -205,7 +205,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
         times[1].tv_usec = sattr->mtime->useconds;
 
         if(utimes(file_absolute_path, times) < 0) {
-            perror("serve_nfs_procedure_2_set_file_attributes - Failed to update 'atime' and 'mtime'");
+            perror_msg("serve_nfs_procedure_2_set_file_attributes: failed to update 'atime' and 'mtime' attributes of file/directory at absolute path '%s'\n", file_absolute_path);
 
             nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
@@ -216,11 +216,11 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
-        // we failed getting attributes for this file - we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
         fprintf(stderr, "serve_procedure_2_set_file_attributes: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
 
+        // we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
         return create_system_error_accepted_reply();
     }
 
@@ -252,7 +252,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
 Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/DirOpArgs") != 0) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: Expected nfs/DirOpArgs but received %s\n", parameters->type_url);
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: expected nfs/DirOpArgs but received %s\n", parameters->type_url);
         
         return create_garbage_args_accepted_reply();
     }
@@ -260,18 +260,18 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     // deserialize parameters
     Nfs__DirOpArgs *diropargs = nfs__dir_op_args__unpack(NULL, parameters->value.len, parameters->value.data);
     if(diropargs == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: Failed to unpack DirOpArgs\n");
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed to unpack DirOpArgs\n");
         
         return create_garbage_args_accepted_reply();
     }
     if(diropargs->dir == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'dir' in DirOpArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'dir' in DirOpArgs is null\n");
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
         return create_garbage_args_accepted_reply();
     }
-    Nfs__FHandle *directory_fhandle = diropargs->dir;   // we are given the NFS filehandle of the directory containing the file
+    Nfs__FHandle *directory_fhandle = diropargs->dir;
     if(directory_fhandle->nfs_filehandle == NULL) {
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: FHandle->nfs_filehandle is null\n");
 
@@ -280,7 +280,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         return create_garbage_args_accepted_reply();
     }
     if(diropargs->name == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'name' in DirOpArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'name' in DirOpArgs is null\n");
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
@@ -288,7 +288,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     }
     Nfs__FileName *file_name = diropargs->name;
     if(file_name->filename == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'filename' in DirOpArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'filename' in DirOpArgs is null\n");
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
@@ -322,8 +322,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     Nfs__FAttr directory_fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(directory_absolute_path, &directory_fattr);
     if(error_code > 0) {
-        // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting file attributes for file at absolute path '%s' with error code %d \n", directory_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting file attributes for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
@@ -332,7 +331,6 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     }
     // only directories can be looked up using LOOKUP
     if(directory_fattr.type != NFS__FTYPE__NFDIR) {
-        // if the file is not a directory, return DirOpRes with 'non-directory specified in a directory operation' status
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'lookup' procedure called on a non-directory '%s'\n", directory_absolute_path);
 
         // build the procedure results
@@ -349,42 +347,61 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
+    free(directory_fattr.atime);
+    free(directory_fattr.mtime);
+    free(directory_fattr.ctime);
 
+    // check that the file client wants to lookup exists
     char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
+    error_code = access(file_absolute_path, F_OK);
+    if(error_code < 0) {
+        if(errno == EIO || errno == ENOENT) {
+            Nfs__Stat nfs_stat;
+            switch(errno) {
+                case EIO:
+                    nfs_stat = NFS__STAT__NFSERR_IO;
+                    fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
+                case ENOENT:
+                    nfs_stat = NFS__STAT__NFSERR_NOENT;
+                    fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: attempted 'lookup' on a file at absolute path '%s' which does not exist\n", file_absolute_path);
+            }
+
+            // build the procedure results
+            Nfs__DirOpRes *diropres = create_default_case_dir_op_res(nfs_stat);
+
+            // serialize the procedure results
+            size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+            uint8_t *diropres_buffer = malloc(diropres_size);
+            nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+            free(file_absolute_path);
+            nfs__dir_op_args__free_unpacked(diropargs, NULL);
+            free(diropres->default_case);
+            free(diropres);
+
+            return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+        }
+        else{
+            perror_msg("serve_nfs_procedure_4_look_up_file_name: failed checking if file to be created at absolute path '%s' already exists", file_absolute_path);
+
+            free(file_absolute_path);
+            nfs__dir_op_args__free_unpacked(diropargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+    }
+
     // create a NFS filehandle for the looked up file
     NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
     error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
-    if(error_code == 1) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: creation of nfs filehandle failed with error code %d \n", error_code);
-
-        nfs__dir_op_args__free_unpacked(diropargs, NULL);
+    if(error_code > 0) {
+        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed creating a NFS filehandle for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
         free(file_absolute_path);
+        nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've checked that the looked up file exists
         return create_system_error_accepted_reply();
-    }
-    if(error_code == 2) {
-        // the file that the client wants to look up in this directory does not exist
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
-
-        // build the procedure results
-        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_NOENT);
-
-        // serialize the procedure results
-        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
-        uint8_t *diropres_buffer = malloc(diropres_size);
-        nfs__dir_op_res__pack(diropres, diropres_buffer);
-
-        free(diropres->default_case);
-        free(diropres);
-
-        Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
-
-        nfs__dir_op_args__free_unpacked(diropargs, NULL);
-
-        free(file_absolute_path);
-
-        return accepted_reply;
     }
 
     // get the attributes of the looked up file
@@ -395,8 +412,9 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
-
         free(file_absolute_path);
+        // remove the inode cache mapping for this file/directory that we added when creating the NFS filehandle, as LOOKUP was unsuccessful
+        remove_inode_mapping(file_nfs_filehandle.inode_number, &inode_cache);
 
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've created a NFS filehandle for this file (we successfully read stat.st_ino)
         return create_system_error_accepted_reply();
@@ -425,11 +443,11 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
     nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
-    // do not free(file_absolute_path) here - it is in the inode cache and will be freed when inode cache is freed on server shut down
-
     free(fattr.atime);
     free(fattr.mtime);
     free(fattr.ctime);
+
+    free(file_absolute_path);
 
     return accepted_reply;
 }
@@ -440,7 +458,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/ReadArgs") != 0) {
-        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Expected nfs/ReadArgs but received %s\n", parameters->type_url);
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: expected nfs/ReadArgs but received %s\n", parameters->type_url);
         
         return create_garbage_args_accepted_reply();
     }
@@ -448,12 +466,12 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     // deserialize parameters
     Nfs__ReadArgs *readargs = nfs__read_args__unpack(NULL, parameters->value.len, parameters->value.data);
     if(readargs == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed to unpack ReadArgs\n");
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed to unpack ReadArgs\n");
         
         return create_garbage_args_accepted_reply();
     }
     if(readargs->file == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: 'file' in ReadArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: 'file' in ReadArgs is null\n");
 
         nfs__read_args__free_unpacked(readargs, NULL);
 
@@ -496,7 +514,7 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__read_args__free_unpacked(readargs, NULL);
 
@@ -532,7 +550,7 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     error_code = read_from_file(file_absolute_path, readargs->offset, readargs->count, read_data, &bytes_read);
     if(error_code > 0) {
         // we failed to read from this file
-        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: Failed to read from file at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed to read from file at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__read_args__free_unpacked(readargs, NULL);
 
@@ -545,7 +563,7 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     error_code = get_attributes(file_absolute_path, &fattr_after_read);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__read_args__free_unpacked(readargs, NULL);
 
@@ -587,7 +605,7 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
 Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/WriteArgs") != 0) {
-        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: Expected nfs/WriteArgs but received %s\n", parameters->type_url);
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: expected nfs/WriteArgs but received %s\n", parameters->type_url);
         
         return create_garbage_args_accepted_reply();
     }
@@ -595,12 +613,12 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
     // deserialize parameters
     Nfs__WriteArgs *writeargs = nfs__write_args__unpack(NULL, parameters->value.len, parameters->value.data);
     if(writeargs == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: Failed to unpack WriteArgs\n");
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed to unpack WriteArgs\n");
         
         return create_garbage_args_accepted_reply();
     }
     if(writeargs->file == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: 'file' in WriteArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: 'file' in WriteArgs is null\n");
 
         nfs__write_args__free_unpacked(writeargs, NULL);
 
@@ -649,8 +667,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(file_absolute_path, &fattr);
     if(error_code > 0) {
-        // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__write_args__free_unpacked(writeargs, NULL);
 
@@ -682,7 +699,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
 
     // check if client requested to write too much data in a single RPC
     if(writeargs->nfsdata.len > NFS_MAXDATA) {
-        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: 'write' of %ld bytes attempted to file at absolute path '%s', but max write allowed is %d bytes\n", writeargs->nfsdata.len, file_absolute_path, NFS_MAXDATA);
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: attempted 'write' of %ld bytes to file at absolute path '%s', but max write allowed is %d bytes\n", writeargs->nfsdata.len, file_absolute_path, NFS_MAXDATA);
 
         // build the procedure results
         Nfs__AttrStat *attr_stat = create_default_case_attr_stat(NFS__STAT__NFSERR_FBIG);
@@ -706,10 +723,13 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
         switch(error_code) {
             case 4:
                 nfs_stat = NFS__STAT__NFSERR_FBIG;
+                fprintf(stderr, "serve_nfs_procedure_8_write_to_file: attempted write that would exceed file size limits, to file at absolute path '%s'\n", file_absolute_path);
             case 5:
                 nfs_stat = NFS__STAT__NFSERR_IO;
+                fprintf(stderr, "serve_nfs_procedure_8_write_to_file: physical IO error occurred while trying to write to file at absolute path '%s'\n", file_absolute_path);
             case 6:
                 nfs_stat = NFS__STAT__NFSERR_NOSPC;
+                fprintf(stderr, "serve_nfs_procedure_8_write_to_file: no space left on device to write to file at absolute path '%s'\n", file_absolute_path);
         }
 
         // build the procedure results
@@ -726,9 +746,9 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
 
         return wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
     }
-    if(error_code > 0) {
+    else if(error_code > 0) {
         // we failed writing to this file
-        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed writing to file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed writing to file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__write_args__free_unpacked(writeargs, NULL);
 
@@ -740,7 +760,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
     error_code = get_attributes(file_absolute_path, &fattr_after_write);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed getting attributes for file/directory at absolute path '%s' with error code %d \n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
 
         nfs__write_args__free_unpacked(writeargs, NULL);
 
@@ -771,6 +791,358 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
 }
 
 /*
+* Runs the NFSPROC_CREATE procedure (8).
+*/
+Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *parameters) {
+    // check parameters are of expected type for this procedure
+    if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/CreateArgs") != 0) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: expected nfs/CreateArgs but received %s\n", parameters->type_url);
+        
+        return create_garbage_args_accepted_reply();
+    }
+
+    // deserialize parameters
+    Nfs__CreateArgs *createargs = nfs__create_args__unpack(NULL, parameters->value.len, parameters->value.data);
+    if(createargs == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: failed to unpack CreateArgs\n");
+        
+        return create_garbage_args_accepted_reply();
+    }
+    if(createargs->where == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: 'where' in CreateArgs is null\n");
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    Nfs__DirOpArgs *diropargs = createargs->where;
+    if(diropargs->dir == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: DirOpArgs->dir is null\n");
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    Nfs__FHandle *directory_fhandle = diropargs->dir;
+    if(directory_fhandle->nfs_filehandle == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: FHandle->nfs_filehandle is null\n");
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    if(diropargs->name == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: DirOpArgs->name is null\n");
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    Nfs__FileName *file_name = diropargs->name;
+    if(file_name->filename == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: DirOpArgs->name->filename is null\n");
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    if(createargs->attributes == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: 'attributes' in CreateArgs is null\n");
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    Nfs__SAttr *sattr = createargs->attributes;
+    if(sattr->atime == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: SAttr->atime is null\n");
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+    if(sattr->mtime == NULL) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: SAttr->mtime is null\n");
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_garbage_args_accepted_reply();
+    }
+
+    NfsFh__NfsFileHandle *directory_nfs_filehandle = directory_fhandle->nfs_filehandle;
+    ino_t inode_number = directory_nfs_filehandle->inode_number;
+
+    char *directory_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
+    if(directory_absolute_path == NULL) {
+        // we couldn't decode inode number back to a file/directory - we assume the client gave us a wrong NFS filehandle, i.e. no such directory
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: failed to decode inode number %ld back to a directory\n", inode_number);
+
+        // build the procedure results
+        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_NOENT);
+
+        // serialize the procedure results
+        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+        uint8_t *diropres_buffer = malloc(diropres_size);
+        nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->default_case);
+        free(diropres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+    }
+
+    // get the attributes of this directory, to check that it is actually a directory
+    Nfs__FAttr directory_fattr = NFS__FATTR__INIT;
+    int error_code = get_attributes(directory_absolute_path, &directory_fattr);
+    if(error_code > 0) {
+        // we failed getting attributes for this file
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: failed getting file attributes for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+    if(directory_fattr.type != NFS__FTYPE__NFDIR) {
+        // if the file is not a directory, return DirOpRes with 'non-directory specified in a directory operation' status
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: 'create' procedure called on a non-directory '%s'\n", directory_absolute_path);
+
+        // build the procedure results
+        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_NOTDIR);
+
+        // serialize the procedure results
+        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+        uint8_t *diropres_buffer = malloc(diropres_size);
+        nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->default_case);
+        free(diropres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+    }
+    free(directory_fattr.atime);
+    free(directory_fattr.mtime);
+    free(directory_fattr.ctime);
+
+    // check if the name of the file to be created is longer than NFS limit
+    if(strlen(file_name->filename) > NFS_MAXNAMLEN) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: attempted to create file in directory '%s' with file name longer than NFS limit\n", directory_absolute_path);
+
+        // build the procedure results
+        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_NAMETOOLONG);
+
+        // serialize the procedure results
+        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+        uint8_t *diropres_buffer = malloc(diropres_size);
+        nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->default_case);
+        free(diropres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+    }
+
+    // check if the file client wants to create already exists
+    char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
+    error_code = access(file_absolute_path, F_OK);
+    if(error_code == 0) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: attempted to create a file '%s' that already exists\n", file_absolute_path);
+
+        // build the procedure results
+        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_EXIST);
+
+        // serialize the procedure results
+        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+        uint8_t *diropres_buffer = malloc(diropres_size);
+        nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+        free(file_absolute_path);
+        nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->default_case);
+        free(diropres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+    }
+    else if(errno == EIO) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
+
+        // build the procedure results
+        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_IO);
+
+        // serialize the procedure results
+        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+        uint8_t *diropres_buffer = malloc(diropres_size);
+        nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+        free(file_absolute_path);
+        nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->default_case);
+        free(diropres);
+
+        return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+    }
+    else if(errno != ENOENT) {
+        // we got an error different from 'ENOENT = No such file or directory'
+        perror_msg("serve_nfs_procedure_9_create_file: failed checking if file to be created at absolute path '%s' already exists", file_absolute_path);
+
+        free(file_absolute_path);
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_system_error_accepted_reply();
+    }
+    // now we know we got a ENOENT from access() i.e. the file client wants to create does not exist
+
+    // create the file
+    int fd; 
+    if(sattr->mode != -1) {
+        fd = open(file_absolute_path, O_CREAT, sattr->mode);    // with O_CREAT flag, open() has no effect if file already exists, and just opens it
+    }
+    else{
+        fd = open(file_absolute_path, O_CREAT); 
+    }
+    if(fd < 0) {
+        if(errno == EIO || errno == ENAMETOOLONG || errno == ENOSPC || errno == ENXIO) {
+            Nfs__Stat nfs_stat;
+            switch(errno) {
+                case EIO:
+                    nfs_stat = NFS__STAT__NFSERR_IO;
+                    fprintf(stderr, "serve_nfs_procedure_9_create_file: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
+                case ENAMETOOLONG:
+                    nfs_stat = NFS__STAT__NFSERR_NAMETOOLONG;
+                    fprintf(stderr, "serve_nfs_procedure_9_create_file: attempted to create a file exceeding file system limit on filename length, at absolute path '%s' \n", file_absolute_path);
+                case ENOSPC: 
+                    nfs_stat = NFS__STAT__NFSERR_NOSPC;
+                    fprintf(stderr, "serve_nfs_procedure_9_create_file: no space left to add a new entry '%s' to directory '%s'\n", file_absolute_path, directory_absolute_path);
+                case ENXIO:
+                    nfs_stat = NFS__STAT__NFSERR_NXIO;
+                    fprintf(stderr, "serve_nfs_procedure_9_create_file: device associated with character/block special device '%s' does not exist\n", file_absolute_path);
+            }
+
+            // build the procedure results
+            Nfs__DirOpRes *diropres = create_default_case_dir_op_res(nfs_stat);
+
+            // serialize the procedure results
+            size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+            uint8_t *diropres_buffer = malloc(diropres_size);
+            nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+            free(file_absolute_path);
+            nfs__create_args__free_unpacked(createargs, NULL);
+            free(diropres->default_case);
+            free(diropres);
+
+            return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+        }
+        else{
+            fprintf(stderr, "serve_nfs_procedure_9_create_file: failed creating file at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
+
+            free(file_absolute_path);
+            nfs__create_args__free_unpacked(createargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+    }
+    close(fd);
+
+    // set initial attributes for the created file
+    if(chown(file_absolute_path, sattr->uid, sattr->gid) < 0) { // don't need to check if uid/gid is -1, as chown ignores uid or gid if it's -1
+        perror_msg("serve_nfs_procedure_9_create_file: failed to initialize 'uid' and 'gid' attributes of the file created at absolute path '%s'\n", file_absolute_path);
+
+        free(file_absolute_path);
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_system_error_accepted_reply();
+    }
+    if(sattr->size != -1 && truncate(file_absolute_path, sattr->size) < 0) {
+        perror_msg("serve_nfs_procedure_9_create_file: failed to initialize 'size' attribute of the file created at absolute path '%s'\n", file_absolute_path);
+
+        free(file_absolute_path);
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        return create_system_error_accepted_reply();
+    }
+    if(sattr->atime->seconds != -1 && sattr->atime->useconds != -1 && sattr->mtime->seconds != -1 && sattr->mtime->useconds != -1) { // API only allows changing of both atime and mtime at once
+        struct timeval times[2];
+        times[0].tv_sec = sattr->atime->seconds;
+        times[0].tv_usec = sattr->atime->useconds;
+        times[1].tv_sec = sattr->mtime->seconds;
+        times[1].tv_usec = sattr->mtime->useconds;
+
+        if(utimes(file_absolute_path, times) < 0) {
+            perror_msg("serve_nfs_procedure_9_create_file: failed to initialize 'atime' and 'mtime' attributes of the file created at absolute path '%s'\n", file_absolute_path);
+
+            free(file_absolute_path);
+            nfs__create_args__free_unpacked(createargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+    }
+
+    // create a NFS filehandle for the created file
+    NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
+    error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
+    if(error_code > 0) {
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: failed creating a NFS filehandle for file at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
+
+        free(file_absolute_path);
+        nfs__create_args__free_unpacked(createargs, NULL);
+
+        // return AcceptedReply with SYSTEM_ERR, as once we've created the file we have to be able to create a NFS filehandle for it
+        return create_system_error_accepted_reply();
+    }
+
+    // get the attributes of the created file
+    Nfs__FAttr fattr = NFS__FATTR__INIT;
+    error_code = get_attributes(file_absolute_path, &fattr);
+    if(error_code > 0) {
+        // we failed getting attributes for this file
+        fprintf(stderr, "serve_nfs_procedure_9_create_file: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
+
+        nfs__create_args__free_unpacked(createargs, NULL);
+        free(file_absolute_path);
+        // remove the inode cache mapping for the created file that we created when creating the NFS filehandle, as CREATE was unsuccessful
+        remove_inode_mapping(file_nfs_filehandle.inode_number, &inode_cache);
+
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
+        return create_system_error_accepted_reply();
+    }
+
+    // build the procedure results
+    Nfs__DirOpRes diropres = NFS__DIR_OP_RES__INIT;
+    diropres.status = NFS__STAT__NFS_OK;
+    diropres.body_case = NFS__DIR_OP_RES__BODY_DIROPOK;
+
+    Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
+    file_fhandle.nfs_filehandle = &file_nfs_filehandle;
+
+    Nfs__DirOpOk diropok = NFS__DIR_OP_OK__INIT;
+    diropok.file = &file_fhandle;
+    diropok.attributes = &fattr;
+
+    diropres.diropok = &diropok;
+
+    // serialize the procedure results
+    size_t diropres_size = nfs__dir_op_res__get_packed_size(&diropres);
+    uint8_t *diropres_buffer = malloc(diropres_size);
+    nfs__dir_op_res__pack(&diropres, diropres_buffer);
+
+    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+
+    nfs__create_args__free_unpacked(createargs, NULL);
+
+    free(fattr.atime);
+    free(fattr.mtime);
+    free(fattr.ctime);
+
+    free(file_absolute_path);
+
+    return accepted_reply;
+}
+
+/*
 * Runs the NFSPROC_READDIR procedure (16).
 */
 Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__Any *parameters) {
@@ -789,14 +1161,14 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
         return create_garbage_args_accepted_reply();
     }
     if(readdirargs->dir == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: 'dir' in ReadDirArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: 'dir' in ReadDirArgs is null\n");
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
 
         return create_garbage_args_accepted_reply();
     }
     if(readdirargs->cookie == NULL) {
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: 'cookie' in ReadDirArgs is NULL \n");
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: 'cookie' in ReadDirArgs is null\n");
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
 
@@ -839,7 +1211,7 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
     int error_code = get_attributes(directory_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed getting file attributes for file at absolute path '%s' with error code %d \n", directory_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed getting file attributes for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
 
@@ -875,7 +1247,7 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
     error_code = read_from_directory(directory_absolute_path, readdirargs->cookie->value, readdirargs->count, &directory_entries, &end_of_stream);
     if(error_code > 0) {
         // we failed reading directory entries
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed reading directory entries for directory at absolute path '%s' with error code %d \n", directory_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed reading directory entries for directory at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
 
@@ -945,6 +1317,7 @@ Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number,
         case 8:
             return serve_nfs_procedure_8_write_to_file(parameters);
         case 9:
+            return serve_nfs_procedure_9_create_file(parameters);
         case 10:
         case 11:
         case 12:

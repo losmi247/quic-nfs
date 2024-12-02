@@ -4,7 +4,7 @@
 * Given the absolute path of a directory or a file, places its inode number in 
 * 'inode_number' argument. 
 *
-* Returns 0 on success, and > 0 on failure (no such file or directory usually).
+* Returns 0 on success, and > 0 on failure.
 */
 int get_inode_number(char *absolute_path, ino_t *inode_number) {
     struct stat file_stat;
@@ -21,21 +21,18 @@ int get_inode_number(char *absolute_path, ino_t *inode_number) {
 /*
 * Given an initialized NfsFh__NfsFileHandle, fills its fields to make it a new filehandle for the given absolute path 
 * (either a directory or a regular file).
-* Then it adds a mapping to the inode cache to remember what absolute path the inode number corresponds to, using the 
-* inode cache given in 'inode_number_cache' argument.
+*
+* On successful exection, it adds a mapping to the inode cache given in 'inode_number_cache' argument, to remember 
+* what absolute path this file's inode number corresponds to.
 *
 * Returns 0 on success and > 0 on failure.
 */
 int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehandle, InodeCache *inode_number_cache) {
-    if(absolute_path == NULL) {
-        return 1;
-    }
-
     ino_t inode_number;
     int error_code = get_inode_number(absolute_path, &inode_number);
     if(error_code > 0) {
-        // we couldn't get inode number of file/directory at this absolute path - it doesn't exist
-        return 2;
+        // we couldn't get inode number of file/directory at this absolute path
+        return 1;
     }
 
     // remember what absolute path this inode number corresponds to
@@ -53,14 +50,8 @@ int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehan
 * Given the absolute path of the containing directory, and a file name of the file inside it,
 * returns the absolute path of that file.
 * The absolute path of the desired file is 'directory_absolute_path/file_name'.
-*
-* Returns NULL on failure.
 */
 char *get_file_absolute_path(char *directory_absolute_path, char *file_name) {
-    if(directory_absolute_path == NULL || file_name == NULL) {
-        return NULL;
-    }
-
     int file_absolute_path_length = strlen(directory_absolute_path) + 1 + strlen(file_name);
     char *concatenation_buffer = malloc(file_absolute_path_length + 1);   // create a string with enough space, +1 for termination character
 
@@ -215,7 +206,7 @@ int write_to_file(char *file_absolute_path, off_t offset, size_t byte_count, uin
         fclose(file);
 
         switch(errno) {
-            case EFBIG:     // attempted write that exceeds file system limits
+            case EFBIG:     // attempted write that exceeds file size limits
                 return 4;
             case EIO:       // physical IO error
                 return 5;

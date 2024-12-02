@@ -10,8 +10,8 @@
 Test(nfs_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
     Mount__FhStatus *fhstatus = mount_directory("/nfs_share");
 
-    int expected_number_of_entries = 5;
-    char *expected_file_names[5] = {"..", ".", "write_test", "a.txt", "test_file.txt"};
+    int expected_number_of_entries = 6;
+    char *expected_file_names[6] = {"..", ".", "create_test", "write_test", "a.txt", "test_file.txt"};
 
     // read from the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -262,8 +262,8 @@ Test(nfs_test_suite, readdir_ok_read_directory_entries_in_batches, .description 
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = fhstatus->directory->nfs_filehandle;
 
-    int expected_number_of_entries = 5;
-    char *expected_file_names[5] = {"..", ".", "write_test", "a.txt", "test_file.txt"};
+    int expected_number_of_entries = 6;
+    char *expected_file_names[6] = {"..", ".", "create_test", "write_test", "a.txt", "test_file.txt"};
 
     long posix_cookie = 0;  // start from beginning of the directory stream
     int eof = 0;

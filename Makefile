@@ -30,14 +30,7 @@ MOUNT_AND_NFS_SERVER_SRCS = ./src/nfs/server/mount.c ./src/nfs/server/nfs.c \
 	${SERIALIZATION_SRCS} ${RPC_PROGRAM_COMMON_SERVER_SRCS} ${ERROR_HANDLING_SRCS}
 
 # files used by the Tests
-TESTS_SRCS = ./tests/procedures/test_mnt.c \
-	./tests/procedures/test_null.c \
-	./tests/procedures/test_getattr.c \
-	./tests/procedures/test_setattr.c \
-	./tests/procedures/test_lookup.c \
-	./tests/procedures/test_read.c \
-	./tests/procedures/test_write.c \
-	./tests/procedures/test_readdir.c \
+TESTS_SRCS = ./tests/procedures/test_*.c \
 	./tests/test_common.c ./tests/validation/common_validation.c ./tests/validation/procedure_validation.c\
 	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS} ${ERROR_HANDLING_SRCS}
 

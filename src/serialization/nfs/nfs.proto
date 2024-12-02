@@ -196,6 +196,15 @@ message WriteArgs {
 }
 
 /*
+* CREATE (9)
+*/
+
+message CreateArgs {
+    DirOpArgs where = 1;
+    SAttr attributes = 2;
+}
+
+/*
 * READDIR (16)
 */
 
