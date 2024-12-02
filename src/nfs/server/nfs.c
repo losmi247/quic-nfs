@@ -1206,6 +1206,7 @@ Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number,
         case 8:
             return serve_nfs_procedure_8_write_to_file(parameters);
         case 9:
+            return serve_nfs_procedure_9_create_file(parameters);
         case 10:
         case 11:
         case 12:
