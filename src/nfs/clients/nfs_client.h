@@ -20,7 +20,7 @@ int nfs_procedure_6_read_from_file(Nfs__ReadArgs readargs, Nfs__ReadRes *result)
 
 int nfs_procedure_8_write_to_file(Nfs__WriteArgs writeargs, Nfs__AttrStat *result);
 
-int nfs_procedure_9_create_file(Nfs__CreateArgs createargs, Nfs__AttrStat *result);
+int nfs_procedure_9_create_file(Nfs__CreateArgs createargs, Nfs__DirOpRes *result);
 
 int nfs_procedure_16_read_from_directory(Nfs__ReadDirArgs readdirargs, Nfs__ReadDirRes *result);
 

@@ -39,6 +39,53 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
 }
 
 /*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_SETATTR to update the attributes of
+* the given file to the values given in 'mode', 'uid', 'gid,' 'size', 'atime', 'mtime' arguments.
+* The new file attributes are validated assuming the file has type given in 'ftype'.
+* 
+* Returns the Nfs__AttrStat returned by SETATTR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__attr_stat__free_unpacked()'
+* with the obtained AttrStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
+* and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
+*/
+Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) {
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = mode;
+    sattr.uid = uid;
+    sattr.gid = gid;
+    sattr.size = size;
+    sattr.atime = atime;
+    sattr.mtime = mtime;
+
+    Nfs__SAttrArgs sattrargs = NFS__SATTR_ARGS__INIT;
+    sattrargs.file = file_fhandle;
+    sattrargs.attributes = &sattr;
+
+    Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
+    int status = nfs_procedure_2_set_file_attributes(sattrargs, attrstat);
+    if(status != 0) {
+        free(attrstat);
+        cr_fail("NFSPROC_SETATTR failed - status %d\n", status);
+    }
+
+    // validate AttrStat
+    cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
+    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
+    
+
+    // validate attributes
+    cr_assert_not_null(attrstat->attributes);
+    Nfs__FAttr *fattr = attrstat->attributes;
+    validate_fattr(attrstat->attributes, ftype);
+    check_fattr_update(fattr, &sattr);
+
+    return attrstat;
+}
+
+/*
 * Given the Nfs__FHandle of a directory, calls NFSPROC_LOOKUP to lookup the given filename
 * inside the given directory. Checks that the looked up file has the given 'expected_ftype' file type.
 * 
@@ -69,9 +116,14 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
     cr_assert_not_null(diropres->diropok);
 
+    // validate Nfs filehandle
     cr_assert_not_null(diropres->diropok->file);
-    cr_assert_not_null(diropres->diropok->file->nfs_filehandle);     // can't validate NFS filehandle contents as a client
-    validate_fattr(diropres->diropok->attributes, expected_ftype); // can't validate any other attributes
+    cr_assert_not_null(diropres->diropok->file->nfs_filehandle);
+
+    // validate attributes
+    cr_assert_not_null(diropres->diropok->attributes);
+    Nfs__FAttr *fattr = diropres->diropok->attributes;
+    validate_fattr(fattr, expected_ftype);
 
     return diropres;
 }
@@ -160,7 +212,68 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 
     cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
-    validate_fattr(attrstat->attributes, ftype);
+
+    cr_assert_not_null(attrstat->attributes);
+    Nfs__FAttr *fattr = attrstat->attributes;
+    validate_fattr(fattr, ftype);
 
     return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_CREATE to create a file with the given filename
+* inside the given directory. The file is created with initial attributes specified in mode, uid, gid
+* arguments.
+* The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
+* 
+* Returns the Nfs__DirOpRes returned by CREATE procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__dir_op_res__free_unpacked()'
+* with the obtained DirOpRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
+* and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
+*/
+Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) {
+    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
+    file_name.filename = filename;
+
+    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
+    diropargs.dir = directory_fhandle;
+    diropargs.name = &file_name;
+
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = mode;
+    sattr.uid = uid;
+    sattr.gid = gid;
+    sattr.size = size;
+    sattr.atime = atime;
+    sattr.mtime = mtime;
+
+    Nfs__CreateArgs createargs = NFS__CREATE_ARGS__INIT;
+    createargs.where = &diropargs;
+    createargs.attributes = &sattr;
+
+    Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
+    int status = nfs_procedure_9_create_file(createargs, diropres);
+    if(status != 0) {
+        free(diropres);
+        cr_fail("NFSPROC_CREATE failed - status %d\n", status);
+    }
+
+    cr_assert_eq(diropres->status, NFS__STAT__NFS_OK);
+    cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
+    cr_assert_not_null(diropres->diropok);
+
+    // validate Nfs filehandle
+    cr_assert_not_null(diropres->diropok->file);
+    cr_assert_not_null(diropres->diropok->file->nfs_filehandle);
+
+    // validate attributes
+    cr_assert_not_null(diropres->diropok->attributes);
+    Nfs__FAttr *fattr = diropres->diropok->attributes;
+    validate_fattr(fattr, ftype);
+    check_fattr_update(fattr, &sattr);
+
+    return diropres;
 }

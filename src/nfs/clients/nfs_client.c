@@ -399,9 +399,9 @@ int nfs_procedure_8_write_to_file(Nfs__WriteArgs writeargs, Nfs__AttrStat *resul
 * and deserialization) failed.
 *
 * In case this function returns 0, the user of this function takes responsibility 
-* to call nfs__attr_stat__free_unpacked(attrstat, NULL) on the received Nfs__AttrStat eventually.
+* to call nfs__dir_op_res__free_unpacked(diropres, NULL) on the received Nfs__DirOpRes eventually.
 */
-int nfs_procedure_9_create_file(Nfs__CreateArgs createargs, Nfs__AttrStat *result) {
+int nfs_procedure_9_create_file(Nfs__CreateArgs createargs, Nfs__DirOpRes *result) {
     // serialize the CreateArgs
     size_t createargs_size = nfs__create_args__get_packed_size(&createargs);
     uint8_t *createargs_buffer = malloc(createargs_size);
@@ -436,24 +436,24 @@ int nfs_procedure_9_create_file(Nfs__CreateArgs createargs, Nfs__AttrStat *resul
     }
 
     // check that procedure results contain the right type
-    if(procedure_results->type_url == NULL || strcmp(procedure_results->type_url, "nfs/AttrStat") != 0) {
-        fprintf(stderr, "NFSPROC_CREATE: Expected nfs/AttrStat but received %s\n", procedure_results->type_url);
+    if(procedure_results->type_url == NULL || strcmp(procedure_results->type_url, "nfs/DirOpRes") != 0) {
+        fprintf(stderr, "NFSPROC_CREATE: Expected nfs/DirOpRes but received %s\n", procedure_results->type_url);
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return -2;
     }
 
-    // now we can unpack the AttrStat from the Any message
-    Nfs__AttrStat *attrstat = nfs__attr_stat__unpack(NULL, procedure_results->value.len, procedure_results->value.data);
-    if(attrstat == NULL) {
-        fprintf(stderr, "NFSPROC_CREATE: Failed to unpack Nfs__AttrStat\n");
+    // now we can unpack the DirOpRes from the Any message
+    Nfs__DirOpRes *diropres = nfs__dir_op_res__unpack(NULL, procedure_results->value.len, procedure_results->value.data);
+    if(diropres == NULL) {
+        fprintf(stderr, "NFSPROC_CREATE: Failed to unpack Nfs__DirOpRes\n");
 
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return -3;
     }
 
-    // place attrstat into the result
-    *result = *attrstat;
+    // place diropres into the result
+    *result = *diropres;
 
     rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
 

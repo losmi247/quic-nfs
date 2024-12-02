@@ -17,9 +17,13 @@ RUN touch /nfs_share/test_file.txt && \
     echo "test_content" >> /nfs_share/test_file.txt
 RUN touch /nfs_share/a.txt && \
     echo "a" >> /nfs_share/a.txt
+
 RUN mkdir /nfs_share/write_test
 RUN touch /nfs_share/write_test/write_test_file.txt && \
     echo "write_test_content" >> /nfs_share/write_test/write_test_file.txt
+
+RUN mkdir /nfs_share/create_test
+
 RUN mkdir -p /existent_but_non_exported_directory
 RUN echo "/exported_but_non_existent_directory *(rw)" >> ./exports
 
