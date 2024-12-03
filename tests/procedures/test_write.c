@@ -33,11 +33,12 @@ Test(nfs_write_test_suite, write_ok, .description = "NFSPROC_WRITE ok") {
     nfs__dir_op_res__free_unpacked(diropres, NULL);
     file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
 
-    Nfs__AttrStat *attrstat = write_to_file_success(&file_fhandle, 6, 5, "done", NFS__FTYPE__NFREG);
+    Nfs__AttrStat *attrstat = write_to_file_success(&file_fhandle, 6, 4, "done", NFS__FTYPE__NFREG);
 
     // read from write_test_file.txt to confirm the write was successful
-    char *expected_new_test_file_content = "write_done";
-    Nfs__ReadRes *readres = read_from_file_success(&file_fhandle, 0, 20, attrstat->attributes, expected_new_test_file_content);
+    uint8_t *expected_new_test_file_content = "write_done_content";
+    uint8_t expected_read_size = strlen(expected_new_test_file_content);
+    Nfs__ReadRes *readres = read_from_file_success(&file_fhandle, 0, expected_read_size, attrstat->attributes, expected_read_size, expected_new_test_file_content);
 
     nfs__attr_stat__free_unpacked(attrstat, NULL);
     nfs__read_res__free_unpacked(readres, NULL);

@@ -22,8 +22,10 @@ Test(nfs_read_test_suite, read_ok, .description = "NFSPROC_READ ok") {
     NfsFh__NfsFileHandle file_nfs_filehandle_copy = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
     file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
 
-    char *expected_test_file_content = "test_content";
-    Nfs__ReadRes *readres = read_from_file_success(&file_fhandle, 2, 10, diropres->diropok->attributes, expected_test_file_content + 2);
+    uint8_t *expected_test_file_content = "test_content";
+    uint8_t *expected_read_content = expected_test_file_content + 2;
+    int expected_read_size = strlen(expected_read_content);
+    Nfs__ReadRes *readres = read_from_file_success(&file_fhandle, 2, expected_read_size, diropres->diropok->attributes, expected_read_size, expected_read_content);
     nfs__dir_op_res__free_unpacked(diropres, NULL);
 
     nfs__read_res__free_unpacked(readres, NULL);
@@ -55,4 +57,30 @@ Test(nfs_read_test_suite, read_is_directory, .description = "NFSPROC_READ direct
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
     read_from_file_fail(&fhandle, 2, 10, NFS__STAT__NFSERR_ISDIR);
+}
+
+Test(nfs_read_test_suite, read_more_than_maxdata_bytes, .description = "NFSPROC_READ read more than maxdata bytes") {
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+
+    // lookup the large_file.txt inside the mounted directory
+    Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
+    mount__fh_status__free_unpacked(fhstatus, NULL);
+    fhandle.nfs_filehandle = &nfs_filehandle_copy;
+
+    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(&fhandle, "large_file.txt", NFS__FTYPE__NFREG);
+
+    // try to read NFS_MAXDATA + 20 bytes from this large_file.txt
+    Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle file_nfs_filehandle_copy = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
+    file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
+
+    uint8_t *expected_read_content = malloc(sizeof(uint8_t) * NFS_MAXDATA);  // expect to read NFS_MAXDATA zeros
+    memset(expected_read_content, 0, NFS_MAXDATA);
+    Nfs__ReadRes *readres = read_from_file_success(&file_fhandle, 0, NFS_MAXDATA + 20, diropres->diropok->attributes, NFS_MAXDATA, expected_read_content);
+    nfs__dir_op_res__free_unpacked(diropres, NULL);
+
+    nfs__read_res__free_unpacked(readres, NULL);
+
+    free(expected_read_content);
 }

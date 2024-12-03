@@ -16,8 +16,8 @@ Test(nfs_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    int expected_number_of_entries = 6;
-    char *expected_filenames[6] = {"..", ".", "create_test", "write_test", "a.txt", "test_file.txt"};
+    int expected_number_of_entries = NFS_SHARE_NUMBER_OF_ENTRIES;
+    char *expected_filenames[NFS_SHARE_NUMBER_OF_ENTRIES] = NFS_SHARE_ENTRIES;
 
     Nfs__ReadDirRes *readdirres = read_from_directory_success(&fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
 
@@ -108,8 +108,8 @@ Test(nfs_test_suite, readdir_ok_read_directory_entries_in_batches, .description 
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = fhstatus->directory->nfs_filehandle;
 
-    int expected_number_of_entries = 6;
-    char *expected_filenames[6] = {"..", ".", "create_test", "write_test", "a.txt", "test_file.txt"};
+    int expected_number_of_entries = NFS_SHARE_NUMBER_OF_ENTRIES;
+    char *expected_filenames[NFS_SHARE_NUMBER_OF_ENTRIES] = NFS_SHARE_ENTRIES;
 
     long posix_cookie = 0;  // start from beginning of the directory stream
     int eof = 0;
@@ -130,7 +130,7 @@ Test(nfs_test_suite, readdir_ok_read_directory_entries_in_batches, .description 
 
             free(readdirres);
 
-            cr_fail("NFSPROC_READDIR failed - status %d\n", status);
+            cr_fatal("NFSPROC_READDIR failed - status %d\n", status);
         }
 
         // validate ReadDirRes
