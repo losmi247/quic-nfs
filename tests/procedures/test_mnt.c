@@ -10,7 +10,7 @@ TestSuite(mount_test_suite);
 Test(mount_test_suite, null, .description = "MOUNTPROC_NULL") {
     int status = mount_procedure_0_do_nothing();
     if (status != 0) {
-        cr_fail("MOUNTPROC_NULL failed - status %d\n", status);
+        cr_fatal("MOUNTPROC_NULL failed - status %d\n", status);
     }
 }
 

@@ -544,6 +544,11 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     free(fattr.mtime);
     free(fattr.ctime);
 
+    // if client requested to read too much data in a single RPC, truncate the read down to NFS_MAXDATA bytes
+    if(readargs->count > NFS_MAXDATA) {
+        readargs->count = NFS_MAXDATA;
+    }
+
     // read from the file
     uint8_t *read_data = malloc(sizeof(uint8_t) * readargs->count);
     size_t bytes_read;
@@ -699,7 +704,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
 
     // check if client requested to write too much data in a single RPC
     if(writeargs->nfsdata.len > NFS_MAXDATA) {
-        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: attempted 'write' of %ld bytes to file at absolute path '%s', but max write allowed is %d bytes\n", writeargs->nfsdata.len, file_absolute_path, NFS_MAXDATA);
+        fprintf(stderr, "serve_nfs_procedure_8_write_to_file: attempted 'write' of %ld bytes to file at absolute path '%s', but max write allowed in a single RPC is %d bytes\n", writeargs->nfsdata.len, file_absolute_path, NFS_MAXDATA);
 
         // build the procedure results
         Nfs__AttrStat *attr_stat = create_default_case_attr_stat(NFS__STAT__NFSERR_FBIG); // FBIG error is not intended for this, but it's the most similar in meaning

@@ -25,7 +25,7 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
     int status = mount_procedure_1_add_mount_entry(dirpath, fhstatus);
     if (status != 0) {
         free(fhstatus);
-        cr_fail("MOUNTPROC_MNT failed - status %d\n", status);
+        cr_fatal("MOUNTPROC_MNT failed - status %d\n", status);
     }
 
     return fhstatus;
@@ -88,7 +88,7 @@ Nfs__AttrStat *get_attributes(Nfs__FHandle file_fhandle) {
     int status = nfs_procedure_1_get_file_attributes(file_fhandle, attrstat);
     if(status != 0) {
         free(attrstat);
-        cr_fail("NFSPROC_GETATTR failed - status %d\n", status);
+        cr_fatal("NFSPROC_GETATTR failed - status %d\n", status);
     }
 
     return attrstat;
@@ -158,7 +158,7 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, Nfs__SAttr *sattr) {
     int status = nfs_procedure_2_set_file_attributes(sattrargs, attrstat);
     if(status != 0) {
         free(attrstat);
-        cr_fail("NFSPROC_SETATTR failed - status %d\n", status);
+        cr_fatal("NFSPROC_SETATTR failed - status %d\n", status);
     }
 
     return attrstat;
@@ -251,7 +251,7 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
     int status = nfs_procedure_4_look_up_file_name(diropargs, diropres);
     if(status != 0) {
         free(diropres);
-        cr_fail("NFSPROC_LOOKUP failed - status %d\n", status);
+        cr_fatal("NFSPROC_LOOKUP failed - status %d\n", status);
     }
 
     return diropres;
@@ -332,7 +332,7 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
     int status = nfs_procedure_6_read_from_file(readargs, readres);
     if(status != 0) {
         free(readres);
-        cr_fail("NFSPROC_READ failed - status %d\n", status);
+        cr_fatal("NFSPROC_READ failed - status %d\n", status);
     }
 
     return readres;
@@ -344,7 +344,8 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 *
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The file attributes received in procedure results are validated assuming the file attributes before the read
-* were 'attributes_before_read', and the read content is supposed to be 'expected_read_content'.
+* were 'attributes_before_read', and the read content is supposed to be 'expected_read_content' of size
+* 'expected_read_size' bytes.
 * Note that we can read from many file types - regular files, symbolic links, or character/block-special devices.
 * 
 * Returns the Nfs__ReadRes returned by READ procedure.
@@ -355,7 +356,7 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadRes
 * and always call 'nfs__read_res__free_unpacked()' on it at some point.
 */
-Nfs__ReadRes *read_from_file_success(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read, char *expected_read_content) {
+Nfs__ReadRes *read_from_file_success(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read, uint32_t expected_read_size, uint8_t *expected_read_content) {
     Nfs__ReadRes *readres = read_from_file(file_fhandle, offset, byte_count);
 
     // validate ReadRes
@@ -376,15 +377,10 @@ Nfs__ReadRes *read_from_file_success(Nfs__FHandle *file_fhandle, uint32_t offset
     // validate read content
     cr_assert_not_null(readres->readresbody->nfsdata.data);
     ProtobufCBinaryData read_content = readres->readresbody->nfsdata;
-    cr_assert_leq(read_content.len, byte_count); // reads up to 'byte_count' bytes
-
-    char *read_content_as_string = malloc(sizeof(char) * (read_content.len + 1));
-    memcpy(read_content_as_string, read_content.data, read_content.len);
-    read_content_as_string[read_content.len] = 0;   // null terminate the string
-
-    cr_assert_str_eq(read_content_as_string, expected_read_content);
-
-    free(read_content_as_string);
+    cr_assert_leq(read_content.len, byte_count);
+    cr_assert_eq(read_content.len, expected_read_size, "Expected to read %d bytes but read %ld bytes", expected_read_size, read_content.len);
+    
+    cr_assert(memcmp(read_content.data, expected_read_content, expected_read_size) == 0); // compare the buffer we read and the expected buffer
 
     return readres;
 }
@@ -432,7 +428,7 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
     int status = nfs_procedure_8_write_to_file(writeargs, attrstat);
     if(status != 0) {
         free(attrstat);
-        cr_fail("NFSPROC_WRITE failed - status %d\n", status);
+        cr_fatal("NFSPROC_WRITE failed - status %d\n", status);
     }
 
     return attrstat;
@@ -512,7 +508,7 @@ Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, Nfs_
     int status = nfs_procedure_9_create_file(createargs, diropres);
     if(status != 0) {
         free(diropres);
-        cr_fail("NFSPROC_CREATE failed - status %d\n", status);
+        cr_fatal("NFSPROC_CREATE failed - status %d\n", status);
     }
 
     return diropres;
@@ -612,7 +608,7 @@ Nfs__ReadDirRes *read_from_directory(Nfs__FHandle *directory_fhandle, uint64_t c
     int status = nfs_procedure_16_read_from_directory(readdirargs, readdirres);
     if(status != 0) {
         free(readdirres);
-        cr_fail("NFSPROC_READDIR failed - status %d\n", status);
+        cr_fatal("NFSPROC_READDIR failed - status %d\n", status);
     }
 
     return readdirres;
