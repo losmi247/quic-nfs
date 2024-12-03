@@ -2,7 +2,6 @@
 #define procedure_validation__header__INCLUDED
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <sys/types.h>
 
 #include "criterion/criterion.h"
