@@ -7,7 +7,7 @@ uint64_t get_time(Nfs__TimeVal *timeval) {
 }
 
 /*
-* Mounts the directory given by absolute path. Returns the Mount__FhStatus.
+* Mounts the directory given by absolute path.
 *
 * Returns the Mount__FhStatus returned by MOUNT procedure.
 *
@@ -28,7 +28,26 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
         cr_fail("MOUNTPROC_MNT failed - status %d\n", status);
     }
 
-    cr_assert_eq(fhstatus->status, 0);
+    return fhstatus;
+}
+
+/*
+* Mounts the directory given by absolute path.
+*
+* The procedure results are validated assuming MOUNT__STAT__MNT_OK Mount status.
+*
+* Returns the Mount__FhStatus returned by MOUNT procedure.
+*
+* The user of this function takes on the responsibility to call 'mount_fh_status_free_unpacked()'
+* with the obtained FhStatus. 
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Mount__FhStatus
+* and always call 'mount_fh_status_free_unpacked()' on it at some point.
+*/
+Mount__FhStatus *mount_directory_success(char *directory_absolute_path) {
+    Mount__FhStatus *fhstatus = mount_directory(directory_absolute_path);
+
+    cr_assert_eq(fhstatus->status, MOUNT__STAT__MNT_OK);
     cr_assert_eq(fhstatus->fhstatus_body_case, MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY);
 
     cr_assert_not_null(fhstatus->directory);
@@ -39,9 +58,88 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
 }
 
 /*
+* Mounts the directory given by absolute path.
+*
+* The procedure results are validated assuming a non-MOUNT__STAT__MNT_OK Mount status, given in argument 'non_mnt_ok_status'.
+*/
+void mount_directory_fail(char *directory_absolute_path, Mount__Stat non_mnt_ok_status) {
+    Mount__FhStatus *fhstatus = mount_directory(directory_absolute_path);
+
+    cr_assert_eq(fhstatus->status, non_mnt_ok_status);
+    cr_assert_eq(fhstatus->fhstatus_body_case, MOUNT__FH_STATUS__FHSTATUS_BODY_DEFAULT_CASE);
+    cr_assert_not_null(fhstatus->default_case);
+
+    mount__fh_status__free_unpacked(fhstatus, NULL);
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_GETATTR to get its attributes.
+* 
+* Returns the Nfs__AttrStat returned by GETATTR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__attr_stat__free_unpacked()'
+* with the obtained AttrStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
+* and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
+*/
+Nfs__AttrStat *get_attributes(Nfs__FHandle file_fhandle) {
+    Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
+    int status = nfs_procedure_1_get_file_attributes(file_fhandle, attrstat);
+    if(status != 0) {
+        free(attrstat);
+        cr_fail("NFSPROC_GETATTR failed - status %d\n", status);
+    }
+
+    return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_GETATTR to get its attributes.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* The file attributes received in procedure results are validated assuming the file has type given in 'expected_ftype'.
+*
+* Returns the Nfs__AttrStat returned by GETATTR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__attr_stat__free_unpacked()'
+* with the obtained AttrStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
+* and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
+*/
+Nfs__AttrStat *get_attributes_success(Nfs__FHandle file_fhandle, Nfs__FType expected_ftype) {
+    Nfs__AttrStat *attrstat = get_attributes(file_fhandle);
+
+    // validate AttrStat
+    cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
+    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
+
+    // validate attributes
+    cr_assert_not_null(attrstat->attributes);
+    validate_fattr(attrstat->attributes, NFS__FTYPE__NFDIR);
+
+    return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_GETATTR to get its attributes.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void get_attributes_fail(Nfs__FHandle file_fhandle, Nfs__Stat non_nfs_ok_status) {
+    Nfs__AttrStat *attrstat = get_attributes(file_fhandle);
+
+    cr_assert_eq(attrstat->status, non_nfs_ok_status);
+    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
+    cr_assert_not_null(attrstat->default_case);
+
+    nfs__attr_stat__free_unpacked(attrstat, NULL);
+}
+
+/*
 * Given the Nfs__FHandle of a file or a directory, calls NFSPROC_SETATTR to update the attributes of
-* the given file to the values given in 'mode', 'uid', 'gid,' 'size', 'atime', 'mtime' arguments.
-* The new file attributes are validated assuming the file has type given in 'ftype'.
+* the given file to the values given in the sattr argument.
 * 
 * Returns the Nfs__AttrStat returned by SETATTR procedure.
 *
@@ -51,18 +149,10 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) {
-    Nfs__SAttr sattr = NFS__SATTR__INIT;
-    sattr.mode = mode;
-    sattr.uid = uid;
-    sattr.gid = gid;
-    sattr.size = size;
-    sattr.atime = atime;
-    sattr.mtime = mtime;
-
+Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, Nfs__SAttr *sattr) {
     Nfs__SAttrArgs sattrargs = NFS__SATTR_ARGS__INIT;
     sattrargs.file = file_fhandle;
-    sattrargs.attributes = &sattr;
+    sattrargs.attributes = sattr;
 
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
     int status = nfs_procedure_2_set_file_attributes(sattrargs, attrstat);
@@ -71,11 +161,39 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid
         cr_fail("NFSPROC_SETATTR failed - status %d\n", status);
     }
 
+    return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_SETATTR to update the attributes of
+* the given file to the values given in 'mode', 'uid', 'gid,' 'size', 'atime', 'mtime' arguments.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* The new file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
+* 
+* Returns the Nfs__AttrStat returned by SETATTR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__attr_stat__free_unpacked()'
+* with the obtained AttrStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
+* and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
+*/
+Nfs__AttrStat *set_attributes_success(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) {
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = mode;
+    sattr.uid = uid;
+    sattr.gid = gid;
+    sattr.size = size;
+    sattr.atime = atime;
+    sattr.mtime = mtime;
+
+    Nfs__AttrStat *attrstat = set_attributes(file_fhandle, &sattr);
+
     // validate AttrStat
     cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
     
-
     // validate attributes
     cr_assert_not_null(attrstat->attributes);
     Nfs__FAttr *fattr = attrstat->attributes;
@@ -86,8 +204,32 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid
 }
 
 /*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_SETATTR to update the attributes of
+* the given file to the values given in 'mode', 'uid', 'gid,' 'size', 'atime', 'mtime' arguments.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void set_attributes_fail(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = mode;
+    sattr.uid = uid;
+    sattr.gid = gid;
+    sattr.size = size;
+    sattr.atime = atime;
+    sattr.mtime = mtime;
+
+    Nfs__AttrStat *attrstat = set_attributes(file_fhandle, &sattr);
+
+    cr_assert_eq(attrstat->status, NFS__STAT__NFSERR_NOENT);
+    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
+    cr_assert_not_null(attrstat->default_case);
+
+    nfs__attr_stat__free_unpacked(attrstat, NULL);
+}
+
+/*
 * Given the Nfs__FHandle of a directory, calls NFSPROC_LOOKUP to lookup the given filename
-* inside the given directory. Checks that the looked up file has the given 'expected_ftype' file type.
+* inside the given directory.
 * 
 * Returns the Nfs__DirOpRes returned by LOOKUP procedure.
 *
@@ -97,7 +239,7 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
 * and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
 */
-Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *filename, Nfs__FType expected_ftype) {
+Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *filename) {
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = filename;
 
@@ -112,6 +254,28 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
         cr_fail("NFSPROC_LOOKUP failed - status %d\n", status);
     }
 
+    return diropres;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_LOOKUP to lookup the given filename
+* inside the given directory.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* The file attributes received in procedure results are validated assuming the file has type given in 'expected_ftype'.
+* 
+* Returns the Nfs__DirOpRes returned by LOOKUP procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__dir_op_res__free_unpacked()'
+* with the obtained DirOpRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
+* and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
+*/
+Nfs__DirOpRes *lookup_file_or_directory_success(Nfs__FHandle *directory_fhandle, char *filename, Nfs__FType expected_ftype) {
+    Nfs__DirOpRes *diropres = lookup_file_or_directory(directory_fhandle, filename);
+
+    // validate DirOpRes
     cr_assert_eq(diropres->status, NFS__STAT__NFS_OK);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
     cr_assert_not_null(diropres->diropok);
@@ -129,10 +293,25 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
 }
 
 /*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_LOOKUP to lookup the given filename
+* inside the given directory.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void lookup_file_or_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
+    Nfs__DirOpRes *diropres = lookup_file_or_directory(directory_fhandle, filename);
+
+    // validate DirOpRes
+    cr_assert_eq(diropres->status, non_nfs_ok_status);
+    cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
+    cr_assert_not_null(diropres->default_case);
+
+    nfs__dir_op_res__free_unpacked(diropres, NULL);
+}
+
+/*
 * Given the Nfs__FHandle of a file, calls NFSPROC_READ to read up to 'byte_count' from 'offset' in the
 * specified file.
-* The resulting AttrStat returned by READ procedure are validated using the 'ftype' provided as argument 
-* (we can read from many file types - regular files, symbolic links, block-special devices, etc.).
 * 
 * Returns the Nfs__ReadRes returned by READ procedure.
 *
@@ -142,11 +321,11 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadRes
 * and always call 'nfs__read_res__free_unpacked()' on it at some point.
 */
-Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read, Nfs__FType ftype) {
+Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count) {
     Nfs__ReadArgs readargs = NFS__READ_ARGS__INIT;
     readargs.file = file_fhandle;
-    readargs.count = byte_count;
     readargs.offset = offset;
+    readargs.count = byte_count;
     readargs.totalcount = 0; // unused
 
     Nfs__ReadRes *readres = malloc(sizeof(Nfs__ReadRes));
@@ -156,6 +335,29 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
         cr_fail("NFSPROC_READ failed - status %d\n", status);
     }
 
+    return readres;
+}
+
+/*
+* Given the Nfs__FHandle of a file, calls NFSPROC_READ to read up to 'byte_count' from 'offset' in the
+* specified file.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* The file attributes received in procedure results are validated assuming the file attributes before the read
+* were 'attributes_before_read', and the read content is supposed to be 'expected_read_content'.
+* Note that we can read from many file types - regular files, symbolic links, or character/block-special devices.
+* 
+* Returns the Nfs__ReadRes returned by READ procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__read_res__free_unpacked()'
+* with the obtained ReadRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadRes
+* and always call 'nfs__read_res__free_unpacked()' on it at some point.
+*/
+Nfs__ReadRes *read_from_file_success(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read, char *expected_read_content) {
+    Nfs__ReadRes *readres = read_from_file(file_fhandle, offset, byte_count);
+
     // validate ReadRes
     cr_assert_eq(readres->status, NFS__STAT__NFS_OK);
     cr_assert_eq(readres->body_case, NFS__READ_RES__BODY_READRESBODY);
@@ -164,7 +366,7 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
     // validate attributes
     cr_assert_not_null(readres->readresbody->attributes);
     Nfs__FAttr *read_fattr = readres->readresbody->attributes;
-    validate_fattr(read_fattr, ftype);
+    validate_fattr(read_fattr, attributes_before_read->type);
     check_equal_fattr(attributes_before_read, read_fattr);
     // this is a famous problem - atime is going to be flushed to disk by the kernel only after 24hrs, we can't synchronously update it
     cr_assert(get_time(attributes_before_read->atime) <= get_time(read_fattr->atime));   // file was accessed
@@ -176,14 +378,37 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
     ProtobufCBinaryData read_content = readres->readresbody->nfsdata;
     cr_assert_leq(read_content.len, byte_count); // reads up to 'byte_count' bytes
 
+    char *read_content_as_string = malloc(sizeof(char) * (read_content.len + 1));
+    memcpy(read_content_as_string, read_content.data, read_content.len);
+    read_content_as_string[read_content.len] = 0;   // null terminate the string
+
+    cr_assert_str_eq(read_content_as_string, expected_read_content);
+
+    free(read_content_as_string);
+
     return readres;
+}
+
+/*
+* Given the Nfs__FHandle of a file, calls NFSPROC_READ to read up to 'byte_count' from 'offset' in the
+* specified file.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void read_from_file_fail(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__Stat non_nfs_ok_status) {
+    Nfs__ReadRes *readres = read_from_file(file_fhandle, offset, byte_count);
+
+    // validate ReadRes
+    cr_assert_eq(readres->status, non_nfs_ok_status);
+    cr_assert_eq(readres->body_case, NFS__READ_RES__BODY_DEFAULT_CASE);
+    cr_assert_not_null(readres->default_case);
+
+    nfs__read_res__free_unpacked(readres, NULL);
 }
 
 /*
 * Given the Nfs__FHandle of a file, calls NFSPROC_WRITE to write the given 'byte_count' at 'offset' in
 * that file, from the specified source buffer. 
-* The resulting AttrStat returned by WRITE procedure are validated using the 'ftype' provided as argument 
-* (we can write to many file types - regular files, symbolic links, block-special devices, etc.).
 * 
 * Returns the Nfs__AttrStat returned by WRITE procedure.
 *
@@ -193,7 +418,7 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__FType ftype) {
+Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer) {
     Nfs__WriteArgs writeargs = NFS__WRITE_ARGS__INIT;
     writeargs.file = file_fhandle;
     writeargs.beginoffset = 0; // unused
@@ -210,14 +435,53 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
         cr_fail("NFSPROC_WRITE failed - status %d\n", status);
     }
 
+    return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a file, calls NFSPROC_WRITE to write the given 'byte_count' at 'offset' in
+* that file, from the specified source buffer.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
+* 
+* Returns the Nfs__AttrStat returned by WRITE procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__attr_stat__free_unpacked()'
+* with the obtained AttrStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
+* and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
+*/
+Nfs__AttrStat *write_to_file_success(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__FType ftype) {
+    Nfs__AttrStat *attrstat = write_to_file(file_fhandle, offset, byte_count, source_buffer);
+
+    // validate AttrStat
     cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
 
+    // validate attributes
     cr_assert_not_null(attrstat->attributes);
     Nfs__FAttr *fattr = attrstat->attributes;
     validate_fattr(fattr, ftype);
 
     return attrstat;
+}
+
+/*
+* Given the Nfs__FHandle of a file, calls NFSPROC_WRITE to write the given 'byte_count' at 'offset' in
+* that file, from the specified source buffer.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void write_to_file_fail(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__Stat non_nfs_ok_status) {
+    Nfs__AttrStat *attrstat = write_to_file(file_fhandle, offset, byte_count, source_buffer);
+
+    cr_assert_eq(attrstat->status, non_nfs_ok_status);
+    cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
+    cr_assert_not_null(attrstat->default_case);
+
+    nfs__attr_stat__free_unpacked(attrstat, NULL);
 }
 
 /*
@@ -303,8 +567,7 @@ Nfs__DirOpRes *create_file_success(Nfs__FHandle *directory_fhandle, char *filena
 * inside the given directory. The file is created with initial attributes specified in mode, uid, gid
 * arguments.
 *
-* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non-nfs-ok-status'.
-* The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
 void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
     Nfs__SAttr sattr = NFS__SATTR__INIT;
@@ -322,4 +585,121 @@ void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mo
     cr_assert_not_null(diropres->default_case);
 
     nfs__dir_op_res__free_unpacked(diropres, NULL);
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_READDIR to read entries from this directory starting at
+* offset specified by the Nfs 'cookie', with total size up to 'byte_count'.
+* 
+* Returns the Nfs__ReadDirRes returned by READDIR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__read_dir_res__free_unpacked()'
+* with the obtained ReadDirRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadDirRes
+* and always call 'nfs__read_dir_res__free_unpacked()' on it at some point.
+*/
+Nfs__ReadDirRes *read_from_directory(Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count) {
+    Nfs__NfsCookie nfs_cookie = NFS__NFS_COOKIE__INIT;
+    nfs_cookie.value = cookie;
+
+    Nfs__ReadDirArgs readdirargs = NFS__READ_DIR_ARGS__INIT;
+    readdirargs.dir = directory_fhandle;
+    readdirargs.cookie = &nfs_cookie;
+    readdirargs.count = byte_count;
+
+    Nfs__ReadDirRes *readdirres = malloc(sizeof(Nfs__ReadDirRes));
+    int status = nfs_procedure_16_read_from_directory(readdirargs, readdirres);
+    if(status != 0) {
+        free(readdirres);
+        cr_fail("NFSPROC_READDIR failed - status %d\n", status);
+    }
+
+    return readdirres;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_READDIR to read entries from this directory starting at
+* offset specified by the Nfs 'cookie', with total size up to 'byte_count'.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* The filenames in the directory entries in the procedure results are checked to exactly be equal to the set of
+* filenames given in 'expected_filenames' argument which consists of 'expected_number_of_entries' filenames.
+* 
+* Returns the Nfs__ReadDirRes returned by READDIR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__read_dir_res__free_unpacked()'
+* with the obtained ReadDirRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadDirRes
+* and always call 'nfs__read_dir_res__free_unpacked()' on it at some point.
+*/
+Nfs__ReadDirRes *read_from_directory_success(Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, int expected_number_of_entries, char *expected_filenames[]) {
+    Nfs__ReadDirRes *readdirres = read_from_directory(directory_fhandle, cookie, byte_count);
+
+    // validate ReadDirRes
+    cr_assert_eq(readdirres->status, NFS__STAT__NFS_OK);
+    cr_assert_eq(readdirres->body_case, NFS__READ_DIR_RES__BODY_READDIROK);
+    cr_assert_not_null(readdirres->readdirok);
+
+    cr_assert_not_null(readdirres->readdirok->entries);
+    //cr_assert_eq(readdirres->readdirok->eof, 1);    // we try and read all directory entries in this test
+
+    Nfs__DirectoryEntriesList *directory_entries = readdirres->readdirok->entries;
+    Nfs__DirectoryEntriesList *directory_entries_head = directory_entries;
+    for(int i = 0; i < expected_number_of_entries; i++) {
+        cr_assert_not_null(directory_entries_head->name);
+        cr_assert_not_null(directory_entries_head->name->filename);
+
+        // check this filename is in the 'expected_filenames' and we have not seen it already
+        char *filename = directory_entries_head->name->filename;
+        int filename_found = 0;
+        for(int j = 0; j < expected_number_of_entries; j++) {
+            // skip already seen filenames
+            if(expected_filenames[j] == NULL) {
+                continue;
+            }
+
+            if(strcmp(filename, expected_filenames[j]) == 0) {
+                // mark the filename as seen
+                expected_filenames[j] = NULL;
+
+                filename_found = 1;
+
+                break;
+            }
+        }
+
+        cr_assert(filename_found == 1, "Entry '%s' in procedure results is not among expected directory entries", filename);
+        
+        cr_assert_not_null(directory_entries_head->cookie);
+
+        if(i < expected_number_of_entries - 1) {
+            cr_assert_not_null(directory_entries_head->nextentry);
+        }
+        else{
+            cr_assert_null(directory_entries_head->nextentry);
+        }
+
+        directory_entries_head = directory_entries_head->nextentry;
+    }
+
+    return readdirres;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_READDIR to read entries from this directory starting at
+* offset specified by the Nfs 'cookie', with total size up to 'byte_count'.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void read_from_directory_fail(Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, Nfs__Stat non_nfs_ok_status) {
+    Nfs__ReadDirRes *readdirres = read_from_directory(directory_fhandle, cookie, byte_count);
+
+    // validate ReadDirRes
+    cr_assert_eq(readdirres->status, non_nfs_ok_status);
+    cr_assert_eq(readdirres->body_case, NFS__READ_DIR_RES__BODY_DEFAULT_CASE);
+    cr_assert_not_null(readdirres->default_case);
+
+    nfs__read_dir_res__free_unpacked(readdirres, NULL);
 }
