@@ -2,6 +2,9 @@
 #define test_common__header__INCLUDED
 
 #define NONEXISTENT_INODE_NUMBER 1234567891235
+#define NONEXISTENT_FILE_NAME "non_existent_file.txt"     // in your test containers, never create a file with this filename
+
+#include <time.h>
 
 #include "criterion/criterion.h"
 #include <criterion/new/assert.h>

@@ -1,7 +1,5 @@
 #include "tests/test_common.h"
 
-#include <time.h>
-
 /*
 * NFSPROC_LOOKUP (4) tests
 */
@@ -12,17 +10,17 @@ Test(nfs_lookup_test_suite, lookup_ok, .description = "NFSPROC_LOOKUP ok") {
     Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
-    Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    NfsFh__NfsFileHandle nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
+    Nfs__FHandle dir_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle dir_nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
     mount__fh_status__free_unpacked(fhstatus, NULL);
-    fhandle.nfs_filehandle = &nfs_filehandle_copy;
+    dir_fhandle.nfs_filehandle = &dir_nfs_filehandle_copy;
 
-    Nfs__DirOpRes *diropres = lookup_file_or_directory(&fhandle, "test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(&dir_fhandle, "test_file.txt", NFS__FTYPE__NFREG);
 
     nfs__dir_op_res__free_unpacked(diropres, NULL);
 }
 
-Test(nfs_lookup_test_suite, lookup_no_such_directory, .description = "NFSPROC_LOOKUP no such directory") {
+Test(nfs_lookup_test_suite, lookup_inside_non_existent_directory, .description = "NFSPROC_LOOKUP inside non-existent directory") {
     Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup a test_file.txt inside a different nonexistent directory
@@ -33,61 +31,21 @@ Test(nfs_lookup_test_suite, lookup_no_such_directory, .description = "NFSPROC_LO
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = &nfs_filehandle;
 
-    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
-    file_name.filename = "test_file.txt";
-
-    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
-    diropargs.dir = &fhandle;
-    diropargs.name = &file_name;
-
-    Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_4_look_up_file_name(diropargs, diropres);
-    if(status != 0) {
-        mount__fh_status__free_unpacked(fhstatus, NULL);
-
-        free(diropres);
-
-        cr_fail("NFSPROC_LOOKUP failed - status %d\n", status);
-    }
-
-    cr_assert_eq(diropres->status, NFS__STAT__NFSERR_NOENT);
-    cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
-    cr_assert_not_null(diropres->default_case);
+    lookup_file_or_directory_fail(&fhandle, "test_file.txt", NFS__STAT__NFSERR_NOENT);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
-    nfs__dir_op_res__free_unpacked(diropres, NULL);
 }
 
 Test(nfs_lookup_test_suite, lookup_no_such_file_or_directory, .description = "NFSPROC_LOOKUP no such file or directory") {
     Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // lookup a nonexistent file inside this mounted directory
-    Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
-    fhandle.nfs_filehandle = fhstatus->directory->nfs_filehandle;
-
-    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
-    file_name.filename = "nonexistent_file.txt";
-
-    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
-    diropargs.dir = &fhandle;
-    diropargs.name = &file_name;
-
-    Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_4_look_up_file_name(diropargs, diropres);
-    if(status != 0) {
-        mount__fh_status__free_unpacked(fhstatus, NULL);
-
-        free(diropres);
-
-        cr_fail("NFSPROC_LOOKUP failed - status %d\n", status);
-    }
-
-    cr_assert_eq(diropres->status, NFS__STAT__NFSERR_NOENT);
-    cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
-    cr_assert_not_null(diropres->default_case);
-
+    Nfs__FHandle dir_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle dir_nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
     mount__fh_status__free_unpacked(fhstatus, NULL);
-    nfs__dir_op_res__free_unpacked(diropres, NULL);
+    dir_fhandle.nfs_filehandle = &dir_nfs_filehandle_copy;
+
+    lookup_file_or_directory_fail(&dir_fhandle, NONEXISTENT_FILE_NAME, NFS__STAT__NFSERR_NOENT);
 }
 
 Test(nfs_lookup_test_suite, lookup_a_non_directory, .description = "NFSPROC_LOOKUP lookup a non-directory") {
@@ -99,7 +57,7 @@ Test(nfs_lookup_test_suite, lookup_a_non_directory, .description = "NFSPROC_LOOK
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *dir_diropres = lookup_file_or_directory(&fhandle, "test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *dir_diropres = lookup_file_or_directory_success(&fhandle, "test_file.txt", NFS__FTYPE__NFREG);
 
     // try to lookup a file name "a.txt" inside this test_file.txt file
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -107,26 +65,5 @@ Test(nfs_lookup_test_suite, lookup_a_non_directory, .description = "NFSPROC_LOOK
     nfs__dir_op_res__free_unpacked(dir_diropres, NULL);
     file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
 
-    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
-    file_name.filename = "a.txt";
-
-    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
-    diropargs.dir = &file_fhandle;
-    diropargs.name = &file_name;
-
-    Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_4_look_up_file_name(diropargs, diropres);
-    if(status != 0) {
-        mount__fh_status__free_unpacked(fhstatus, NULL);
-
-        free(diropres);
-
-        cr_fail("NFSPROC_LOOKUP failed - status %d\n", status);
-    }
-
-    cr_assert_eq(diropres->status, NFS__STAT__NFSERR_NOTDIR);
-    cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
-    cr_assert_not_null(diropres->default_case);
-
-    nfs__dir_op_res__free_unpacked(diropres, NULL);
+    lookup_file_or_directory_fail(&file_fhandle, "a.txt", NFS__STAT__NFSERR_NOTDIR);
 }

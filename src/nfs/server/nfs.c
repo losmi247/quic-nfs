@@ -702,7 +702,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
         fprintf(stderr, "serve_nfs_procedure_8_write_to_file: attempted 'write' of %ld bytes to file at absolute path '%s', but max write allowed is %d bytes\n", writeargs->nfsdata.len, file_absolute_path, NFS_MAXDATA);
 
         // build the procedure results
-        Nfs__AttrStat *attr_stat = create_default_case_attr_stat(NFS__STAT__NFSERR_FBIG);
+        Nfs__AttrStat *attr_stat = create_default_case_attr_stat(NFS__STAT__NFSERR_FBIG); // FBIG error is not intended for this, but it's the most similar in meaning
 
         // serialize the procedure results
         size_t attr_stat_size = nfs__attr_stat__get_packed_size(attr_stat);

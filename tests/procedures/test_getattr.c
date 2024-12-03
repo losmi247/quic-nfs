@@ -26,6 +26,7 @@ Test(nfs_getattr_test_suite, getattr_no_such_file_or_directory, .description = "
     // pick a nonexistent inode number in this mounted directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
     nfs_filehandle.inode_number = NONEXISTENT_INODE_NUMBER;
+    nfs_filehandle.timestamp = time(NULL);
 
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = &nfs_filehandle;
