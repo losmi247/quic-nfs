@@ -483,11 +483,11 @@ int nfs_procedure_14_create_directory(Nfs__CreateArgs createargs, Nfs__DirOpRes 
     parameters.value.len = createargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 14, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 14, parameters);
     free(createargs_buffer);
 
     // validate RPC reply
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;
