@@ -20,9 +20,9 @@
 int nfs_procedure_0_do_nothing(void) {
     // no parameters, so an empty Any
     Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 0, parameters);
 
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
     Google__Protobuf__Any *procedure_results = accepted_reply->results;
     if(error_code > 0) {
@@ -69,11 +69,11 @@ int nfs_procedure_1_get_file_attributes(Nfs__FHandle fhandle, Nfs__AttrStat *res
     parameters.value.len = fhandle_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 1, parameters);
     free(fhandle_buffer);
 
     // validate RPC reply
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;
@@ -138,11 +138,11 @@ int nfs_procedure_2_set_file_attributes(Nfs__SAttrArgs sattrargs, Nfs__AttrStat 
     parameters.value.len = sattrargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 2, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 2, parameters);
     free(sattrargs_buffer);
 
     // validate RPC reply
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;
@@ -207,11 +207,11 @@ int nfs_procedure_4_look_up_file_name(Nfs__DirOpArgs diropargs, Nfs__DirOpRes *r
     parameters.value.len = diropargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 4, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 4, parameters);
     free(diropargs_buffer);
 
     // validate RPC reply
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;
@@ -276,11 +276,11 @@ int nfs_procedure_6_read_from_file(Nfs__ReadArgs readargs, Nfs__ReadRes *result)
     parameters.value.len = readargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 6, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 6, parameters);
     free(readargs_buffer);
 
     // validate RPC reply
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;
@@ -345,11 +345,11 @@ int nfs_procedure_8_write_to_file(Nfs__WriteArgs writeargs, Nfs__AttrStat *resul
     parameters.value.len = writeargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 8, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 8, parameters);
     free(writeargs_buffer);
 
     // validate RPC reply
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;
@@ -414,11 +414,11 @@ int nfs_procedure_9_create_file(Nfs__CreateArgs createargs, Nfs__DirOpRes *resul
     parameters.value.len = createargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 9, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 9, parameters);
     free(createargs_buffer);
 
     // validate RPC reply
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;
@@ -483,11 +483,11 @@ int nfs_procedure_16_read_from_directory(Nfs__ReadDirArgs readdirargs, Nfs__Read
     parameters.value.len = readdirargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 16, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 16, parameters);
     free(readdirargs_buffer);
 
     // validate RPC reply
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;

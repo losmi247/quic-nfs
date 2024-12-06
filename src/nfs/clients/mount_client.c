@@ -20,9 +20,9 @@
 int mount_procedure_0_do_nothing(void) {
     // no parameters, so an empty Any
     Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(MOUNT_RPC_SERVER_IPV4_ADDR, MOUNT_RPC_SERVER_PORT, MOUNT_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(MOUNT_RPC_SERVER_IPV4_ADDR, MOUNT_RPC_SERVER_PORT, MOUNT_RPC_PROGRAM_NUMBER, 2, 0, parameters);
 
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
     Google__Protobuf__Any *procedure_results = accepted_reply->results;
     if(error_code > 0) {
@@ -69,11 +69,11 @@ int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *r
     parameters.value.len = dirpath_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc(MOUNT_RPC_SERVER_IPV4_ADDR, MOUNT_RPC_SERVER_PORT, MOUNT_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(MOUNT_RPC_SERVER_IPV4_ADDR, MOUNT_RPC_SERVER_PORT, MOUNT_RPC_PROGRAM_NUMBER, 2, 1, parameters);
     free(dirpath_buffer);
 
     // validate RPC reply
-    int error_code = validate_rpc_message_from_server(rpc_reply);
+    int error_code = validate_successful_accepted_reply(rpc_reply);
     if(error_code > 0) {
         rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
         return error_code;

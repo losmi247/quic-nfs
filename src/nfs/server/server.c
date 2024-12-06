@@ -12,6 +12,9 @@ InodeCache inode_cache;
 * Functions from server_common_rpc.h that each RPC program's server must implement.
 */
 
+/*
+* Forwards the RPC call to the specific RPC program, and returns the AcceptedReply.
+*/
 Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {
     if(program_number == MOUNT_RPC_PROGRAM_NUMBER) {
         return call_mount(program_version, procedure_number, parameters);
@@ -37,7 +40,7 @@ Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t
 */
 
 /*
-* Signal handler for graceful shutdown
+* Signal handler for graceful shutdown.
 */
 void handle_signal(int signal) {
     if (signal == SIGTERM) {
