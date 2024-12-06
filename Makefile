@@ -14,9 +14,11 @@ SERIALIZATION_SRCS = ./src/serialization/mount/mount.pb-c.c \
 	./src/serialization/google_protos/empty.pb-c.c
 
 RPC_PROGRAM_COMMON_SERVER_SRCS = ./src/common_rpc/server_common_rpc.c \
-	./src/common_rpc/common_rpc.c
+	./src/common_rpc/common_rpc.c \
+	./src/common_rpc/record_marking.c
 RPC_PROGRAM_COMMON_CLIENT_SRCS = ./src/common_rpc/client_common_rpc.c \
-	./src/common_rpc/common_rpc.c
+	./src/common_rpc/common_rpc.c \
+	./src/common_rpc/record_marking.c
 
 CLIENTS_SRCS = ./src/nfs/clients/mount_client.c ./src/nfs/clients/nfs_client.c
 
