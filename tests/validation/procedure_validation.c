@@ -516,8 +516,8 @@ Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, Nfs_
 
 /*
 * Given the Nfs__FHandle of a directory, calls NFSPROC_CREATE to create a file with the given filename
-* inside the given directory. The file is created with initial attributes specified in mode, uid, gid
-* arguments.
+* inside the given directory. The file is created with initial attributes specified in mode, uid, gid, size,
+* atime, mtime arguments.
 *
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
@@ -560,8 +560,8 @@ Nfs__DirOpRes *create_file_success(Nfs__FHandle *directory_fhandle, char *filena
 
 /*
 * Given the Nfs__FHandle of a directory, calls NFSPROC_CREATE to create a file with the given filename
-* inside the given directory. The file is created with initial attributes specified in mode, uid, gid
-* arguments.
+* inside the given directory. The file is created with initial attributes specified in mode, uid, gid, size,
+* atime, mtime arguments.
 *
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
@@ -575,6 +575,109 @@ void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mo
     sattr.mtime = mtime;
 
     Nfs__DirOpRes *diropres = create_file(directory_fhandle, filename, &sattr);
+
+    cr_assert_eq(diropres->status, non_nfs_ok_status);
+    cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
+    cr_assert_not_null(diropres->default_case);
+
+    nfs__dir_op_res__free_unpacked(diropres, NULL);
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_MKDIR to create a directory with the given filename
+* inside the given directory. The directory is created with initial attributes specified in sattr argument.
+* 
+* Returns the Nfs__DirOpRes returned by MKDIR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__dir_op_res__free_unpacked()'
+* with the obtained DirOpRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
+* and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
+*/
+Nfs__DirOpRes *create_directory(Nfs__FHandle *directory_fhandle, char *filename, Nfs__SAttr *sattr) {
+    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
+    file_name.filename = filename;
+
+    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
+    diropargs.dir = directory_fhandle;
+    diropargs.name = &file_name;
+
+    Nfs__CreateArgs createargs = NFS__CREATE_ARGS__INIT;
+    createargs.where = &diropargs;
+    createargs.attributes = sattr;
+
+    Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
+    int status = nfs_procedure_14_create_directory(createargs, diropres);
+    if(status != 0) {
+        free(diropres);
+        cr_fatal("NFSPROC_MKDIR failed - status %d\n", status);
+    }
+
+    return diropres;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_MKDIR to create a directory with the given filename
+* inside the given directory. The file is created with initial attributes specified in mode, uid, gid, atime, 
+* mtime arguments (size attribute not used, as it can not be set for directories).
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
+* 
+* Returns the Nfs__DirOpRes returned by MKDIR procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__dir_op_res__free_unpacked()'
+* with the obtained DirOpRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
+* and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
+*/
+Nfs__DirOpRes *create_directory_success(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) { 
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = mode;
+    sattr.uid = uid;
+    sattr.gid = gid;
+    sattr.size = -1;    // we do not (can not) set size attribute for directories
+    sattr.atime = atime;
+    sattr.mtime = mtime;
+    
+    Nfs__DirOpRes *diropres = create_directory(directory_fhandle, filename, &sattr);
+
+    cr_assert_eq(diropres->status, NFS__STAT__NFS_OK);
+    cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
+    cr_assert_not_null(diropres->diropok);
+
+    // validate Nfs filehandle
+    cr_assert_not_null(diropres->diropok->file);
+    cr_assert_not_null(diropres->diropok->file->nfs_filehandle);
+
+    // validate attributes
+    cr_assert_not_null(diropres->diropok->attributes);
+    Nfs__FAttr *fattr = diropres->diropok->attributes;
+    validate_fattr(fattr, ftype);
+    check_fattr_update(fattr, &sattr);
+
+    return diropres;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_MKDIR to create a directory with the given filename
+* inside the given directory. The file is created with initial attributes specified in mode, uid, gid, atime, 
+* mtime arguments (size attribute not used, as it can not be set for directories).
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void create_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = mode;
+    sattr.uid = uid;
+    sattr.gid = gid;
+    sattr.size = -1;
+    sattr.atime = atime;
+    sattr.mtime = mtime;
+
+    Nfs__DirOpRes *diropres = create_directory(directory_fhandle, filename, &sattr);
 
     cr_assert_eq(diropres->status, non_nfs_ok_status);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);

@@ -47,6 +47,11 @@ Nfs__DirOpRes *create_file_success(Nfs__FHandle *directory_fhandle, char *filena
 
 void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status);
 
+// NFSPROC_MKDIR
+Nfs__DirOpRes *create_directory_success(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype);
+
+void create_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status);
+
 // NFSPROC_READDIR validation
 Nfs__ReadDirRes *read_from_directory_success(Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, int expected_number_of_entries, char *expected_filenames[]);
 
