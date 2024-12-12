@@ -56,6 +56,7 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
         nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
 
         nfs__fhandle__free_unpacked(fhandle, NULL);
+        free(attr_stat->nfs_status);
         free(attr_stat->default_case);
         free(attr_stat);
 
@@ -75,7 +76,11 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
 
     // build the procedure results
     Nfs__AttrStat attr_stat = NFS__ATTR_STAT__INIT;
-    attr_stat.status = NFS__STAT__NFS_OK;
+
+    Nfs__NfsStat nfs_status = NFS__NFS_STAT__INIT;
+    nfs_status.stat = NFS__STAT__NFS_OK;
+
+    attr_stat.nfs_status = &nfs_status;
     attr_stat.body_case = NFS__ATTR_STAT__BODY_ATTRIBUTES;
     attr_stat.attributes = &fattr;
 
@@ -88,9 +93,7 @@ Rpc__AcceptedReply serve_nfs_procedure_1_get_file_attributes(Google__Protobuf__A
 
     nfs__fhandle__free_unpacked(fhandle, NULL);
 
-    free(fattr.atime);
-    free(fattr.mtime);
-    free(fattr.ctime);
+    clean_up_fattr(&fattr);
 
     return accepted_reply;
 }
@@ -168,6 +171,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
         nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
 
         nfs__sattr_args__free_unpacked(sattrargs, NULL);
+        free(attr_stat->nfs_status);
         free(attr_stat->default_case);
         free(attr_stat);
 
@@ -226,7 +230,11 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
 
     // build the procedure results
     Nfs__AttrStat attr_stat = NFS__ATTR_STAT__INIT;
-    attr_stat.status = NFS__STAT__NFS_OK;
+
+    Nfs__NfsStat nfs_status = NFS__NFS_STAT__INIT;
+    nfs_status.stat = NFS__STAT__NFS_OK;
+
+    attr_stat.nfs_status = &nfs_status;
     attr_stat.body_case = NFS__ATTR_STAT__BODY_ATTRIBUTES;
     attr_stat.attributes = &fattr;
 
@@ -238,10 +246,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
 
     nfs__sattr_args__free_unpacked(sattrargs, NULL);
-
-    free(fattr.atime);
-    free(fattr.mtime);
-    free(fattr.ctime);
+    clean_up_fattr(&fattr);
 
     return accepted_reply;
 }
@@ -312,6 +317,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         nfs__dir_op_res__pack(diropres, diropres_buffer);
 
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -330,7 +336,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         return create_system_error_accepted_reply();
     }
     // only directories can be looked up using LOOKUP
-    if(directory_fattr.type != NFS__FTYPE__NFDIR) {
+    if(directory_fattr.nfs_ftype->ftype != NFS__FTYPE__NFDIR) {
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: 'lookup' procedure called on a non-directory '%s'\n", directory_absolute_path);
 
         // build the procedure results
@@ -341,15 +347,15 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
         uint8_t *diropres_buffer = malloc(diropres_size);
         nfs__dir_op_res__pack(diropres, diropres_buffer);
 
+        clean_up_fattr(&directory_fattr);
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
-    free(directory_fattr.atime);
-    free(directory_fattr.mtime);
-    free(directory_fattr.ctime);
+    clean_up_fattr(&directory_fattr);
 
     // check that the file client wants to lookup exists
     char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
@@ -376,6 +382,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
             free(file_absolute_path);
             nfs__dir_op_args__free_unpacked(diropargs, NULL);
+            free(diropres->nfs_status);
             free(diropres->default_case);
             free(diropres);
 
@@ -422,7 +429,10 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     
     // build the procedure results
     Nfs__DirOpRes diropres = NFS__DIR_OP_RES__INIT;
-    diropres.status = NFS__STAT__NFS_OK;
+
+    Nfs__NfsStat nfs_status = NFS__NFS_STAT__INIT;
+    nfs_status.stat = NFS__STAT__NFS_OK;
+    diropres.nfs_status = &nfs_status;
     diropres.body_case = NFS__DIR_OP_RES__BODY_DIROPOK;
 
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -443,9 +453,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
 
     nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
-    free(fattr.atime);
-    free(fattr.mtime);
-    free(fattr.ctime);
+    clean_up_fattr(&fattr);
 
     free(file_absolute_path);
 
@@ -503,6 +511,7 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
         nfs__read_res__pack(readres, readres_buffer);
 
         nfs__read_args__free_unpacked(readargs, NULL);
+        free(readres->nfs_status);
         free(readres->default_case);
         free(readres);
 
@@ -522,7 +531,7 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
         return create_system_error_accepted_reply();
     }
     // all file types except for directories can be read as files
-    if(fattr.type == NFS__FTYPE__NFDIR) {
+    if(fattr.nfs_ftype->ftype == NFS__FTYPE__NFDIR) {
         // if the file is actually directory, return ReadRes with 'directory specified in a non-directory operation' status
         fprintf(stderr, "serve_nfs_procedure_6_read_from_file: a directory '%s' was specified for 'read' which is a non-directory operation\n", file_absolute_path);
 
@@ -534,15 +543,14 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
         uint8_t *readres_buffer = malloc(readres_size);
         nfs__read_res__pack(readres, readres_buffer);
 
+        clean_up_fattr(&fattr);
         nfs__read_args__free_unpacked(readargs, NULL);
         free(readres->default_case);
         free(readres);
 
         return wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
     }
-    free(fattr.atime);
-    free(fattr.mtime);
-    free(fattr.ctime);
+    clean_up_fattr(&fattr);
 
     // if client requested to read too much data in a single RPC, truncate the read down to NFS_MAXDATA bytes
     if(readargs->count > NFS_MAXDATA) {
@@ -578,7 +586,10 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     
     // build the procedure results
     Nfs__ReadRes readres = NFS__READ_RES__INIT;
-    readres.status = NFS__STAT__NFS_OK;
+
+    Nfs__NfsStat nfs_status = NFS__NFS_STAT__INIT;
+    nfs_status.stat = NFS__STAT__NFS_OK;
+    readres.nfs_status = &nfs_status;
     readres.body_case = NFS__READ_RES__BODY_READRESBODY;
 
     Nfs__ReadResBody readresbody = NFS__READ_RES_BODY__INIT;
@@ -597,9 +608,7 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
 
     nfs__read_args__free_unpacked(readargs, NULL);
 
-    free(fattr_after_read.atime);
-    free(fattr_after_read.mtime);
-    free(fattr_after_read.ctime);
+    clean_up_fattr(&fattr_after_read);
 
     return accepted_reply;
 }
@@ -662,6 +671,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
         nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
 
         nfs__write_args__free_unpacked(writeargs, NULL);
+        free(attr_stat->nfs_status);
         free(attr_stat->default_case);
         free(attr_stat);
 
@@ -680,7 +690,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
         return create_system_error_accepted_reply();
     }
     // all file types except for directories can be written to as files
-    if(fattr.type == NFS__FTYPE__NFDIR) {
+    if(fattr.nfs_ftype->ftype == NFS__FTYPE__NFDIR) {
         // if the file is actually directory, return AttrStat with 'directory specified in a non-directory operation' status
         fprintf(stderr, "serve_nfs_procedure_8_write_to_file: a directory '%s' was specified for 'write' which is a non-directory operation\n", file_absolute_path);
 
@@ -692,15 +702,15 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
         uint8_t *attr_stat_buffer = malloc(attr_stat_size);
         nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
 
+        clean_up_fattr(&fattr);
         nfs__write_args__free_unpacked(writeargs, NULL);
+        free(attr_stat->nfs_status);
         free(attr_stat->default_case);
         free(attr_stat);
 
         return wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
     }
-    free(fattr.atime);
-    free(fattr.mtime);
-    free(fattr.ctime);
+    clean_up_fattr(&fattr);
 
     // check if client requested to write too much data in a single RPC
     if(writeargs->nfsdata.len > NFS_MAXDATA) {
@@ -715,6 +725,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
         nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
 
         nfs__write_args__free_unpacked(writeargs, NULL);
+        free(attr_stat->nfs_status);
         free(attr_stat->default_case);
         free(attr_stat);
 
@@ -746,6 +757,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
         nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
 
         nfs__write_args__free_unpacked(writeargs, NULL);
+        free(attr_stat->nfs_status);
         free(attr_stat->default_case);
         free(attr_stat);
 
@@ -775,7 +787,11 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
 
     // build the procedure results
     Nfs__AttrStat attr_stat = NFS__ATTR_STAT__INIT;
-    attr_stat.status = NFS__STAT__NFS_OK;
+
+    Nfs__NfsStat nfs_status = NFS__NFS_STAT__INIT;
+    nfs_status.stat = NFS__STAT__NFS_OK;
+
+    attr_stat.nfs_status = &nfs_status;
     attr_stat.body_case = NFS__ATTR_STAT__BODY_ATTRIBUTES;
     attr_stat.attributes = &fattr_after_write;
 
@@ -788,9 +804,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
 
     nfs__write_args__free_unpacked(writeargs, NULL);
 
-    free(fattr_after_write.atime);
-    free(fattr_after_write.mtime);
-    free(fattr_after_write.ctime);
+    clean_up_fattr(&fattr_after_write);
 
     return accepted_reply;
 }
@@ -891,6 +905,7 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
         nfs__dir_op_res__pack(diropres, diropres_buffer);
 
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -909,7 +924,7 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
         return create_system_error_accepted_reply();
     }
-    if(directory_fattr.type != NFS__FTYPE__NFDIR) {
+    if(directory_fattr.nfs_ftype->ftype != NFS__FTYPE__NFDIR) {
         // if the file is not a directory, return DirOpRes with 'non-directory specified in a directory operation' status
         fprintf(stderr, "serve_nfs_procedure_9_create_file: 'create' procedure called on a non-directory '%s'\n", directory_absolute_path);
 
@@ -921,15 +936,15 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
         uint8_t *diropres_buffer = malloc(diropres_size);
         nfs__dir_op_res__pack(diropres, diropres_buffer);
 
+        clean_up_fattr(&directory_fattr);
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
-    free(directory_fattr.atime);
-    free(directory_fattr.mtime);
-    free(directory_fattr.ctime);
+    clean_up_fattr(&directory_fattr);
 
     // check if the name of the file to be created is longer than NFS limit
     if(strlen(file_name->filename) > NFS_MAXNAMLEN) {
@@ -944,6 +959,7 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
         nfs__dir_op_res__pack(diropres, diropres_buffer);
 
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -966,6 +982,7 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
 
         free(file_absolute_path);
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -984,6 +1001,7 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
 
         free(file_absolute_path);
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -1036,6 +1054,7 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
 
             free(file_absolute_path);
             nfs__create_args__free_unpacked(createargs, NULL);
+            free(diropres->nfs_status);
             free(diropres->default_case);
             free(diropres);
 
@@ -1117,7 +1136,11 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
 
     // build the procedure results
     Nfs__DirOpRes diropres = NFS__DIR_OP_RES__INIT;
-    diropres.status = NFS__STAT__NFS_OK;
+
+    Nfs__NfsStat nfs_status = NFS__NFS_STAT__INIT;
+    nfs_status.stat = NFS__STAT__NFS_OK;
+
+    diropres.nfs_status = &nfs_status;
     diropres.body_case = NFS__DIR_OP_RES__BODY_DIROPOK;
 
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -1138,9 +1161,7 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
 
     nfs__create_args__free_unpacked(createargs, NULL);
 
-    free(fattr.atime);
-    free(fattr.mtime);
-    free(fattr.ctime);
+    clean_up_fattr(&fattr);
 
     free(file_absolute_path);
 
@@ -1243,6 +1264,7 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
         nfs__dir_op_res__pack(diropres, diropres_buffer);
 
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -1261,7 +1283,7 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
         return create_system_error_accepted_reply();
     }
-    if(directory_fattr.type != NFS__FTYPE__NFDIR) {
+    if(directory_fattr.nfs_ftype->ftype != NFS__FTYPE__NFDIR) {
         // if the file is not a directory, return DirOpRes with 'non-directory specified in a directory operation' status
         fprintf(stderr, "serve_nfs_procedure_14_create_directory: 'mkdir' procedure called on a non-directory '%s'\n", directory_absolute_path);
 
@@ -1273,15 +1295,15 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
         uint8_t *diropres_buffer = malloc(diropres_size);
         nfs__dir_op_res__pack(diropres, diropres_buffer);
 
+        clean_up_fattr(&directory_fattr);
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
         return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
     }
-    free(directory_fattr.atime);
-    free(directory_fattr.mtime);
-    free(directory_fattr.ctime);
+    clean_up_fattr(&directory_fattr);
 
     // check if the name of the directory to be created is longer than NFS limit
     if(strlen(file_name->filename) > NFS_MAXNAMLEN) {
@@ -1296,6 +1318,7 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
         nfs__dir_op_res__pack(diropres, diropres_buffer);
 
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -1318,6 +1341,7 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
 
         free(child_directory_absolute_path);
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -1336,6 +1360,7 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
 
         free(child_directory_absolute_path);
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -1387,6 +1412,7 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
 
             free(child_directory_absolute_path);
             nfs__create_args__free_unpacked(createargs, NULL);
+            free(diropres->nfs_status);
             free(diropres->default_case);
             free(diropres);
 
@@ -1424,6 +1450,7 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
 
         free(child_directory_absolute_path);
         nfs__create_args__free_unpacked(createargs, NULL);
+        free(diropres->nfs_status);
         free(diropres->default_case);
         free(diropres);
 
@@ -1477,7 +1504,11 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
 
     // build the procedure results
     Nfs__DirOpRes diropres = NFS__DIR_OP_RES__INIT;
-    diropres.status = NFS__STAT__NFS_OK;
+
+    Nfs__NfsStat nfs_status = NFS__NFS_STAT__INIT;
+    nfs_status.stat = NFS__STAT__NFS_OK;
+
+    diropres.nfs_status = &nfs_status;
     diropres.body_case = NFS__DIR_OP_RES__BODY_DIROPOK;
 
     Nfs__FHandle child_directory_fhandle = NFS__FHANDLE__INIT;
@@ -1498,9 +1529,7 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
 
     nfs__create_args__free_unpacked(createargs, NULL);
 
-    free(fattr.atime);
-    free(fattr.mtime);
-    free(fattr.ctime);
+    clean_up_fattr(&fattr);
 
     free(child_directory_absolute_path);
 
@@ -1565,6 +1594,7 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
         nfs__read_dir_res__pack(readdirres, readdirres_buffer);
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+        free(readdirres->nfs_status);
         free(readdirres->default_case);
         free(readdirres);
 
@@ -1584,7 +1614,7 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
         return create_system_error_accepted_reply();
     }
     // only directories can be read using READDIR
-    if(fattr.type != NFS__FTYPE__NFDIR) {
+    if(fattr.nfs_ftype->ftype != NFS__FTYPE__NFDIR) {
         // if the file is not a directory, return ReadDirRes with 'non-directory specified in a directory operation' status
         fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: a non-directory '%s' was specified for 'readdir' which is a directory operation\n", directory_absolute_path);
 
@@ -1596,15 +1626,15 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
         uint8_t *readdirres_buffer = malloc(readdirres_size);
         nfs__read_dir_res__pack(readdirres, readdirres_buffer);
 
+        clean_up_fattr(&fattr);
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+        free(readdirres->nfs_status);
         free(readdirres->default_case);
         free(readdirres);
 
         return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
     }
-    free(fattr.atime);
-    free(fattr.mtime);
-    free(fattr.ctime);
+    clean_up_fattr(&fattr);
 
     // read entries from the directory
     Nfs__DirectoryEntriesList *directory_entries = NULL;
@@ -1622,7 +1652,11 @@ Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__
     
     // build the procedure results
     Nfs__ReadDirRes readdirres = NFS__READ_DIR_RES__INIT;
-    readdirres.status = NFS__STAT__NFS_OK;
+
+    Nfs__NfsStat nfs_status = NFS__NFS_STAT__INIT;
+    nfs_status.stat = NFS__STAT__NFS_OK;
+
+    readdirres.nfs_status = &nfs_status;
     readdirres.body_case = NFS__READ_DIR_RES__BODY_READDIROK;
 
     Nfs__ReadDirOk readdirok = NFS__READ_DIR_OK__INIT;

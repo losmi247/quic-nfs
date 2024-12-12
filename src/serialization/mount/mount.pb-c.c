@@ -52,6 +52,51 @@ void   mount__fhandle__free_unpacked
   assert(message->base.descriptor == &mount__fhandle__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   mount__mnt_stat__init
+                     (Mount__MntStat         *message)
+{
+  static const Mount__MntStat init_value = MOUNT__MNT_STAT__INIT;
+  *message = init_value;
+}
+size_t mount__mnt_stat__get_packed_size
+                     (const Mount__MntStat *message)
+{
+  assert(message->base.descriptor == &mount__mnt_stat__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t mount__mnt_stat__pack
+                     (const Mount__MntStat *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &mount__mnt_stat__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t mount__mnt_stat__pack_to_buffer
+                     (const Mount__MntStat *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &mount__mnt_stat__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Mount__MntStat *
+       mount__mnt_stat__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Mount__MntStat *)
+     protobuf_c_message_unpack (&mount__mnt_stat__descriptor,
+                                allocator, len, data);
+}
+void   mount__mnt_stat__free_unpacked
+                     (Mount__MntStat *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &mount__mnt_stat__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   mount__fh_status__init
                      (Mount__FhStatus         *message)
 {
@@ -360,16 +405,54 @@ const ProtobufCMessageDescriptor mount__fhandle__descriptor =
   (ProtobufCMessageInit) mount__fhandle__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor mount__fh_status__field_descriptors[3] =
+static const ProtobufCFieldDescriptor mount__mnt_stat__field_descriptors[1] =
 {
   {
-    "status",
+    "stat",
     1,
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_ENUM,
     0,   /* quantifier_offset */
-    offsetof(Mount__FhStatus, status),
+    offsetof(Mount__MntStat, stat),
     &mount__stat__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned mount__mnt_stat__field_indices_by_name[] = {
+  0,   /* field[0] = stat */
+};
+static const ProtobufCIntRange mount__mnt_stat__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor mount__mnt_stat__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "mount.MntStat",
+  "MntStat",
+  "Mount__MntStat",
+  "mount",
+  sizeof(Mount__MntStat),
+  1,
+  mount__mnt_stat__field_descriptors,
+  mount__mnt_stat__field_indices_by_name,
+  1,  mount__mnt_stat__number_ranges,
+  (ProtobufCMessageInit) mount__mnt_stat__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor mount__fh_status__field_descriptors[3] =
+{
+  {
+    "mnt_status",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(Mount__FhStatus, mnt_status),
+    &mount__mnt_stat__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -402,7 +485,7 @@ static const ProtobufCFieldDescriptor mount__fh_status__field_descriptors[3] =
 static const unsigned mount__fh_status__field_indices_by_name[] = {
   2,   /* field[2] = default_case */
   1,   /* field[1] = directory */
-  0,   /* field[0] = status */
+  0,   /* field[0] = mnt_status */
 };
 static const ProtobufCIntRange mount__fh_status__number_ranges[1 + 1] =
 {
@@ -685,7 +768,7 @@ static const ProtobufCEnumValue mount__stat__enum_values_by_number[5] =
   { "MNTERR_NOENT", "MOUNT__STAT__MNTERR_NOENT", 2 },
   { "MNTERR_NOTEXP", "MOUNT__STAT__MNTERR_NOTEXP", 3 },
   { "MNTERR_IO", "MOUNT__STAT__MNTERR_IO", 5 },
-  { "NFSERR_NOTDIR", "MOUNT__STAT__NFSERR_NOTDIR", 20 },
+  { "MNTERR_NOTDIR", "MOUNT__STAT__MNTERR_NOTDIR", 20 },
 };
 static const ProtobufCIntRange mount__stat__value_ranges[] = {
 {0, 0},{2, 1},{5, 3},{20, 4},{0, 5}
@@ -694,9 +777,9 @@ static const ProtobufCEnumValueIndex mount__stat__enum_values_by_name[5] =
 {
   { "MNTERR_IO", 3 },
   { "MNTERR_NOENT", 1 },
+  { "MNTERR_NOTDIR", 4 },
   { "MNTERR_NOTEXP", 2 },
   { "MNT_OK", 0 },
-  { "NFSERR_NOTDIR", 4 },
 };
 const ProtobufCEnumDescriptor mount__stat__descriptor =
 {

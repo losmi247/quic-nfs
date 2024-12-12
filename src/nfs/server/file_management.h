@@ -36,6 +36,8 @@ char *get_file_absolute_path(char *directory_absolute_path, char *file_name);
 
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr);
 
+void clean_up_fattr(Nfs__FAttr *fattr);
+
 /*
 * File management functions used by NFSPROC_READ
 */

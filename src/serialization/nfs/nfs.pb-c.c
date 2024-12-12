@@ -7,6 +7,96 @@
 #endif
 
 #include "src/serialization/nfs/nfs.pb-c.h"
+void   nfs__nfs_stat__init
+                     (Nfs__NfsStat         *message)
+{
+  static const Nfs__NfsStat init_value = NFS__NFS_STAT__INIT;
+  *message = init_value;
+}
+size_t nfs__nfs_stat__get_packed_size
+                     (const Nfs__NfsStat *message)
+{
+  assert(message->base.descriptor == &nfs__nfs_stat__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t nfs__nfs_stat__pack
+                     (const Nfs__NfsStat *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &nfs__nfs_stat__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t nfs__nfs_stat__pack_to_buffer
+                     (const Nfs__NfsStat *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &nfs__nfs_stat__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Nfs__NfsStat *
+       nfs__nfs_stat__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Nfs__NfsStat *)
+     protobuf_c_message_unpack (&nfs__nfs_stat__descriptor,
+                                allocator, len, data);
+}
+void   nfs__nfs_stat__free_unpacked
+                     (Nfs__NfsStat *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &nfs__nfs_stat__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
+void   nfs__nfs_ftype__init
+                     (Nfs__NfsFType         *message)
+{
+  static const Nfs__NfsFType init_value = NFS__NFS_FTYPE__INIT;
+  *message = init_value;
+}
+size_t nfs__nfs_ftype__get_packed_size
+                     (const Nfs__NfsFType *message)
+{
+  assert(message->base.descriptor == &nfs__nfs_ftype__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t nfs__nfs_ftype__pack
+                     (const Nfs__NfsFType *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &nfs__nfs_ftype__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t nfs__nfs_ftype__pack_to_buffer
+                     (const Nfs__NfsFType *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &nfs__nfs_ftype__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Nfs__NfsFType *
+       nfs__nfs_ftype__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Nfs__NfsFType *)
+     protobuf_c_message_unpack (&nfs__nfs_ftype__descriptor,
+                                allocator, len, data);
+}
+void   nfs__nfs_ftype__free_unpacked
+                     (Nfs__NfsFType *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &nfs__nfs_ftype__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   nfs__fhandle__init
                      (Nfs__FHandle         *message)
 {
@@ -997,6 +1087,82 @@ void   nfs__read_dir_res__free_unpacked
   assert(message->base.descriptor == &nfs__read_dir_res__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+static const ProtobufCFieldDescriptor nfs__nfs_stat__field_descriptors[1] =
+{
+  {
+    "stat",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_ENUM,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__NfsStat, stat),
+    &nfs__stat__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned nfs__nfs_stat__field_indices_by_name[] = {
+  0,   /* field[0] = stat */
+};
+static const ProtobufCIntRange nfs__nfs_stat__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor nfs__nfs_stat__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "nfs.NfsStat",
+  "NfsStat",
+  "Nfs__NfsStat",
+  "nfs",
+  sizeof(Nfs__NfsStat),
+  1,
+  nfs__nfs_stat__field_descriptors,
+  nfs__nfs_stat__field_indices_by_name,
+  1,  nfs__nfs_stat__number_ranges,
+  (ProtobufCMessageInit) nfs__nfs_stat__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor nfs__nfs_ftype__field_descriptors[1] =
+{
+  {
+    "ftype",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_ENUM,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__NfsFType, ftype),
+    &nfs__ftype__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned nfs__nfs_ftype__field_indices_by_name[] = {
+  0,   /* field[0] = ftype */
+};
+static const ProtobufCIntRange nfs__nfs_ftype__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor nfs__nfs_ftype__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "nfs.NfsFType",
+  "NfsFType",
+  "Nfs__NfsFType",
+  "nfs",
+  sizeof(Nfs__NfsFType),
+  1,
+  nfs__nfs_ftype__field_descriptors,
+  nfs__nfs_ftype__field_indices_by_name,
+  1,  nfs__nfs_ftype__number_ranges,
+  (ProtobufCMessageInit) nfs__nfs_ftype__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
 static const ProtobufCFieldDescriptor nfs__fhandle__field_descriptors[1] =
 {
   {
@@ -1089,13 +1255,13 @@ const ProtobufCMessageDescriptor nfs__time_val__descriptor =
 static const ProtobufCFieldDescriptor nfs__fattr__field_descriptors[14] =
 {
   {
-    "type",
+    "nfs_ftype",
     1,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
+    PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__FAttr, type),
-    &nfs__ftype__descriptor,
+    offsetof(Nfs__FAttr, nfs_ftype),
+    &nfs__nfs_ftype__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -1267,10 +1433,10 @@ static const unsigned nfs__fattr__field_indices_by_name[] = {
   4,   /* field[4] = gid */
   1,   /* field[1] = mode */
   12,   /* field[12] = mtime */
+  0,   /* field[0] = nfs_ftype */
   2,   /* field[2] = nlink */
   7,   /* field[7] = rdev */
   5,   /* field[5] = size */
-  0,   /* field[0] = type */
   3,   /* field[3] = uid */
 };
 static const ProtobufCIntRange nfs__fattr__number_ranges[1 + 1] =
@@ -1475,13 +1641,13 @@ const ProtobufCMessageDescriptor nfs__path__descriptor =
 static const ProtobufCFieldDescriptor nfs__attr_stat__field_descriptors[3] =
 {
   {
-    "status",
+    "nfs_status",
     1,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
+    PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__AttrStat, status),
-    &nfs__stat__descriptor,
+    offsetof(Nfs__AttrStat, nfs_status),
+    &nfs__nfs_stat__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -1514,7 +1680,7 @@ static const ProtobufCFieldDescriptor nfs__attr_stat__field_descriptors[3] =
 static const unsigned nfs__attr_stat__field_indices_by_name[] = {
   1,   /* field[1] = attributes */
   2,   /* field[2] = default_case */
-  0,   /* field[0] = status */
+  0,   /* field[0] = nfs_status */
 };
 static const ProtobufCIntRange nfs__attr_stat__number_ranges[1 + 1] =
 {
@@ -1641,13 +1807,13 @@ const ProtobufCMessageDescriptor nfs__dir_op_ok__descriptor =
 static const ProtobufCFieldDescriptor nfs__dir_op_res__field_descriptors[3] =
 {
   {
-    "status",
+    "nfs_status",
     1,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
+    PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__DirOpRes, status),
-    &nfs__stat__descriptor,
+    offsetof(Nfs__DirOpRes, nfs_status),
+    &nfs__nfs_stat__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -1680,7 +1846,7 @@ static const ProtobufCFieldDescriptor nfs__dir_op_res__field_descriptors[3] =
 static const unsigned nfs__dir_op_res__field_indices_by_name[] = {
   2,   /* field[2] = default_case */
   1,   /* field[1] = diropok */
-  0,   /* field[0] = status */
+  0,   /* field[0] = nfs_status */
 };
 static const ProtobufCIntRange nfs__dir_op_res__number_ranges[1 + 1] =
 {
@@ -1756,13 +1922,13 @@ const ProtobufCMessageDescriptor nfs__sattr_args__descriptor =
 static const ProtobufCFieldDescriptor nfs__read_link_res__field_descriptors[3] =
 {
   {
-    "status",
+    "nfs_status",
     1,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
+    PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__ReadLinkRes, status),
-    &nfs__stat__descriptor,
+    offsetof(Nfs__ReadLinkRes, nfs_status),
+    &nfs__nfs_stat__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -1795,7 +1961,7 @@ static const ProtobufCFieldDescriptor nfs__read_link_res__field_descriptors[3] =
 static const unsigned nfs__read_link_res__field_indices_by_name[] = {
   1,   /* field[1] = data */
   2,   /* field[2] = default_case */
-  0,   /* field[0] = status */
+  0,   /* field[0] = nfs_status */
 };
 static const ProtobufCIntRange nfs__read_link_res__number_ranges[1 + 1] =
 {
@@ -1948,13 +2114,13 @@ const ProtobufCMessageDescriptor nfs__read_res_body__descriptor =
 static const ProtobufCFieldDescriptor nfs__read_res__field_descriptors[3] =
 {
   {
-    "status",
+    "nfs_status",
     1,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
+    PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__ReadRes, status),
-    &nfs__stat__descriptor,
+    offsetof(Nfs__ReadRes, nfs_status),
+    &nfs__nfs_stat__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -1986,8 +2152,8 @@ static const ProtobufCFieldDescriptor nfs__read_res__field_descriptors[3] =
 };
 static const unsigned nfs__read_res__field_indices_by_name[] = {
   2,   /* field[2] = default_case */
+  0,   /* field[0] = nfs_status */
   1,   /* field[1] = readresbody */
-  0,   /* field[0] = status */
 };
 static const ProtobufCIntRange nfs__read_res__number_ranges[1 + 1] =
 {
@@ -2383,13 +2549,13 @@ const ProtobufCMessageDescriptor nfs__read_dir_ok__descriptor =
 static const ProtobufCFieldDescriptor nfs__read_dir_res__field_descriptors[3] =
 {
   {
-    "status",
+    "nfs_status",
     1,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
+    PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    offsetof(Nfs__ReadDirRes, status),
-    &nfs__stat__descriptor,
+    offsetof(Nfs__ReadDirRes, nfs_status),
+    &nfs__nfs_stat__descriptor,
     NULL,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
@@ -2421,8 +2587,8 @@ static const ProtobufCFieldDescriptor nfs__read_dir_res__field_descriptors[3] =
 };
 static const unsigned nfs__read_dir_res__field_indices_by_name[] = {
   2,   /* field[2] = default_case */
+  0,   /* field[0] = nfs_status */
   1,   /* field[1] = readdirok */
-  0,   /* field[0] = status */
 };
 static const ProtobufCIntRange nfs__read_dir_res__number_ranges[1 + 1] =
 {

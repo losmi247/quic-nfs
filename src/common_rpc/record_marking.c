@@ -12,11 +12,11 @@ int receive_bytes(int socket_fd, size_t bytes_to_read, uint8_t *destination_buff
         size_t bytes_left = bytes_to_read - total_bytes_read;
         size_t bytes_read = recv(socket_fd, destination_buffer + total_bytes_read, bytes_left, 0);
         if (bytes_read < 0) {
-            perror("receive_bytes: failed to read from the socket\n");
+            perror("receive_bytes: failed to read from the socket");
             return 1;
         }
         if(bytes_read == 0) {  // to avoid infinite loops
-            perror("receive_bytes: read zero bytes from the socket\n");
+            perror("receive_bytes: read zero bytes from the socket");
             return 2;
         }
 
@@ -44,7 +44,7 @@ uint8_t *receive_rm_record(int socket_fd, size_t *rm_record_data_size) {
         // read the RM fragment header
         uint8_t fragment_header_buffer[RM_FRAGMENT_HEADER_SIZE];
         int error_code = receive_bytes(socket_fd, RM_FRAGMENT_HEADER_SIZE, fragment_header_buffer);
-        if(error_code < 0) {
+        if(error_code > 0) {
             perror("Failed to receive the Record Marking fragment header");
 
             free(rm_record_data_buffer);
@@ -85,11 +85,11 @@ int send_bytes(int socket_fd, const uint8_t *source_buffer, size_t buffer_size) 
     while (total_bytes_sent < buffer_size) {
         size_t bytes_sent = send(socket_fd, source_buffer + total_bytes_sent, buffer_size - total_bytes_sent, 0);
         if (bytes_sent < 0) {
-            perror("send_bytes: failed to send from the buffer\n");
+            perror("send_bytes: failed to send from the buffer");
             return 1;
         }
         if(bytes_sent == 0) {  // to avoid infinite loops
-            perror("send_bytes: sent zero bytes from the buffer\n");
+            perror("send_bytes: sent zero bytes from the buffer");
             return 2;
         }
 

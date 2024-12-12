@@ -93,19 +93,19 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
             }
 
             // build the procedure results
-            Mount__FhStatus fh_status = create_default_case_fh_status(mount_stat);
+            Mount__FhStatus *fh_status = create_default_case_fh_status(mount_stat);
 
             // serialize the procedure results
-            size_t fh_status_size = mount__fh_status__get_packed_size(&fh_status);
+            size_t fh_status_size = mount__fh_status__get_packed_size(fh_status);
             uint8_t *fh_status_buffer = malloc(fh_status_size);
-            mount__fh_status__pack(&fh_status, fh_status_buffer);
-
-            Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
+            mount__fh_status__pack(fh_status, fh_status_buffer);
 
             mount__dir_path__free_unpacked(dirpath, NULL);
-            free(fh_status.default_case);
+            free(fh_status->mnt_status);
+            free(fh_status->default_case);
+            free(fh_status);
 
-            return accepted_reply;
+            return wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
         }
         else{
             perror_msg("serve_mnt_procedure_1_add_mount_entry: failed checking if directory to be mounted at absolute path '%s' exists", directory_absolute_path);
@@ -128,45 +128,43 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
         return create_system_error_accepted_reply();
     }
     // only directories can be mounted using MNT
-    if(directory_fattr.type != NFS__FTYPE__NFDIR) {
+    if(directory_fattr.nfs_ftype->ftype != NFS__FTYPE__NFDIR) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: 'mnt' procedure called on a non-directory '%s'\n", directory_absolute_path);
 
         // build the procedure results
-        Mount__FhStatus fh_status = create_default_case_fh_status(MOUNT__STAT__NFSERR_NOTDIR);
+        Mount__FhStatus *fh_status = create_default_case_fh_status(MOUNT__STAT__MNTERR_NOTDIR);
 
         // serialize the procedure results
-        size_t fh_status_size = mount__fh_status__get_packed_size(&fh_status);
+        size_t fh_status_size = mount__fh_status__get_packed_size(fh_status);
         uint8_t *fh_status_buffer = malloc(fh_status_size);
-        mount__fh_status__pack(&fh_status, fh_status_buffer);
+        mount__fh_status__pack(fh_status, fh_status_buffer);
 
-        Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
-
+        clean_up_fattr(&directory_fattr);
         mount__dir_path__free_unpacked(dirpath, NULL);
-        free(fh_status.default_case);
+        free(fh_status->mnt_status);
+        free(fh_status->default_case);
+        free(fh_status);
 
-        return accepted_reply;
+        return wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
     }
-    free(directory_fattr.atime);
-    free(directory_fattr.mtime);
-    free(directory_fattr.ctime);
+    clean_up_fattr(&directory_fattr);
 
     if(!is_directory_exported(directory_absolute_path)) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: directory at absolute path '%s' not exported for Nfs\n", directory_absolute_path);
 
-        Mount__FhStatus fh_status = create_default_case_fh_status(MOUNT__STAT__MNTERR_NOTEXP);
+        Mount__FhStatus *fh_status = create_default_case_fh_status(MOUNT__STAT__MNTERR_NOTEXP);
 
         // serialize the procedure results
-        size_t fh_status_size = mount__fh_status__get_packed_size(&fh_status);
+        size_t fh_status_size = mount__fh_status__get_packed_size(fh_status);
         uint8_t *fh_status_buffer = malloc(fh_status_size);
-        mount__fh_status__pack(&fh_status, fh_status_buffer);
-
-        free(fh_status.default_case);
-
-        Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
+        mount__fh_status__pack(fh_status, fh_status_buffer);
 
         mount__dir_path__free_unpacked(dirpath, NULL);
+        free(fh_status->mnt_status);
+        free(fh_status->default_case);
+        free(fh_status);
 
-        return accepted_reply;
+        return wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
     }
 
     // create a NFS file handle for this directory
@@ -186,7 +184,11 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
 
     // build the procedure results
     Mount__FhStatus fh_status = MOUNT__FH_STATUS__INIT;
-    fh_status.status = MOUNT__STAT__MNT_OK;
+
+    Mount__MntStat mnt_status = MOUNT__MNT_STAT__INIT;
+    mnt_status.stat = MOUNT__STAT__MNT_OK;
+
+    fh_status.mnt_status = &mnt_status;
     fh_status.fhstatus_body_case = MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY;
 
     Mount__FHandle fhandle = MOUNT__FHANDLE__INIT;
