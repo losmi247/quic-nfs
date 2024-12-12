@@ -45,7 +45,7 @@ To run the tests:
 |  7  | WRITECACHE     | write to cache                               |      NFSv3          |     NFSv3             |        NFSv3       |
 |  8  | WRITE          | write to file                                |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  9  | CREATE         | create file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
-| 10  | REMOVE         | remove file                                  |                     |                       |                    |
+| 10  | REMOVE         | remove file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 11  | RENAME         | rename file                                  |                     |                       |                    |
 | 12  | LINK           | create link to file                          |                     |                       |                    |
 | 13  | SYMLINK        | create symbolic link to file                 |                     |                       |                    |

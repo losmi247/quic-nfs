@@ -4,7 +4,8 @@
 * Validates FAttr fields that can be checked for correctnes from the client.
 */
 void validate_fattr(Nfs__FAttr *fattr, Nfs__FType ftype) {
-    cr_assert_eq(fattr->type, ftype);
+    cr_assert_not_null(fattr->nfs_ftype);
+    cr_assert_eq(fattr->nfs_ftype->ftype, ftype);
 
     cr_assert_not_null(fattr->atime);
     cr_assert_not_null(fattr->mtime);
@@ -16,7 +17,12 @@ void validate_fattr(Nfs__FAttr *fattr, Nfs__FType ftype) {
 * excluding atime, mtime, ctime fields.
 */
 void check_equal_fattr(Nfs__FAttr *fattr1, Nfs__FAttr *fattr2) {
-    cr_assert_eq(fattr1->type, fattr2->type);
+    cr_assert_not_null(fattr1);
+    cr_assert_not_null(fattr2);
+    cr_assert_not_null(fattr1->nfs_ftype);
+    cr_assert_not_null(fattr2->nfs_ftype);
+
+    cr_assert_eq(fattr1->nfs_ftype->ftype, fattr2->nfs_ftype->ftype);
     cr_assert_eq(fattr1->mode, fattr2->mode);
 
     cr_assert_eq(fattr1->nlink, fattr2->nlink);
@@ -37,6 +43,13 @@ void check_equal_fattr(Nfs__FAttr *fattr1, Nfs__FAttr *fattr2) {
 * proper values after the update.
 */
 void check_fattr_update(Nfs__FAttr *updated_fattr, Nfs__SAttr *sattr) {
+    cr_assert_not_null(updated_fattr);
+    cr_assert_not_null(updated_fattr->atime);
+    cr_assert_not_null(updated_fattr->mtime);
+    cr_assert_not_null(sattr);
+    cr_assert_not_null(sattr->atime);
+    cr_assert_not_null(sattr->mtime);
+
     if(sattr->mode != -1) {
         cr_assert_eq(((updated_fattr->mode) & ((1<<12)-1)), sattr->mode); // only check first 12 bits - (sticky,setuid,setgid),owner,group,others, before that is device/file type
     }

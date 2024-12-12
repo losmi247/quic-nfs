@@ -28,11 +28,12 @@ void add_inode_mapping(ino_t inode_number, char *absolute_path, InodeCache *head
 * and deallocates that removed InodeCacheMapping along with the 
 * absolute path inside it.
 *
-* Returns 0 on successful removal of the entry, and > 0 otherwise.
+* Returns 0 on successful removal of the entry, 1 if the corresponding entry
+* could not be found, and > 1 on failure otherwise.
 */
-int remove_inode_mapping(ino_t inode_number, InodeCache *head) {
+int remove_inode_mapping_by_inode_number(ino_t inode_number, InodeCache *head) {
     if(head == NULL) {
-        return 1;
+        return 2;
     }
 
     // the entry we want to remove is the first in the list
@@ -61,7 +62,49 @@ int remove_inode_mapping(ino_t inode_number, InodeCache *head) {
         curr_mapping = curr_mapping->next;
     }
 
-    return 2;
+    return 1;
+}
+
+/*
+* Removes an entry with the given absolute path from the inode cache,
+* and deallocates that removed InodeCacheMapping along with the 
+* absolute path inside it.
+*
+* Returns 0 on successful removal of the entry, 1 if the corresponding entry
+* could not be found, and > 1 on failure otherwise.
+*/
+int remove_inode_mapping_by_absolute_path(char *absolute_path, InodeCache *head) {
+    if(head == NULL) {
+        return 2;
+    }
+
+    // the entry we want to remove is the first in the list
+    if(strcmp((*head)->absolute_path, absolute_path) == 0) {
+        struct InodeCacheMapping *new_head = (*head)->next;
+
+        free_inode_cache_mapping(*head);
+
+        *head = new_head;
+
+        return 0;
+    }
+
+    // the entry we want to remove is somewhere in the middle of the list
+    struct InodeCacheMapping *curr_mapping = (*head)->next, *prev_mapping = *head;
+    while(curr_mapping != NULL) {
+        if(strcmp(curr_mapping->absolute_path, absolute_path)) {
+            prev_mapping->next = curr_mapping->next;
+
+            free_inode_cache_mapping(curr_mapping);
+
+            return 0;
+        }
+
+        prev_mapping = curr_mapping;
+        curr_mapping = curr_mapping->next;
+    }
+
+    return 1;
 }
 
 /*

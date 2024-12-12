@@ -26,7 +26,7 @@ Test(mount_test_suite, mnt_no_such_directory, .description = "MOUNTPROC_MNT no s
 
 Test(mount_test_suite, mnt_not_a_directory, .description = "MOUNTPROC_MNT not a directory") {
     // try to mount a file /nfs_share/test_file.txt
-    mount_directory_fail("/nfs_share/test_file.txt", MOUNT__STAT__NFSERR_NOTDIR);
+    mount_directory_fail("/nfs_share/test_file.txt", MOUNT__STAT__MNTERR_NOTDIR);
 }
 
 Test(mount_test_suite, mnt_directory_not_exported, .description = "MOUNTPROC_MNT directory not exported") {

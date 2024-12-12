@@ -23,7 +23,7 @@ int main() {
     status = mount_procedure_1_add_mount_entry(dirpath, fhstatus);
     if(status == 0) {
         fprintf(stdout, "Successfully executed MOUNTPROC_MNT\n");
-        fprintf(stdout, "Status: %d\n", fhstatus->status);
+        fprintf(stdout, "Status: %d\n", fhstatus->mnt_status->stat);
         fprintf(stdout, "Filehandle: inode number - %lu\n", fhstatus->directory->nfs_filehandle->inode_number);
 
         mount__fh_status__free_unpacked(fhstatus, NULL);

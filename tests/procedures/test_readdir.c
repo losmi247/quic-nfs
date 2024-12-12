@@ -134,7 +134,8 @@ Test(nfs_test_suite, readdir_ok_read_directory_entries_in_batches, .description 
         }
 
         // validate ReadDirRes
-        cr_assert_eq(readdirres->status, NFS__STAT__NFS_OK);
+        cr_assert_not_null(readdirres->nfs_status);
+        cr_assert_eq(readdirres->nfs_status->stat, NFS__STAT__NFS_OK);
         cr_assert_eq(readdirres->body_case, NFS__READ_DIR_RES__BODY_READDIROK);
         cr_assert_not_null(readdirres->readdirok);
 

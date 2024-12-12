@@ -28,6 +28,8 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
         cr_fatal("MOUNTPROC_MNT failed - status %d\n", status);
     }
 
+    cr_assert_not_null(fhstatus);
+
     return fhstatus;
 }
 
@@ -47,7 +49,8 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
 Mount__FhStatus *mount_directory_success(char *directory_absolute_path) {
     Mount__FhStatus *fhstatus = mount_directory(directory_absolute_path);
 
-    cr_assert_eq(fhstatus->status, MOUNT__STAT__MNT_OK);
+    cr_assert_not_null(fhstatus->mnt_status);
+    cr_assert_eq(fhstatus->mnt_status->stat, MOUNT__STAT__MNT_OK);
     cr_assert_eq(fhstatus->fhstatus_body_case, MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY);
 
     cr_assert_not_null(fhstatus->directory);
@@ -65,7 +68,8 @@ Mount__FhStatus *mount_directory_success(char *directory_absolute_path) {
 void mount_directory_fail(char *directory_absolute_path, Mount__Stat non_mnt_ok_status) {
     Mount__FhStatus *fhstatus = mount_directory(directory_absolute_path);
 
-    cr_assert_eq(fhstatus->status, non_mnt_ok_status);
+    cr_assert_not_null(fhstatus->mnt_status);
+    cr_assert_eq(fhstatus->mnt_status->stat, non_mnt_ok_status);
     cr_assert_eq(fhstatus->fhstatus_body_case, MOUNT__FH_STATUS__FHSTATUS_BODY_DEFAULT_CASE);
     cr_assert_not_null(fhstatus->default_case);
 
@@ -91,6 +95,8 @@ Nfs__AttrStat *get_attributes(Nfs__FHandle file_fhandle) {
         cr_fatal("NFSPROC_GETATTR failed - status %d\n", status);
     }
 
+    cr_assert_not_null(attrstat);
+
     return attrstat;
 }
 
@@ -112,7 +118,8 @@ Nfs__AttrStat *get_attributes_success(Nfs__FHandle file_fhandle, Nfs__FType expe
     Nfs__AttrStat *attrstat = get_attributes(file_fhandle);
 
     // validate AttrStat
-    cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
+    cr_assert_not_null(attrstat->nfs_status);
+    cr_assert_eq(attrstat->nfs_status->stat, NFS__STAT__NFS_OK);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
 
     // validate attributes
@@ -130,7 +137,8 @@ Nfs__AttrStat *get_attributes_success(Nfs__FHandle file_fhandle, Nfs__FType expe
 void get_attributes_fail(Nfs__FHandle file_fhandle, Nfs__Stat non_nfs_ok_status) {
     Nfs__AttrStat *attrstat = get_attributes(file_fhandle);
 
-    cr_assert_eq(attrstat->status, non_nfs_ok_status);
+    cr_assert_not_null(attrstat->nfs_status);
+    cr_assert_eq(attrstat->nfs_status->stat, non_nfs_ok_status);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
     cr_assert_not_null(attrstat->default_case);
 
@@ -160,6 +168,8 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, Nfs__SAttr *sattr) {
         free(attrstat);
         cr_fatal("NFSPROC_SETATTR failed - status %d\n", status);
     }
+
+    cr_assert_not_null(attrstat);
 
     return attrstat;
 }
@@ -191,7 +201,8 @@ Nfs__AttrStat *set_attributes_success(Nfs__FHandle *file_fhandle, mode_t mode, u
     Nfs__AttrStat *attrstat = set_attributes(file_fhandle, &sattr);
 
     // validate AttrStat
-    cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
+    cr_assert_not_null(attrstat->nfs_status);
+    cr_assert_eq(attrstat->nfs_status->stat, NFS__STAT__NFS_OK);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
     
     // validate attributes
@@ -220,7 +231,8 @@ void set_attributes_fail(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid
 
     Nfs__AttrStat *attrstat = set_attributes(file_fhandle, &sattr);
 
-    cr_assert_eq(attrstat->status, NFS__STAT__NFSERR_NOENT);
+    cr_assert_not_null(attrstat->nfs_status);
+    cr_assert_eq(attrstat->nfs_status->stat, non_nfs_ok_status);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
     cr_assert_not_null(attrstat->default_case);
 
@@ -254,6 +266,8 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
         cr_fatal("NFSPROC_LOOKUP failed - status %d\n", status);
     }
 
+    cr_assert_not_null(diropres);
+
     return diropres;
 }
 
@@ -276,7 +290,8 @@ Nfs__DirOpRes *lookup_file_or_directory_success(Nfs__FHandle *directory_fhandle,
     Nfs__DirOpRes *diropres = lookup_file_or_directory(directory_fhandle, filename);
 
     // validate DirOpRes
-    cr_assert_eq(diropres->status, NFS__STAT__NFS_OK);
+    cr_assert_not_null(diropres->nfs_status);
+    cr_assert_eq(diropres->nfs_status->stat, NFS__STAT__NFS_OK);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
     cr_assert_not_null(diropres->diropok);
 
@@ -302,7 +317,8 @@ void lookup_file_or_directory_fail(Nfs__FHandle *directory_fhandle, char *filena
     Nfs__DirOpRes *diropres = lookup_file_or_directory(directory_fhandle, filename);
 
     // validate DirOpRes
-    cr_assert_eq(diropres->status, non_nfs_ok_status);
+    cr_assert_not_null(diropres->nfs_status);
+    cr_assert_eq(diropres->nfs_status->stat, non_nfs_ok_status);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(diropres->default_case);
 
@@ -335,6 +351,8 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
         cr_fatal("NFSPROC_READ failed - status %d\n", status);
     }
 
+    cr_assert_not_null(readres);
+
     return readres;
 }
 
@@ -360,14 +378,15 @@ Nfs__ReadRes *read_from_file_success(Nfs__FHandle *file_fhandle, uint32_t offset
     Nfs__ReadRes *readres = read_from_file(file_fhandle, offset, byte_count);
 
     // validate ReadRes
-    cr_assert_eq(readres->status, NFS__STAT__NFS_OK);
+    cr_assert_not_null(readres->nfs_status);
+    cr_assert_eq(readres->nfs_status->stat, NFS__STAT__NFS_OK);
     cr_assert_eq(readres->body_case, NFS__READ_RES__BODY_READRESBODY);
     cr_assert_not_null(readres->readresbody);
 
     // validate attributes
     cr_assert_not_null(readres->readresbody->attributes);
     Nfs__FAttr *read_fattr = readres->readresbody->attributes;
-    validate_fattr(read_fattr, attributes_before_read->type);
+    validate_fattr(read_fattr, attributes_before_read->nfs_ftype->ftype);
     check_equal_fattr(attributes_before_read, read_fattr);
     // this is a famous problem - atime is going to be flushed to disk by the kernel only after 24hrs, we can't synchronously update it
     cr_assert(get_time(attributes_before_read->atime) <= get_time(read_fattr->atime));   // file was accessed
@@ -395,7 +414,8 @@ void read_from_file_fail(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t b
     Nfs__ReadRes *readres = read_from_file(file_fhandle, offset, byte_count);
 
     // validate ReadRes
-    cr_assert_eq(readres->status, non_nfs_ok_status);
+    cr_assert_not_null(readres->nfs_status);
+    cr_assert_eq(readres->nfs_status->stat, non_nfs_ok_status);
     cr_assert_eq(readres->body_case, NFS__READ_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(readres->default_case);
 
@@ -431,6 +451,8 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
         cr_fatal("NFSPROC_WRITE failed - status %d\n", status);
     }
 
+    cr_assert_not_null(attrstat);
+
     return attrstat;
 }
 
@@ -453,7 +475,8 @@ Nfs__AttrStat *write_to_file_success(Nfs__FHandle *file_fhandle, uint32_t offset
     Nfs__AttrStat *attrstat = write_to_file(file_fhandle, offset, byte_count, source_buffer);
 
     // validate AttrStat
-    cr_assert_eq(attrstat->status, NFS__STAT__NFS_OK);
+    cr_assert_not_null(attrstat->nfs_status);
+    cr_assert_eq(attrstat->nfs_status->stat, NFS__STAT__NFS_OK);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
 
     // validate attributes
@@ -473,7 +496,8 @@ Nfs__AttrStat *write_to_file_success(Nfs__FHandle *file_fhandle, uint32_t offset
 void write_to_file_fail(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__Stat non_nfs_ok_status) {
     Nfs__AttrStat *attrstat = write_to_file(file_fhandle, offset, byte_count, source_buffer);
 
-    cr_assert_eq(attrstat->status, non_nfs_ok_status);
+    cr_assert_not_null(attrstat->nfs_status);
+    cr_assert_eq(attrstat->nfs_status->stat, non_nfs_ok_status);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
     cr_assert_not_null(attrstat->default_case);
 
@@ -511,6 +535,8 @@ Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, Nfs_
         cr_fatal("NFSPROC_CREATE failed - status %d\n", status);
     }
 
+    cr_assert_not_null(diropres);
+
     return diropres;
 }
 
@@ -541,7 +567,8 @@ Nfs__DirOpRes *create_file_success(Nfs__FHandle *directory_fhandle, char *filena
     
     Nfs__DirOpRes *diropres = create_file(directory_fhandle, filename, &sattr);
 
-    cr_assert_eq(diropres->status, NFS__STAT__NFS_OK);
+    cr_assert_not_null(diropres->nfs_status);
+    cr_assert_eq(diropres->nfs_status->stat, NFS__STAT__NFS_OK);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
     cr_assert_not_null(diropres->diropok);
 
@@ -576,11 +603,80 @@ void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mo
 
     Nfs__DirOpRes *diropres = create_file(directory_fhandle, filename, &sattr);
 
-    cr_assert_eq(diropres->status, non_nfs_ok_status);
+    cr_assert_not_null(diropres->nfs_status);
+    cr_assert_eq(diropres->nfs_status->stat, non_nfs_ok_status);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(diropres->default_case);
 
     nfs__dir_op_res__free_unpacked(diropres, NULL);
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_REMOVE to delete the file with the given filename
+* inside the given directory.
+* 
+* Returns the Nfs__NfsStat returned by REMOVE procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *remove_file(Nfs__FHandle *directory_fhandle, char *filename) {
+    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
+    file_name.filename = filename;
+
+    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
+    diropargs.dir = directory_fhandle;
+    diropargs.name = &file_name;
+
+    Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
+    int status = nfs_procedure_10_remove_file(diropargs, nfsstat);
+    if(status != 0) {
+        free(nfsstat);
+        cr_fatal("NFSPROC_REMOVE failed - status %d\n", status);
+    }
+
+    cr_assert_not_null(nfsstat);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_REMOVE to delete the file with the given filename
+* inside the given directory.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* 
+* Returns the Nfs__NfsStat returned by REMOVE procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *remove_file_success(Nfs__FHandle *directory_fhandle, char *filename) { 
+    Nfs__NfsStat *nfsstat = remove_file(directory_fhandle, filename);
+
+    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_REMOVE to delete the file with the given filename
+* inside the given directory.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void remove_file_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
+    Nfs__NfsStat *nfsstat = remove_file(directory_fhandle, filename);
+
+    cr_assert_eq(nfsstat->stat, non_nfs_ok_status);
+
+    nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 }
 
 /*
@@ -614,6 +710,8 @@ Nfs__DirOpRes *create_directory(Nfs__FHandle *directory_fhandle, char *filename,
         cr_fatal("NFSPROC_MKDIR failed - status %d\n", status);
     }
 
+    cr_assert_not_null(diropres);
+
     return diropres;
 }
 
@@ -644,7 +742,8 @@ Nfs__DirOpRes *create_directory_success(Nfs__FHandle *directory_fhandle, char *f
     
     Nfs__DirOpRes *diropres = create_directory(directory_fhandle, filename, &sattr);
 
-    cr_assert_eq(diropres->status, NFS__STAT__NFS_OK);
+    cr_assert_not_null(diropres->nfs_status);
+    cr_assert_eq(diropres->nfs_status->stat, NFS__STAT__NFS_OK);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
     cr_assert_not_null(diropres->diropok);
 
@@ -679,7 +778,8 @@ void create_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, mode
 
     Nfs__DirOpRes *diropres = create_directory(directory_fhandle, filename, &sattr);
 
-    cr_assert_eq(diropres->status, non_nfs_ok_status);
+    cr_assert_not_null(diropres->nfs_status);
+    cr_assert_eq(diropres->nfs_status->stat, non_nfs_ok_status);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(diropres->default_case);
 
@@ -714,6 +814,8 @@ Nfs__ReadDirRes *read_from_directory(Nfs__FHandle *directory_fhandle, uint64_t c
         cr_fatal("NFSPROC_READDIR failed - status %d\n", status);
     }
 
+    cr_assert_not_null(readdirres);
+
     return readdirres;
 }
 
@@ -737,7 +839,8 @@ Nfs__ReadDirRes *read_from_directory_success(Nfs__FHandle *directory_fhandle, ui
     Nfs__ReadDirRes *readdirres = read_from_directory(directory_fhandle, cookie, byte_count);
 
     // validate ReadDirRes
-    cr_assert_eq(readdirres->status, NFS__STAT__NFS_OK);
+    cr_assert_not_null(readdirres->nfs_status);
+    cr_assert_eq(readdirres->nfs_status->stat, NFS__STAT__NFS_OK);
     cr_assert_eq(readdirres->body_case, NFS__READ_DIR_RES__BODY_READDIROK);
     cr_assert_not_null(readdirres->readdirok);
 
@@ -796,7 +899,8 @@ void read_from_directory_fail(Nfs__FHandle *directory_fhandle, uint64_t cookie, 
     Nfs__ReadDirRes *readdirres = read_from_directory(directory_fhandle, cookie, byte_count);
 
     // validate ReadDirRes
-    cr_assert_eq(readdirres->status, non_nfs_ok_status);
+    cr_assert_not_null(readdirres->nfs_status);
+    cr_assert_eq(readdirres->nfs_status->stat, non_nfs_ok_status);
     cr_assert_eq(readdirres->body_case, NFS__READ_DIR_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(readdirres->default_case);
 

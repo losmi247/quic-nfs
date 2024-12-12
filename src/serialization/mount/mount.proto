@@ -17,11 +17,15 @@ enum Stat {
     MNTERR_NOENT = 2;           // no such file or directory
     MNTERR_NOTEXP = 3;           // the file is not exported for NFS
     MNTERR_IO = 5;              // hard error e.g. disk error
-    NFSERR_NOTDIR = 20;         // not a directory - caller specified a non-directory in a directory operation 
+    MNTERR_NOTDIR = 20;         // not a directory - caller specified a non-directory in a directory operation
+}
+
+message MntStat {
+    Stat stat = 1;    // 0 for success, non-zero for error
 }
 
 message FhStatus {
-    Stat status = 1; // 0 for success, non-zero for error
+    MntStat mnt_status = 1;
     oneof fhstatus_body {
         FHandle directory = 2;                  // case status is 0
         google.protobuf.Empty default_case = 3; // default case (status > 0)

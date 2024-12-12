@@ -88,7 +88,7 @@ Nfs__FType decode_file_type(mode_t st_mode) {
 * Given an absolute path of a file or a directory, gives the corresponding file's attributes in 'fattr'.
 * Returns 0 on succes and > 0 on failure.
 *
-* The user of this function takes the responsibility to free the heap-allocated TimeVal structures.
+* The user of this function takes the responsibility to free the heap-allocated NfsFType and TimeVal structures.
 */
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
     struct stat file_stat;
@@ -97,7 +97,14 @@ int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
         return 1;
     }
 
-    fattr->type = decode_file_type(file_stat.st_mode);
+    Nfs__NfsFType *nfs_ftype = malloc(sizeof(Nfs__NfsFType));
+    if(nfs_ftype == NULL) {
+        perror("Failed to allocate 'NfsFType'");
+        return 2;
+    }
+    nfs__nfs_ftype__init(nfs_ftype);
+    nfs_ftype->ftype = decode_file_type(file_stat.st_mode);
+    fattr->nfs_ftype = nfs_ftype;
 
     fattr->mode = file_stat.st_mode;
     fattr->nlink = file_stat.st_nlink;
@@ -112,14 +119,40 @@ int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
     fattr->fileid = file_stat.st_ino;  // we use file's inode number as fileid (unique identifier on this device)
 
     Nfs__TimeVal *atime = malloc(sizeof(Nfs__TimeVal));
+    if(atime == NULL) {
+        perror("Failed to allocate 'TimeVal'");
+
+        free(nfs_ftype);
+
+        return 3;
+    }
     nfs__time_val__init(atime);
     atime->seconds = file_stat.st_atim.tv_sec;
     atime->useconds = file_stat.st_atim.tv_nsec;
+
     Nfs__TimeVal *mtime = malloc(sizeof(Nfs__TimeVal));
+    if(mtime == NULL) {
+        perror("Failed to allocate 'TimeVal'");
+
+        free(nfs_ftype);
+        free(atime);
+
+        return 3;
+    }
     nfs__time_val__init(mtime);
     mtime->seconds = file_stat.st_mtim.tv_sec;
     mtime->useconds = file_stat.st_mtim.tv_nsec;
+
     Nfs__TimeVal *ctime = malloc(sizeof(Nfs__TimeVal));
+    if(ctime == NULL) {
+        perror("Failed to allocate 'TimeVal'");
+        
+        free(nfs_ftype);
+        free(atime);
+        free(mtime);
+
+        return 3;
+    }
     nfs__time_val__init(ctime);
     ctime->seconds = file_stat.st_ctim.tv_sec;
     ctime->useconds = file_stat.st_ctim.tv_nsec;
@@ -129,6 +162,20 @@ int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
     fattr->ctime = ctime;
 
     return 0;
+}
+
+/*
+* Deallocates heap allocated fields of the given FAttr. Does nothing if 'fattr' is NULL.
+*/
+void clean_up_fattr(Nfs__FAttr *fattr) {
+    if(fattr == NULL) {
+        return;
+    }
+
+    free(fattr->nfs_ftype);
+    free(fattr->atime);
+    free(fattr->mtime);
+    free(fattr->ctime);
 }
 
 /*
