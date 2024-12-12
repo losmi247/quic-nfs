@@ -471,7 +471,7 @@ int nfs_procedure_9_create_file(Nfs__CreateArgs createargs, Nfs__DirOpRes *resul
 * to call nfs__nfs_stat__free_unpacked(nfsstat, NULL) on the received Nfs__NfsStat eventually.
 */
 int nfs_procedure_10_remove_file(Nfs__DirOpArgs diropargs, Nfs__NfsStat *result) {
-    // serialize the CreateArgs
+    // serialize the DirOpArgs
     size_t diropargs_size = nfs__dir_op_args__get_packed_size(&diropargs);
     uint8_t *diropargs_buffer = malloc(diropargs_size);
     nfs__dir_op_args__pack(&diropargs, diropargs_buffer);
@@ -592,6 +592,75 @@ int nfs_procedure_14_create_directory(Nfs__CreateArgs createargs, Nfs__DirOpRes 
 
     // place diropres into the result
     *result = *diropres;
+
+    rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+
+    return 0;
+}
+
+/*
+* Calls the NFSPROC_RMDIR Nfs procedure.
+* On successful run, returns 0 and places procedure result in 'result'.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
+*
+* In case this function returns 0, the user of this function takes responsibility 
+* to call nfs__nfs_stat__free_unpacked(nfsstat, NULL) on the received Nfs__NfsStat eventually.
+*/
+int nfs_procedure_15_remove_directory(Nfs__DirOpArgs diropargs, Nfs__NfsStat *result) {
+    // serialize the DirOpArgs
+    size_t diropargs_size = nfs__dir_op_args__get_packed_size(&diropargs);
+    uint8_t *diropargs_buffer = malloc(diropargs_size);
+    nfs__dir_op_args__pack(&diropargs, diropargs_buffer);
+
+    // Any message to wrap DirOpArgs
+    Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
+    parameters.type_url = "nfs/DirOpArgs";
+    parameters.value.data = diropargs_buffer;
+    parameters.value.len = diropargs_size;
+
+    // send RPC call
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 15, parameters);
+    free(diropargs_buffer);
+
+    // validate RPC reply
+    int error_code = validate_successful_accepted_reply(rpc_reply);
+    if(error_code > 0) {
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return error_code;
+    }
+
+    log_rpc_msg_info(rpc_reply);
+
+    // extract procedure results
+    Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
+    Google__Protobuf__Any *procedure_results = accepted_reply->results;
+    if(procedure_results == NULL) {
+        fprintf(stderr, "NFSPROC_RMDIR: procedure_results is NULL - This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -1;
+    }
+
+    // check that procedure results contain the right type
+    if(procedure_results->type_url == NULL || strcmp(procedure_results->type_url, "nfs/NfsStat") != 0) {
+        fprintf(stderr, "NFSPROC_RMDIR: Expected nfs/NfsStat but received %s\n", procedure_results->type_url);
+
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -2;
+    }
+
+    // now we can unpack the NfsStat from the Any message
+    Nfs__NfsStat *nfs_status = nfs__nfs_stat__unpack(NULL, procedure_results->value.len, procedure_results->value.data);
+    if(nfs_status == NULL) {
+        fprintf(stderr, "NFSPROC_RMDIR: Failed to unpack Nfs__NfsStat\n");
+
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -3;
+    }
+
+    // place the NfsStat into the result
+    *result = *nfs_status;
 
     rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
 
