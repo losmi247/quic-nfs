@@ -612,6 +612,74 @@ void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mo
 }
 
 /*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_REMOVE to delete the file with the given filename
+* inside the given directory.
+* 
+* Returns the Nfs__NfsStat returned by REMOVE procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *remove_file(Nfs__FHandle *directory_fhandle, char *filename) {
+    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
+    file_name.filename = filename;
+
+    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
+    diropargs.dir = directory_fhandle;
+    diropargs.name = &file_name;
+
+    Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
+    int status = nfs_procedure_10_remove_file(diropargs, nfsstat);
+    if(status != 0) {
+        free(nfsstat);
+        cr_fatal("NFSPROC_REMOVE failed - status %d\n", status);
+    }
+
+    cr_assert_not_null(nfsstat);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_REMOVE to delete the file with the given filename
+* inside the given directory.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* 
+* Returns the Nfs__NfsStat returned by REMOVE procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *remove_file_success(Nfs__FHandle *directory_fhandle, char *filename) { 
+    Nfs__NfsStat *nfsstat = remove_file(directory_fhandle, filename);
+
+    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_REMOVE to delete the file with the given filename
+* inside the given directory.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void remove_file_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
+    Nfs__NfsStat *nfsstat = remove_file(directory_fhandle, filename);
+
+    cr_assert_eq(nfsstat->stat, non_nfs_ok_status);
+
+    nfs__nfs_stat__free_unpacked(nfsstat, NULL);
+}
+
+/*
 * Given the Nfs__FHandle of a directory, calls NFSPROC_MKDIR to create a directory with the given filename
 * inside the given directory. The directory is created with initial attributes specified in sattr argument.
 * 

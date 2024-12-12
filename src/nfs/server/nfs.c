@@ -1400,13 +1400,13 @@ Rpc__AcceptedReply serve_nfs_procedure_10_remove_file(Google__Protobuf__Any *par
     // here error_code = 0 or 1, so either the inode mapping was not found or was successfully removed
 
     // build the procedure results
-    Nfs__NfsStat nfs_status = NFS__NFS_STAT__INIT;
-    nfs_status.stat = NFS__STAT__NFS_OK;
+    Nfs__NfsStat nfsstat = NFS__NFS_STAT__INIT;
+    nfsstat.stat = NFS__STAT__NFS_OK;
 
     // serialize the procedure results
-    size_t nfsstat_size = nfs__nfs_stat__get_packed_size(&nfs_status);
+    size_t nfsstat_size = nfs__nfs_stat__get_packed_size(&nfsstat);
     uint8_t *nfsstat_buffer = malloc(nfsstat_size);
-    nfs__nfs_stat__pack(&nfs_status, nfsstat_buffer);
+    nfs__nfs_stat__pack(&nfsstat, nfsstat_buffer);
 
     Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
 
