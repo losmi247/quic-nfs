@@ -23,6 +23,8 @@ Rpc__AcceptedReply serve_nfs_procedure_10_remove_file(Google__Protobuf__Any *par
 
 Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any *parameters);
 
+Rpc__AcceptedReply serve_nfs_procedure_15_remove_directory(Google__Protobuf__Any *parameters);
+
 Rpc__AcceptedReply serve_nfs_procedure_16_read_from_directory(Google__Protobuf__Any *parameters);
 
 #endif /* nfsproc__header__INCLUDED */

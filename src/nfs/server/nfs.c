@@ -48,6 +48,7 @@ Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number,
         case 14:
             return serve_nfs_procedure_14_create_directory(parameters);
         case 15:
+            return serve_nfs_procedure_15_remove_directory(parameters);
         case 16:
             return serve_nfs_procedure_16_read_from_directory(parameters);
         case 17:
