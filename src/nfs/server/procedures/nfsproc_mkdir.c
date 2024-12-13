@@ -223,15 +223,19 @@ Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any
                 case EDQUOT:
                     nfs_stat = NFS__STAT__NFSERR_DQUOT;
                     fprintf(stderr, "serve_nfs_procedure_14_create_directory: tried to create directory at absolute path '%s', but user's quota of disk blocks or inodes on the file system has been exhausted\n", child_directory_absolute_path);
+                    break;
                 case ENAMETOOLONG:
                     nfs_stat = NFS__STAT__NFSERR_NAMETOOLONG;
                     fprintf(stderr, "serve_nfs_procedure_14_create_directory: attempted to create a directory at absolute path '%s' which exceeds system limit on pathname length\n", child_directory_absolute_path);
+                    break;
                 case ENOSPC: 
                     nfs_stat = NFS__STAT__NFSERR_NOSPC;
                     fprintf(stderr, "serve_nfs_procedure_14_create_directory: no room for directory '%s' to be created on this device\n", child_directory_absolute_path);
+                    break;
                 case EROFS:
                     nfs_stat = NFS__STAT__NFSERR_ROFS;
                     fprintf(stderr, "serve_nfs_procedure_14_create_directory: attempted to create a directory at absolute path '%s' on a read-only file system\n", child_directory_absolute_path);
+                    break;
             }
 
             // build the procedure results

@@ -116,9 +116,11 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
                 case EIO:
                     nfs_stat = NFS__STAT__NFSERR_IO;
                     fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
+                    break;
                 case ENOENT:
                     nfs_stat = NFS__STAT__NFSERR_NOENT;
                     fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: attempted 'lookup' on a file at absolute path '%s' which does not exist\n", file_absolute_path);
+                    break;
             }
 
             // build the procedure results

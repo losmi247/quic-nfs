@@ -46,7 +46,7 @@ To run the tests:
 |  8  | WRITE          | write to file                                |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  9  | CREATE         | create file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 10  | REMOVE         | remove file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
-| 11  | RENAME         | rename file                                  |                     |                       |                    |
+| 11  | RENAME         | rename file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 12  | LINK           | create link to file                          |                     |                       |                    |
 | 13  | SYMLINK        | create symbolic link to file                 |                     |                       |                    |
 | 14  | MKDIR          | create directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |

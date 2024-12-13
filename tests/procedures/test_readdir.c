@@ -84,7 +84,7 @@ Test(nfs_test_suite, readdir_ok_lookup_then_readdir, .description = "NFSPROC_REA
     nfs__read_dir_res__free_unpacked(readdirres, NULL);
 }
 
-Test(nfs_test_suite, readdir_ok_read_only_first_directory_entry, .description = "NFSPROC_READDIR ok read only first directory entry") {
+Test(nfs_test_suite, readdir_ok_read_only_first_directory_entry, .description = "NFSPROC_READDIR ok read only first two directory entries") {
     Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
 
     // read the first entry from the /nfs_share directory
@@ -93,10 +93,10 @@ Test(nfs_test_suite, readdir_ok_read_only_first_directory_entry, .description = 
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    int expected_number_of_entries = 1;
-    char *expected_filenames[1] = {".."};
+    int expected_number_of_entries = 2;
+    char *expected_filenames[2] = {"..", "."};
 
-    Nfs__ReadDirRes *readdirres = read_from_directory_success(&fhandle, 0, 20, expected_number_of_entries, expected_filenames);
+    Nfs__ReadDirRes *readdirres = read_from_directory_success(&fhandle, 0, 40, expected_number_of_entries, expected_filenames);
 
     nfs__read_dir_res__free_unpacked(readdirres, NULL);
 }

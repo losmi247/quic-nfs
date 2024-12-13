@@ -862,6 +862,51 @@ void   nfs__create_args__free_unpacked
   assert(message->base.descriptor == &nfs__create_args__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   nfs__rename_args__init
+                     (Nfs__RenameArgs         *message)
+{
+  static const Nfs__RenameArgs init_value = NFS__RENAME_ARGS__INIT;
+  *message = init_value;
+}
+size_t nfs__rename_args__get_packed_size
+                     (const Nfs__RenameArgs *message)
+{
+  assert(message->base.descriptor == &nfs__rename_args__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t nfs__rename_args__pack
+                     (const Nfs__RenameArgs *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &nfs__rename_args__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t nfs__rename_args__pack_to_buffer
+                     (const Nfs__RenameArgs *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &nfs__rename_args__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Nfs__RenameArgs *
+       nfs__rename_args__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Nfs__RenameArgs *)
+     protobuf_c_message_unpack (&nfs__rename_args__descriptor,
+                                allocator, len, data);
+}
+void   nfs__rename_args__free_unpacked
+                     (Nfs__RenameArgs *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &nfs__rename_args__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   nfs__nfs_cookie__init
                      (Nfs__NfsCookie         *message)
 {
@@ -2314,6 +2359,57 @@ const ProtobufCMessageDescriptor nfs__create_args__descriptor =
   nfs__create_args__field_indices_by_name,
   1,  nfs__create_args__number_ranges,
   (ProtobufCMessageInit) nfs__create_args__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor nfs__rename_args__field_descriptors[2] =
+{
+  {
+    "from",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__RenameArgs, from),
+    &nfs__dir_op_args__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "to",
+    2,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__RenameArgs, to),
+    &nfs__dir_op_args__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned nfs__rename_args__field_indices_by_name[] = {
+  0,   /* field[0] = from */
+  1,   /* field[1] = to */
+};
+static const ProtobufCIntRange nfs__rename_args__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor nfs__rename_args__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "nfs.RenameArgs",
+  "RenameArgs",
+  "Nfs__RenameArgs",
+  "nfs",
+  sizeof(Nfs__RenameArgs),
+  2,
+  nfs__rename_args__field_descriptors,
+  nfs__rename_args__field_indices_by_name,
+  1,  nfs__rename_args__number_ranges,
+  (ProtobufCMessageInit) nfs__rename_args__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor nfs__nfs_cookie__field_descriptors[1] =

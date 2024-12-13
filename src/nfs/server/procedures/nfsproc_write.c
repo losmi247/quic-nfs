@@ -127,12 +127,15 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
             case 4:
                 nfs_stat = NFS__STAT__NFSERR_FBIG;
                 fprintf(stderr, "serve_nfs_procedure_8_write_to_file: attempted write that would exceed file size limits, to file at absolute path '%s'\n", file_absolute_path);
+                break;
             case 5:
                 nfs_stat = NFS__STAT__NFSERR_IO;
                 fprintf(stderr, "serve_nfs_procedure_8_write_to_file: physical IO error occurred while trying to write to file at absolute path '%s'\n", file_absolute_path);
+                break;
             case 6:
                 nfs_stat = NFS__STAT__NFSERR_NOSPC;
                 fprintf(stderr, "serve_nfs_procedure_8_write_to_file: no space left on device to write to file at absolute path '%s'\n", file_absolute_path);
+                break;
         }
 
         // build the procedure results

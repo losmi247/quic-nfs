@@ -74,9 +74,11 @@ Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *
                 case EIO:
                     mount_stat = MOUNT__STAT__MNTERR_IO;
                     fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: physical IO error occurred while checking if directory at absolute path '%s' exists\n", directory_absolute_path);
+                    break;
                 case ENOENT:
                     mount_stat = MOUNT__STAT__MNTERR_NOENT;
                     fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: attempted to mount a directory at absolute path '%s' which does not exist\n", directory_absolute_path);
+                    break;
             }
 
             // build the procedure results

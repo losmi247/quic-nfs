@@ -18,6 +18,8 @@ int remove_inode_mapping_by_inode_number(ino_t inode_number, InodeCache *head);
 
 int remove_inode_mapping_by_absolute_path(char *absolute_path, InodeCache *head);
 
+int update_inode_mapping_absolute_path_by_absolute_path(char *absolute_path, char *new_absolute_path, InodeCache *head);
+
 char *get_absolute_path_from_inode_number(ino_t inode_number, InodeCache head);
 
 void clean_up_inode_cache(InodeCache inode_cache);

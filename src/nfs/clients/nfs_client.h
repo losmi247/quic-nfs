@@ -24,6 +24,8 @@ int nfs_procedure_9_create_file(Nfs__CreateArgs createargs, Nfs__DirOpRes *resul
 
 int nfs_procedure_10_remove_file(Nfs__DirOpArgs diropargs, Nfs__NfsStat *result);
 
+int nfs_procedure_11_rename_file(Nfs__RenameArgs renameargs, Nfs__NfsStat *result);
+
 int nfs_procedure_14_create_directory(Nfs__CreateArgs createargs, Nfs__DirOpRes *result);
 
 int nfs_procedure_15_remove_directory(Nfs__DirOpArgs diropargs, Nfs__NfsStat *result);

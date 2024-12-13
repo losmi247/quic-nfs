@@ -680,6 +680,91 @@ void remove_file_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat
 }
 
 /*
+* Given the Nfs__FHandle's of 'from' and 'to' directories, and Nfs__FileName's of 'from' and 'to' files/directories
+* inside the 'from' and 'to' directores, calls NFSPROC_RENAME to rename the file with the given 'from' filename in the
+* 'from' directory to the 'to' directory with the 'to' filename.
+* 
+* Returns the Nfs__NfsStat returned by RENAME procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *rename_file(Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename) {
+    Nfs__FileName from_file_name = NFS__FILE_NAME__INIT;
+    from_file_name.filename = from_filename;
+
+    Nfs__DirOpArgs from = NFS__DIR_OP_ARGS__INIT;
+    from.dir = from_directory_fhandle;
+    from.name = &from_file_name;
+
+    Nfs__FileName to_file_name = NFS__FILE_NAME__INIT;
+    to_file_name.filename = to_filename;
+
+    Nfs__DirOpArgs to = NFS__DIR_OP_ARGS__INIT;
+    to.dir = to_directory_fhandle;
+    to.name = &to_file_name;
+
+    Nfs__RenameArgs renameargs = NFS__RENAME_ARGS__INIT;
+    renameargs.from = &from;
+    renameargs.to = &to;
+
+    Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
+    int status = nfs_procedure_11_rename_file(renameargs, nfsstat);
+    if(status != 0) {
+        free(nfsstat);
+        cr_fatal("NFSPROC_RENAME failed - status %d\n", status);
+    }
+
+    cr_assert_not_null(nfsstat);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle's of 'from' and 'to' directories, and Nfs__FileName's of 'from' and 'to' files/directories
+* inside the 'from' and 'to' directores, calls NFSPROC_RENAME to rename the file with the given 'from' filename in the
+* 'from' directory to the 'to' directory with the 'to' filename.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* 
+* Returns the Nfs__NfsStat returned by RENAME procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *rename_file_success(Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename) {
+    Nfs__NfsStat *nfsstat = rename_file(from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
+
+    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle's of 'from' and 'to' directories, and Nfs__FileName's of 'from' and 'to' files/directories
+* inside the 'from' and 'to' directores, calls NFSPROC_RENAME to rename the file with the given 'from' filename in the
+* 'from' directory to the 'to' directory with the 'to' filename.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void rename_file_fail(Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename, Nfs__Stat non_nfs_ok_status) {
+    Nfs__NfsStat *nfsstat = rename_file(from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
+
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
+
+    nfs__nfs_stat__free_unpacked(nfsstat, NULL);
+}
+
+/*
 * Given the Nfs__FHandle of a directory, calls NFSPROC_MKDIR to create a directory with the given filename
 * inside the given directory. The directory is created with initial attributes specified in sattr argument.
 * 
