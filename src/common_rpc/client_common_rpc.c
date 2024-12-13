@@ -218,15 +218,15 @@ char *rpc_accept_stat_to_string(Rpc__AcceptStat accept_stat) {
         case RPC__ACCEPT_STAT__SUCCESS:
             return strdup("SUCCESS");
         case RPC__ACCEPT_STAT__PROG_UNAVAIL:
-            return strdup("SUCCESS");
+            return strdup("PROG_UNAVAIAL");
         case RPC__ACCEPT_STAT__PROG_MISMATCH:
-            return strdup("SUCCESS");
+            return strdup("PROG_MISMATCH");
         case RPC__ACCEPT_STAT__PROC_UNAVAIL:
-            return strdup("SUCCESS");
+            return strdup("PROC_UNAVAIL");
         case RPC__ACCEPT_STAT__GARBAGE_ARGS:
-            return strdup("SUCCESS");
+            return strdup("GARBAGE_ARGS");
         case RPC__ACCEPT_STAT__SYSTEM_ERR:
-            return strdup("SUCCESS");
+            return strdup("SYSTEM_ERR");
         default:
             return strdup("Unknown");
     }
@@ -274,7 +274,9 @@ int validate_successful_accepted_reply(Rpc__RpcMsg *rpc_reply) {
             fprintf(stderr, "Accepted RPC Reply: requested RPC program version not supported, min version=%d, max version=%d\n", mismatch_info->low, mismatch_info->high);
             return 4;
         default:
-            fprintf(stderr, "Accepted RPC Reply with AcceptStat: %s\n", rpc_accept_stat_to_string(accepted_reply->stat));
+            char *accept_stat = rpc_accept_stat_to_string(accepted_reply->stat);
+            fprintf(stderr, "Accepted RPC Reply with AcceptStat: %s\n", accept_stat);
+            free(accept_stat);
             return 5;
     }
 }

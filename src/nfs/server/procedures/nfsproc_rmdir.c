@@ -113,9 +113,11 @@ Rpc__AcceptedReply serve_nfs_procedure_15_remove_directory(Google__Protobuf__Any
                 case EIO:
                     nfs_stat = NFS__STAT__NFSERR_IO;
                     fprintf(stderr, "serve_nfs_procedure_15_remove_directory: physical IO error occurred while checking if file/directory at absolute path '%s' exists\n", file_absolute_path);
+                    break;
                 case ENOENT:
                     nfs_stat = NFS__STAT__NFSERR_NOENT;
                     fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory '%s' that does not exist\n", file_absolute_path);
+                    break;
             }
 
             // build the procedure results
@@ -185,13 +187,15 @@ Rpc__AcceptedReply serve_nfs_procedure_15_remove_directory(Google__Protobuf__Any
                 case ENAMETOOLONG:
                     nfs_stat = NFS__STAT__NFSERR_NAMETOOLONG;
                     fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory at absolute path '%s' which exceeds system limit on pathname length\n", file_absolute_path);
+                    break;
                 case ENOTEMPTY:
                     nfs_stat = NFS__STAT__NFSERR_NOTEMPTY;
                     fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory at absolute path '%s' which is non-empty i.e. contains entries other than '.' and '..'\n", file_absolute_path);
+                    break;
                 case EROFS:
                     nfs_stat = NFS__STAT__NFSERR_ROFS;
                     fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory at absolute path '%s' on a read-only file system\n", file_absolute_path);
-
+                    break;
             }
 
             // build the procedure results

@@ -20,8 +20,8 @@ RUN touch /nfs_share/a.txt && \
 RUN touch /nfs_share/large_file.txt && \
     dd if=/dev/zero of=/nfs_share/large_file.txt bs=10000 count=1
 
-RUN mkdir /nfs_share/write_test
-RUN touch /nfs_share/write_test/write_test_file.txt && \
+RUN mkdir /nfs_share/write_test && \
+    touch /nfs_share/write_test/write_test_file.txt && \
     echo -n "write_test_content" >> /nfs_share/write_test/write_test_file.txt
 
 RUN mkdir /nfs_share/create_test && \
@@ -33,6 +33,7 @@ RUN mkdir /nfs_share/remove_test && \
 RUN mkdir /nfs_share/rename_test && \
     mkdir /nfs_share/rename_test/dir1 && \
     mkdir /nfs_share/rename_test/dir2 && \
+    mkdir /nfs_share/rename_test/dir3 && \
     touch /nfs_share/rename_test/dir1/rename_test_file.txt
 
 RUN mkdir /nfs_share/mkdir_test && \

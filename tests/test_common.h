@@ -20,4 +20,6 @@
 
 NfsFh__NfsFileHandle deep_copy_nfs_filehandle(NfsFh__NfsFileHandle *nfs_filehandle);
 
+char *nfs_stat_to_string(Nfs__Stat stat);
+
 #endif /* test_common__header__INCLUDED */

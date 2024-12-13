@@ -224,15 +224,19 @@ Rpc__AcceptedReply serve_nfs_procedure_9_create_file(Google__Protobuf__Any *para
                 case EIO:
                     nfs_stat = NFS__STAT__NFSERR_IO;
                     fprintf(stderr, "serve_nfs_procedure_9_create_file: physical IO error occurred while trying to create a file at absolute path '%s'\n", file_absolute_path);
+                    break;
                 case ENAMETOOLONG:
                     nfs_stat = NFS__STAT__NFSERR_NAMETOOLONG;
                     fprintf(stderr, "serve_nfs_procedure_9_create_file: attempted to create a file at absolute path '%s' which exceeds system limit on pathname length\n", file_absolute_path);
+                    break;
                 case ENOSPC: 
                     nfs_stat = NFS__STAT__NFSERR_NOSPC;
                     fprintf(stderr, "serve_nfs_procedure_9_create_file: no space left to add a new entry '%s' to directory '%s'\n", file_absolute_path, directory_absolute_path);
+                    break;
                 case ENXIO:
                     nfs_stat = NFS__STAT__NFSERR_NXIO;
                     fprintf(stderr, "serve_nfs_procedure_9_create_file: device associated with character/block special device '%s' does not exist\n", file_absolute_path);
+                    break;
             }
 
             // build the procedure results

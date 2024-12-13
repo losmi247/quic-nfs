@@ -159,9 +159,11 @@ Rpc__AcceptedReply serve_nfs_procedure_11_rename_file(Google__Protobuf__Any *par
                 case EIO:
                     nfs_stat = NFS__STAT__NFSERR_IO;
                     fprintf(stderr, "serve_nfs_procedure_11_rename_file: physical IO error occurred while checking if file at absolute path '%s' exists\n", old_file_absolute_path);
+                    break;
                 case ENOENT:
                     nfs_stat = NFS__STAT__NFSERR_NOENT;
                     fprintf(stderr, "serve_nfs_procedure_11_rename_file: attempted to rename a file '%s' that does not exist\n", old_file_absolute_path);
+                    break;
             }
 
             // build the procedure results
@@ -249,27 +251,37 @@ Rpc__AcceptedReply serve_nfs_procedure_11_rename_file(Google__Protobuf__Any *par
     char *new_file_absolute_path = get_file_absolute_path(to_directory_absolute_path, to_file_name->filename);
     error_code = rename(old_file_absolute_path, new_file_absolute_path);
     if(error_code < 0) {
-        if(errno == EDQUOT || errno == ENAMETOOLONG || errno == ENOENT || errno == ENOSPC || errno == ENOTEMPTY || errno == EROFS) {
+        if(errno == EDQUOT || errno == EINVAL || errno == ENAMETOOLONG || errno == ENOENT || errno == ENOSPC || errno == ENOTEMPTY || errno == EROFS) {
             Nfs__Stat nfs_stat;
             switch(errno) {
                 case EDQUOT:
                     nfs_stat = NFS__STAT__NFSERR_DQUOT;
                     fprintf(stderr, "serve_nfs_procedure_11_rename_file: the user's quota of disk blocks on the file system has been exhausted when trying to rename file at absolute path '%s' to '%s'\n", old_file_absolute_path, new_file_absolute_path);
+                    break;
+                case EINVAL:
+                    nfs_stat = NFS__STAT__NFSERR_EXIST;
+                    fprintf(stderr, "serve_nfs_procedure_11_rename_file: an attempt was made to make a directory a subdirectory of itself when trying to rename file at absolute path '%s' to '%s'\n", old_file_absolute_path, new_file_absolute_path);
+                    break;
                 case ENAMETOOLONG:
                     nfs_stat = NFS__STAT__NFSERR_NAMETOOLONG;
                     fprintf(stderr, "serve_nfs_procedure_11_rename_file: attempted to rename a file at absolute path '%s' to '%s', one of which exceeds system limit on pathname length\n", old_file_absolute_path, new_file_absolute_path);
+                    break;
                 case ENOENT:
                     nfs_stat = NFS__STAT__NFSERR_NOENT;
                     fprintf(stderr, "serve_nfs_procedure_11_rename_file: a directory component in new absolute path '%s' does not exist\n", new_file_absolute_path);
+                    break;
                 case ENOSPC:
                     nfs_stat = NFS__STAT__NFSERR_NOSPC;
                     fprintf(stderr, "serve_nfs_procedure_11_rename_file: the device containing the file has no room for the new directory entry\n");
+                    break;
                 case ENOTEMPTY:
                     nfs_stat = NFS__STAT__NFSERR_NOTEMPTY;
                     fprintf(stderr, "serve_nfs_procedure_11_rename_file: attempted to move file at absolute path '%s' to absolute path '%s' which is a nonempty directory\n", old_file_absolute_path, new_file_absolute_path); // not allowed to overwrite nonempty directories!
+                    break;
                 case EROFS:
                     nfs_stat = NFS__STAT__NFSERR_ROFS;
                     fprintf(stderr, "serve_nfs_procedure_11_rename_file: attempted to rename a file at absolute path '%s' to '%s' on a read-only file system\n", old_file_absolute_path, new_file_absolute_path);
+                    break;
             }
 
             // build the procedure results

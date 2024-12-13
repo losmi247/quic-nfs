@@ -756,7 +756,10 @@ Nfs__NfsStat *rename_file_success(Nfs__FHandle *from_directory_fhandle, char *fr
 void rename_file_fail(Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename, Nfs__Stat non_nfs_ok_status) {
     Nfs__NfsStat *nfsstat = rename_file(from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
 
-    cr_assert_eq(nfsstat->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
 
     nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 }

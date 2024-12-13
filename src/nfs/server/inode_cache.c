@@ -109,7 +109,8 @@ int remove_inode_mapping_by_absolute_path(char *absolute_path, InodeCache *head)
 
 /*
 * Finds the entry with the given absolute path in the inode cache, frees its old absolute path 
-* and updates its absolute path to the new absolute path given in 'new_absolute_path' argument.
+* and updates its absolute path to the new absolute path given in 'new_absolute_path' argument
+* (a copy of this string is created on heap so that the user can free 'new_absolute_path' on their side safely).
 *
 * Returns 0 on successful update of the entry, 1 if the corresponding entry
 * could not be found, and > 1 on failure otherwise.
@@ -124,7 +125,7 @@ int update_inode_mapping_absolute_path_by_absolute_path(char *absolute_path, cha
         if(strcmp(curr_mapping->absolute_path, absolute_path) == 0) {
             free(curr_mapping->absolute_path);
 
-            curr_mapping->absolute_path = new_absolute_path;
+            curr_mapping->absolute_path = strdup(new_absolute_path);
 
             return 0;
         }

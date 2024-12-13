@@ -12,6 +12,8 @@
 
 #include "common_validation.h"
 
+#include "tests/test_common.h"
+
 // MOUNTPROC_MNT validation
 Mount__FhStatus *mount_directory_success(char *directory_absolute_path);
 
