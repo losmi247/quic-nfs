@@ -213,6 +213,15 @@ message CreateArgs {
 }
 
 /*
+* RENAME (11)
+*/
+
+message RenameArgs {
+    DirOpArgs from = 1;
+    DirOpArgs to = 2;
+}
+
+/*
 * READDIR (16)
 */
 

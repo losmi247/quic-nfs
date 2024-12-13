@@ -36,6 +36,7 @@ typedef struct Nfs__ReadResBody Nfs__ReadResBody;
 typedef struct Nfs__ReadRes Nfs__ReadRes;
 typedef struct Nfs__WriteArgs Nfs__WriteArgs;
 typedef struct Nfs__CreateArgs Nfs__CreateArgs;
+typedef struct Nfs__RenameArgs Nfs__RenameArgs;
 typedef struct Nfs__NfsCookie Nfs__NfsCookie;
 typedef struct Nfs__ReadDirArgs Nfs__ReadDirArgs;
 typedef struct Nfs__DirectoryEntriesList Nfs__DirectoryEntriesList;
@@ -64,7 +65,7 @@ typedef enum _Nfs__Stat {
    */
   NFS__STAT__NFSERR_NXIO = 6,
   /*
-   * permission denied - caller doesn't have correct permission to perform requested operation 
+   * permission denied - caller doesn't have correct permission to perform requested operation
    */
   NFS__STAT__NFSERR_ACCES = 13,
   /*
@@ -536,6 +537,17 @@ struct  Nfs__CreateArgs
     , NULL, NULL }
 
 
+struct  Nfs__RenameArgs
+{
+  ProtobufCMessage base;
+  Nfs__DirOpArgs *from;
+  Nfs__DirOpArgs *to;
+};
+#define NFS__RENAME_ARGS__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__rename_args__descriptor) \
+    , NULL, NULL }
+
+
 /*
  * Cookie used for positioning in the directory stream
  */
@@ -980,6 +992,25 @@ Nfs__CreateArgs *
 void   nfs__create_args__free_unpacked
                      (Nfs__CreateArgs *message,
                       ProtobufCAllocator *allocator);
+/* Nfs__RenameArgs methods */
+void   nfs__rename_args__init
+                     (Nfs__RenameArgs         *message);
+size_t nfs__rename_args__get_packed_size
+                     (const Nfs__RenameArgs   *message);
+size_t nfs__rename_args__pack
+                     (const Nfs__RenameArgs   *message,
+                      uint8_t             *out);
+size_t nfs__rename_args__pack_to_buffer
+                     (const Nfs__RenameArgs   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__RenameArgs *
+       nfs__rename_args__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__rename_args__free_unpacked
+                     (Nfs__RenameArgs *message,
+                      ProtobufCAllocator *allocator);
 /* Nfs__NfsCookie methods */
 void   nfs__nfs_cookie__init
                      (Nfs__NfsCookie         *message);
@@ -1134,6 +1165,9 @@ typedef void (*Nfs__WriteArgs_Closure)
 typedef void (*Nfs__CreateArgs_Closure)
                  (const Nfs__CreateArgs *message,
                   void *closure_data);
+typedef void (*Nfs__RenameArgs_Closure)
+                 (const Nfs__RenameArgs *message,
+                  void *closure_data);
 typedef void (*Nfs__NfsCookie_Closure)
                  (const Nfs__NfsCookie *message,
                   void *closure_data);
@@ -1176,6 +1210,7 @@ extern const ProtobufCMessageDescriptor nfs__read_res_body__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_res__descriptor;
 extern const ProtobufCMessageDescriptor nfs__write_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__create_args__descriptor;
+extern const ProtobufCMessageDescriptor nfs__rename_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__nfs_cookie__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_dir_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__directory_entries_list__descriptor;
