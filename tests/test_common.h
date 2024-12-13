@@ -2,9 +2,9 @@
 #define test_common__header__INCLUDED
 
 #define NONEXISTENT_INODE_NUMBER 1234567891235
-#define NONEXISTENT_FILE_NAME "non_existent_file.txt"     // in your test containers, never create a file with this filename
-#define NFS_SHARE_ENTRIES {"..", ".", "mkdir_test", "create_test", "remove_test", "write_test", "a.txt", "test_file.txt", "large_file.txt"}
-#define NFS_SHARE_NUMBER_OF_ENTRIES 9
+#define NONEXISTENT_FILENAME "non_existent_file"     // in your test containers, never create a file or directory with this filename
+#define NFS_SHARE_ENTRIES {"..", ".", "mkdir_test", "create_test", "remove_test", "write_test", "rmdir_test", "a.txt", "test_file.txt", "large_file.txt"}
+#define NFS_SHARE_NUMBER_OF_ENTRIES 10
 
 #include <time.h>
 

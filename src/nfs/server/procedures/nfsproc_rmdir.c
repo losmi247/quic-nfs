@@ -177,7 +177,7 @@ Rpc__AcceptedReply serve_nfs_procedure_15_remove_directory(Google__Protobuf__Any
     clean_up_fattr(&fattr);
 
     // delete the directory file name
-    error_code = remove(file_absolute_path);
+    error_code = rmdir(file_absolute_path);
     if(error_code < 0) {
         if(errno == ENAMETOOLONG || errno == ENOTEMPTY || errno == EROFS) {
             Nfs__Stat nfs_stat;

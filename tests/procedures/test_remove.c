@@ -89,7 +89,7 @@ Test(nfs_remove_test_suite, remove_no_such_file, .description = "NFSPROC_REMOVE 
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    remove_file_fail(&fhandle, NONEXISTENT_FILE_NAME, NFS__STAT__NFSERR_NOENT);
+    remove_file_fail(&fhandle, NONEXISTENT_FILENAME, NFS__STAT__NFSERR_NOENT);
 }
 
 Test(nfs_remove_test_suite, remove_is_directory, .description = "NFSPROC_REMOVE directory specified for a non-directory operation") {
