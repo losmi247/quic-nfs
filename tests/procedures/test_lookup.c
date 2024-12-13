@@ -45,7 +45,7 @@ Test(nfs_lookup_test_suite, lookup_no_such_file_or_directory, .description = "NF
     mount__fh_status__free_unpacked(fhstatus, NULL);
     dir_fhandle.nfs_filehandle = &dir_nfs_filehandle_copy;
 
-    lookup_file_or_directory_fail(&dir_fhandle, NONEXISTENT_FILE_NAME, NFS__STAT__NFSERR_NOENT);
+    lookup_file_or_directory_fail(&dir_fhandle, NONEXISTENT_FILENAME, NFS__STAT__NFSERR_NOENT);
 }
 
 Test(nfs_lookup_test_suite, lookup_a_non_directory, .description = "NFSPROC_LOOKUP lookup a non-directory") {

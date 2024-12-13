@@ -23,7 +23,8 @@ RPC_PROGRAM_COMMON_CLIENT_SRCS = ./src/common_rpc/client_common_rpc.c \
 CLIENTS_SRCS = ./src/nfs/clients/mount_client.c ./src/nfs/clients/nfs_client.c
 
 # files used by Nfs+Mount server
-MOUNT_AND_NFS_SERVER_SRCS = ./src/nfs/server/mount.c ./src/nfs/server/nfs.c \
+MOUNT_AND_NFS_SERVER_SRCS = ./src/nfs/server/mount.c ./src/nfs/server/procedures/mntproc_*.c \
+	./src/nfs/server/nfs.c ./src/nfs/server/procedures/nfsproc_*.c \
 	./src/nfs/server/mount_list.c \
 	./src/nfs/server/inode_cache.c \
 	./src/nfs/server/file_management.c \

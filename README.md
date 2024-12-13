@@ -19,7 +19,7 @@ and:
 3. Run ```make all``` to build the server and client
 4. First run ```./build/mount_and_nfs_server``` and then ```./build/repl```
 
-The Nfs and Mount server are implemented as a single process, to allowed efficient sharing of the cache containing mappings of inode numbers to files/directories.
+The Nfs and Mount server are implemented as a single process, to allow efficient sharing of the cache containing mappings of inode numbers to files/directories.
 
 # Tests
 
@@ -50,6 +50,6 @@ To run the tests:
 | 12  | LINK           | create link to file                          |                     |                       |                    |
 | 13  | SYMLINK        | create symbolic link to file                 |                     |                       |                    |
 | 14  | MKDIR          | create directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |
-| 15  | RMDIR          | remove directory                             |                     |                       |                    |
+| 15  | RMDIR          | remove directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 16  | READDIR        | read from directory                          |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 17  | STATFS         | get filesystem attributes                    |                     |                       |                    |

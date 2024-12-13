@@ -33,6 +33,9 @@ RUN touch /nfs_share/remove_test/remove_test_file.txt
 RUN mkdir /nfs_share/mkdir_test
 RUN touch /nfs_share/mkdir_test/existing_directory
 
+RUN mkdir /nfs_share/rmdir_test
+RUN mkdir /nfs_share/rmdir_test/rmdir_test_dir
+
 RUN mkdir -p /existent_but_non_exported_directory
 
 RUN chmod +x ./build/mount_and_nfs_server

@@ -26,6 +26,8 @@ int nfs_procedure_10_remove_file(Nfs__DirOpArgs diropargs, Nfs__NfsStat *result)
 
 int nfs_procedure_14_create_directory(Nfs__CreateArgs createargs, Nfs__DirOpRes *result);
 
+int nfs_procedure_15_remove_directory(Nfs__DirOpArgs diropargs, Nfs__NfsStat *result);
+
 int nfs_procedure_16_read_from_directory(Nfs__ReadDirArgs readdirargs, Nfs__ReadDirRes *result);
 
 #endif /* nfs_client__header__INCLUDED */

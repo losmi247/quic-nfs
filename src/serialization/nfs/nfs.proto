@@ -15,7 +15,7 @@ enum Stat {
     NFSERR_NOENT = 2;           // no such file or directory
     NFSERR_IO = 5;              // hard error e.g. disk error
     NFSERR_NXIO = 6;            // no such device or address
-    NFSERR_ACCES = 13;          // permission denied - caller doesn't have correct permission to perform requested operation 
+    NFSERR_ACCES = 13;          // permission denied - caller doesn't have correct permission to perform requested operation
     NFSERR_EXIST = 17;          // file already exists
     NFSERR_NODEV = 19;          // no such device
     NFSERR_NOTDIR = 20;         // not a directory - caller specified a non-directory in a directory operation 
