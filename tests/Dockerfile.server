@@ -34,6 +34,8 @@ RUN mkdir /nfs_share/rename_test && \
     mkdir /nfs_share/rename_test/dir1 && \
     mkdir /nfs_share/rename_test/dir2 && \
     mkdir /nfs_share/rename_test/dir3 && \
+    mkdir /nfs_share/rename_test/dir4 && \
+    touch /nfs_share/rename_test/dir4/rename_test_file.txt && \
     touch /nfs_share/rename_test/dir1/rename_test_file.txt
 
 RUN mkdir /nfs_share/mkdir_test && \

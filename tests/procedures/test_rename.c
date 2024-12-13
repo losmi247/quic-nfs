@@ -185,3 +185,21 @@ Test(nfs_rename_test_suite, make_directory_a_subdirectory_of_itself, .descriptio
 
     rename_file_fail(&rename_test_dir_fhandle, "dir3", &dir3_fhandle, "newdir", NFS__STAT__NFSERR_EXIST);
 }
+
+Test(nfs_rename_test_suite, overwrite_non_empty_directory, .description = "NFSPROC_REMOVE overwrite a nonempty directory") {
+    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+
+    // lookup the rename_test directory inside the mounted directory
+    Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
+    mount__fh_status__free_unpacked(fhstatus, NULL);
+    fhandle.nfs_filehandle = &nfs_filehandle_copy;
+
+    Nfs__DirOpRes *rename_test_dir_diropres = lookup_file_or_directory_success(&fhandle, "rename_test", NFS__FTYPE__NFDIR);
+
+    // try to move the /nfs_share/rename_test/dir3 directory to /nfs_share/rename_test/dir4 (overwrite dir4 which is a nonempty directory)
+    Nfs__FHandle rename_test_dir_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle rename_test_dir_nfs_filehandle_copy = deep_copy_nfs_filehandle(rename_test_dir_diropres->diropok->file->nfs_filehandle);
+    nfs__dir_op_res__free_unpacked(rename_test_dir_diropres, NULL);
+    rename_test_dir_fhandle.nfs_filehandle = &rename_test_dir_nfs_filehandle_copy;
+}
