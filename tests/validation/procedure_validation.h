@@ -52,6 +52,11 @@ Nfs__NfsStat *remove_file_success(Nfs__FHandle *directory_fhandle, char *filenam
 
 void remove_file_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status);
 
+// NFSPROC_RENAME validation
+Nfs__NfsStat *rename_file_success(Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename);
+
+void rename_file_fail(Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename, Nfs__Stat non_nfs_ok_status);
+
 // NFSPROC_MKDIR validation
 Nfs__DirOpRes *create_directory_success(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype);
 

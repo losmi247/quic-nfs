@@ -43,6 +43,7 @@ Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number,
         case 10:
             return serve_nfs_procedure_10_remove_file(parameters);
         case 11:
+            return serve_nfs_procedure_11_rename_file(parameters);
         case 12:
         case 13:
         case 14:

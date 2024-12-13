@@ -24,17 +24,22 @@ RUN mkdir /nfs_share/write_test
 RUN touch /nfs_share/write_test/write_test_file.txt && \
     echo -n "write_test_content" >> /nfs_share/write_test/write_test_file.txt
 
-RUN mkdir /nfs_share/create_test
-RUN touch /nfs_share/create_test/existing_file.txt
+RUN mkdir /nfs_share/create_test && \
+    touch /nfs_share/create_test/existing_file.txt
 
-RUN mkdir /nfs_share/remove_test
-RUN touch /nfs_share/remove_test/remove_test_file.txt
+RUN mkdir /nfs_share/remove_test && \
+    touch /nfs_share/remove_test/remove_test_file.txt
 
-RUN mkdir /nfs_share/mkdir_test
-RUN touch /nfs_share/mkdir_test/existing_directory
+RUN mkdir /nfs_share/rename_test && \
+    mkdir /nfs_share/rename_test/dir1 && \
+    mkdir /nfs_share/rename_test/dir2 && \
+    touch /nfs_share/rename_test/dir1/rename_test_file.txt
 
-RUN mkdir /nfs_share/rmdir_test
-RUN mkdir /nfs_share/rmdir_test/rmdir_test_dir
+RUN mkdir /nfs_share/mkdir_test && \
+    touch /nfs_share/mkdir_test/existing_directory
+
+RUN mkdir /nfs_share/rmdir_test && \
+    mkdir /nfs_share/rmdir_test/rmdir_test_dir
 
 RUN mkdir -p /existent_but_non_exported_directory
 
