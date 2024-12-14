@@ -10,6 +10,10 @@ PARSING_SRCS = ./src/parsing/parsing.c
 
 FILEHANDLE_MANAGEMENT_SRCS = ./src/repl/filehandle_management.c
 
+COMMAND_HANDLERS_SRCS = ./src/repl/handlers/*.c
+
+REPL_VALIDATION_SRCS = ./src/repl/validation/validation.c
+
 SERIALIZATION_SRCS = ./src/serialization/mount/mount.pb-c.c \
 	./src/serialization/nfs/nfs.pb-c.c \
 	./src/serialization/nfs_fh/nfs_fh.pb-c.c \
@@ -42,7 +46,7 @@ TESTS_SRCS = ./tests/procedures/test_*.c \
 	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS} ${ERROR_HANDLING_SRCS}
 
 # files used by the Repl
-REPL_SRCS = ${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS} ${ERROR_HANDLING_SRCS}
+REPL_SRCS = ${CLIENTS_SRCS} ${COMMAND_HANDLERS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${REPL_VALIDATION_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS} ${ERROR_HANDLING_SRCS}
 
 all: create-build-dir mount-and-nfs-server repl
 all-debug: create-build-dir mount-and-nfs-server-debug repl-debug
