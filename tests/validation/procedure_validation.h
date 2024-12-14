@@ -74,4 +74,9 @@ Nfs__ReadDirRes *read_from_directory_success(Nfs__FHandle *directory_fhandle, ui
 
 void read_from_directory_fail(Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, Nfs__Stat non_nfs_ok_status);
 
+// NFSPROC_STATFS validation
+Nfs__StatFsRes *get_filesystem_attributes_success(Nfs__FHandle fhandle);
+
+void get_filesystem_attributes_fail(Nfs__FHandle fhandle, Nfs__Stat non_nfs_ok_status);
+
 #endif /* procedure_validation__header__INCLUDED */

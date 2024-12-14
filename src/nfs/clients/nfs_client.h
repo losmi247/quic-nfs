@@ -32,4 +32,6 @@ int nfs_procedure_15_remove_directory(Nfs__DirOpArgs diropargs, Nfs__NfsStat *re
 
 int nfs_procedure_16_read_from_directory(Nfs__ReadDirArgs readdirargs, Nfs__ReadDirRes *result);
 
+int nfs_procedure_17_get_filesystem_attributes(Nfs__FHandle fhandle, Nfs__StatFsRes *result);
+
 #endif /* nfs_client__header__INCLUDED */

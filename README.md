@@ -52,4 +52,4 @@ To run the tests:
 | 14  | MKDIR          | create directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 15  | RMDIR          | remove directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 16  | READDIR        | read from directory                          |   done &#10004;     |   done &#10004;       |   done &#10004;    |
-| 17  | STATFS         | get filesystem attributes                    |                     |                       |                    |
+| 17  | STATFS         | get filesystem attributes                    |   done &#10004;     |   done &#10004;       |   done &#10004;    |

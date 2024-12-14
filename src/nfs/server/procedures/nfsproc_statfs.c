@@ -89,7 +89,7 @@ Rpc__AcceptedReply serve_nfs_procedure_17_get_filesystem_attributes(Google__Prot
     nfs_status.stat = NFS__STAT__NFS_OK;
 
     statfsres.nfs_status = &nfs_status;
-    statfsres.body_case = NFS__STAT_FS_RES__BODY_DEFAULT_CASE;
+    statfsres.body_case = NFS__STAT_FS_RES__BODY_FS_INFO;
 
     Nfs__FsInfo fsinfo = NFS__FS_INFO__INIT;
     fsinfo.tsize = fs_stat.f_bsize;

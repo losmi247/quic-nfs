@@ -804,3 +804,72 @@ int nfs_procedure_16_read_from_directory(Nfs__ReadDirArgs readdirargs, Nfs__Read
 
     return 0;
 }
+
+/*
+* Calls the NFSPROC_STATFS Nfs procedure.
+* On successful run, returns 0 and places procedure result in 'result'.
+* On unsuccessful run, returns error code > 0 if validation of the RPC message failed - this is
+* the validation error code, and returns error code < 0 if validation of procedure results (type checking
+* and deserialization) failed.
+*
+* In case this function returns 0, the user of this function takes responsibility 
+* to call nfs__stat_fs_res__free_unpacked(attrstat, NULL) on the received Nfs__StatFsRes eventually.
+*/
+int nfs_procedure_17_get_filesystem_attributes(Nfs__FHandle fhandle, Nfs__StatFsRes *result) {
+    // serialize the FHandle
+    size_t fhandle_size = nfs__fhandle__get_packed_size(&fhandle);
+    uint8_t *fhandle_buffer = malloc(fhandle_size);
+    nfs__fhandle__pack(&fhandle, fhandle_buffer);
+
+    // Any message to wrap FHandle
+    Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
+    parameters.type_url = "nfs/FHandle";
+    parameters.value.data = fhandle_buffer;
+    parameters.value.len = fhandle_size;
+
+    // send RPC call
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(NFS_RPC_SERVER_IPV4_ADDR, NFS_RPC_SERVER_PORT, NFS_RPC_PROGRAM_NUMBER, 2, 17, parameters);
+    free(fhandle_buffer);
+
+    // validate RPC reply
+    int error_code = validate_successful_accepted_reply(rpc_reply);
+    if(error_code > 0) {
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return error_code;
+    }
+
+    log_rpc_msg_info(rpc_reply);
+
+    // extract procedure results
+    Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
+    Google__Protobuf__Any *procedure_results = accepted_reply->results;
+    if(procedure_results == NULL) {
+        fprintf(stderr, "NFSPROC_STATFS: procedure_results is NULL - This shouldn't happen, 'validated_rpc_reply' checked that procedure_results is not NULL\n");
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -1;
+    }
+
+    // check that procedure results contain the right type
+    if(procedure_results->type_url == NULL || strcmp(procedure_results->type_url, "nfs/StatFsRes") != 0) {
+        fprintf(stderr, "NFSPROC_STATFS: Expected nfs/StatFsRes but received %s\n", procedure_results->type_url);
+
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -2;
+    }
+
+    // now we can unpack the StatFsRes from the Any message
+    Nfs__StatFsRes *statfsres = nfs__stat_fs_res__unpack(NULL, procedure_results->value.len, procedure_results->value.data);
+    if(statfsres == NULL) {
+        fprintf(stderr, "NFSPROC_STATFS: Failed to unpack Nfs__StatFsRes\n");
+
+        rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+        return -3;
+    }
+
+    // place StatFsRes into the result
+    *result = *statfsres;
+
+    rpc__rpc_msg__free_unpacked(rpc_reply, NULL);
+
+    return 0;
+}
