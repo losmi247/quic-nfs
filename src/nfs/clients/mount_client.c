@@ -17,10 +17,10 @@
 * the validation error code, and returns error code < 0 if validation of procedure results (type checking
 * and deserialization) failed.
 */
-int mount_procedure_0_do_nothing(void) {
+int mount_procedure_0_do_nothing(const char *server_ipv4_addr, uint16_t server_port) {
     // no parameters, so an empty Any
     Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(MOUNT_RPC_SERVER_IPV4_ADDR, MOUNT_RPC_SERVER_PORT, MOUNT_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, MOUNT_RPC_PROGRAM_NUMBER, 2, 0, parameters);
 
     int error_code = validate_successful_accepted_reply(rpc_reply);
     Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
@@ -56,7 +56,7 @@ int mount_procedure_0_do_nothing(void) {
 * In case this function returns 0, the user of this function takes responsibility 
 * to call 'mount__fh_status__free_unpacked(fh_status, NULL)' on the received Mount__FhStatus eventually.
 */
-int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *result) {
+int mount_procedure_1_add_mount_entry(const char *server_ipv4_addr, uint16_t server_port, Mount__DirPath dirpath, Mount__FhStatus *result) {
     // serialize the DirPath
     size_t dirpath_size = mount__dir_path__get_packed_size(&dirpath);
     uint8_t *dirpath_buffer = malloc(dirpath_size);
@@ -69,7 +69,7 @@ int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *r
     parameters.value.len = dirpath_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(MOUNT_RPC_SERVER_IPV4_ADDR, MOUNT_RPC_SERVER_PORT, MOUNT_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, MOUNT_RPC_PROGRAM_NUMBER, 2, 1, parameters);
     free(dirpath_buffer);
 
     // validate RPC reply

@@ -47,4 +47,4 @@ RUN mkdir /nfs_share/rmdir_test && \
 RUN mkdir -p /existent_but_non_exported_directory
 
 RUN chmod +x ./build/mount_and_nfs_server
-CMD ["./build/mount_and_nfs_server"]
+CMD ["./build/mount_and_nfs_server", "--test"]
