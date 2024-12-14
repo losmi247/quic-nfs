@@ -1,5 +1,8 @@
 #include "server.h"
 
+#include "tests/test_common.h"  // for NFS_AND_MOUNT_TEST_RPC_SERVER_PORT
+#include "src/parsing/parsing.h"       // for parsing the port number from command line args
+
 /*
 * Define Mount+Nfs server state
 */
@@ -52,6 +55,7 @@ void handle_signal(int signal) {
         clean_up_mount_list(mount_list);
 
         fprintf(stdout, "Server shutdown successfull\n");
+        fflush(stdout);
 
         exit(0);
     }
@@ -60,9 +64,34 @@ void handle_signal(int signal) {
 /*
 * The main body of the Nfs+Mount server, which awaits RPCs.
 */
-int main() {
-    signal(SIGTERM, handle_signal);  // register signal handler
+int main(int argc, char *argv[]) {
+    // parse command line arguments
+    if(argc != 2) {
+        fprintf(stderr, "Error: Incorrect usage. Correct usage: %s (<port number> or --test)\n", argv[0]);
+        return 1;
+    }
 
+    uint16_t port_number = 0;
+    if(strncmp(argv[1], "--", 2) == 0) {    // the first argument is a flag
+        if(strcmp(argv[1], "--test") == 0) {
+            port_number = NFS_AND_MOUNT_TEST_RPC_SERVER_PORT;   // when testing, run at this port
+        }
+        else {
+            fprintf(stderr, "Error: Invalid flag. Did you mean '--test'?\n");
+            return 1;
+        }
+    }
+    else {
+        port_number = parse_port_number(argv[1]);
+        if(port_number == 0) {
+            return 1;
+        }
+    }
+
+    // register the signal handler
+    signal(SIGTERM, handle_signal);  
+
+    // create the server socket
     rpc_server_socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
     if(rpc_server_socket_fd < 0) { 
         fprintf(stderr, "Socket creation failed\n");
@@ -76,7 +105,7 @@ int main() {
     struct sockaddr_in rpc_server_addr;
     rpc_server_addr.sin_family = AF_INET; 
     rpc_server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    rpc_server_addr.sin_port = htons(NFS_RPC_SERVER_PORT);
+    rpc_server_addr.sin_port = htons(port_number);
   
     // bind socket to the rpc server address
     if(bind(rpc_server_socket_fd, (struct sockaddr *) &rpc_server_addr, sizeof(rpc_server_addr)) < 0) { 
@@ -92,7 +121,7 @@ int main() {
         return 1;
     }
 
-    fprintf(stdout, "Server listening on port %d\n", NFS_RPC_SERVER_PORT);
+    fprintf(stdout, "Server listening on port %d...\n", port_number);
   
     while(1) {
         struct sockaddr_in rpc_client_addr;

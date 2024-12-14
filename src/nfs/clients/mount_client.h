@@ -8,8 +8,8 @@
 * In case of unsuccessful execution, the procedure returns an error code > 0, from client_common_rpc.c.
 */
 
-int mount_procedure_0_do_nothing(void);
+int mount_procedure_0_do_nothing(const char *server_ipv4_addr, uint16_t server_port);
 
-int mount_procedure_1_add_mount_entry(Mount__DirPath dirpath, Mount__FhStatus *result);
+int mount_procedure_1_add_mount_entry(const char *server_ipv4_addr, uint16_t server_port, Mount__DirPath dirpath, Mount__FhStatus *result);
 
 #endif /* mount_client__header__INCLUDED */

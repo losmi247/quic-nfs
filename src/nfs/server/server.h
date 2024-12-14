@@ -24,6 +24,8 @@
 
 #include "src/error_handling/error_handling.h"
 
+#include "src/path_building/path_building.h"
+
 #include "../nfs_common.h"
 
 #include "mount_list.h"

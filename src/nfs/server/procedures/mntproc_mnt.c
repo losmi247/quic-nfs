@@ -1,7 +1,8 @@
 #include "mntproc.h"
 
 /*
-* Exported files management.
+* Checks if the /exports directory contains a line 'absolute_path *(rw)' to check if the
+* directory client wants mount is exported for NFS.
 */
 int is_directory_exported(const char *absolute_path) {
     if(absolute_path == NULL) {

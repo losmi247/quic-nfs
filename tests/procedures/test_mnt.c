@@ -1,5 +1,7 @@
 #include "tests/test_common.h"
 
+#include "src/nfs/nfs_common.h"
+
 /*
 * Mount RPC program tests.
 */
@@ -8,7 +10,7 @@ TestSuite(mount_test_suite);
 
 // MOUNTPROC_NULL (0)
 Test(mount_test_suite, null, .description = "MOUNTPROC_NULL") {
-    int status = mount_procedure_0_do_nothing();
+    int status = mount_procedure_0_do_nothing(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT);
     if (status != 0) {
         cr_fatal("MOUNTPROC_NULL failed - status %d\n", status);
     }

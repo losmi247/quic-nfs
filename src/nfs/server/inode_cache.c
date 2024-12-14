@@ -1,6 +1,15 @@
 #include "inode_cache.h"
 
+/*
+* Frees heap allocated space in the given InodeCacheMapping and the InodeCacheMapping itself.
+*
+* Does nothing if the given InodeCacheMapping is null.
+*/
 void free_inode_cache_mapping(struct InodeCacheMapping *inode_cache_mapping) {
+    if(inode_cache_mapping == NULL) {
+        return;
+    }
+
     free(inode_cache_mapping->absolute_path);
     free(inode_cache_mapping);
 }

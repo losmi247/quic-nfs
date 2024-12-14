@@ -1,39 +1,131 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
-#include "src/nfs/clients/mount_client.h"
+#include "repl.h"
+
+#include "handlers/handlers.h"
+
+#define BUFFER_SIZE 256
+#define KNRM  "\x1B[0m"
+#define KRED  "\x1B[31m"    // red color for displaying the CWD
+#define KGRN  "\x1B[32m"
 
 /*
-* The Read-Eval-Print-Loop that waits for Mount or Nfs commands and
-* executed them using the mount_client.h or nfs_client.h
+* Define Nfs Client state.
 */
-int main() {
-    int status = mount_procedure_0_do_nothing();
-    if(status == 0) {
-        fprintf(stdout, "Successfully executed MOUNTPROC_NULL\n");
+
+char *server_ipv4_addr;
+uint16_t server_port_number;
+
+DAGNode *filesystem_dag_root;
+DAGNode *cwd_node;
+
+/*
+* Functions used by the REPL body.
+*/
+
+/*
+* Displays the CWD and '>' at the start of the line in the REPL.
+*/
+void display_prompt(void) {
+    if(filesystem_dag_root == NULL) {
+        printf(KRED "(no NFS share mounted)");
     }
-    else{
-        fprintf(stdout, "MOUNTPROC_NULL failed - status %d\n", status);
+    else {
+        printf(KRED "(%s:%s)", server_ipv4_addr, cwd_node->absolute_path);
+    }
+    
+    printf(KGRN " >");
+    printf(KNRM " ");   // so that user input hass normal colour
+
+    fflush(stdout);
+}
+
+/*
+* Cleans up all Nfs client state before the REPL shuts down.
+*/
+void clean_up(void) {
+    free(server_ipv4_addr);
+
+    clean_up_dag(filesystem_dag_root);
+}
+
+int main(void) {
+    printf("NFS Client REPL\n");
+    printf("Supported commands:\n\n");
+    
+    printf("mount <server_ip> <port> <remote_path>          - mount a remote NFS share\n");
+    printf("ls                                              - list all entries in the current working directory\n");
+    printf("cd <directory name>                             - change cwd to the given directory name which is in the current working directory\n");
+
+    printf("\nType 'exit' to quit the REPL.\n\n");
+
+    // initialize NFS client state
+    server_ipv4_addr = NULL;
+    server_port_number = 0;
+    filesystem_dag_root = NULL;
+    cwd_node = NULL;
+
+    // Read-Eval-Print Loop
+    char input[BUFFER_SIZE];
+    while(1) {
+        display_prompt();
+
+        // read user input
+        if(!fgets(input, BUFFER_SIZE, stdin)) {
+            perror("Error reading input");
+            return 1;
+        }
+
+        // remove trailing newline
+        input[strcspn(input, "\n")] = 0;
+
+        // check for exit condition
+        if(strcmp(input, "exit") == 0) {
+            clean_up();
+
+            printf("Exiting REPL. Goodbye! \n");
+
+            break;
+        }
+
+        // parse commands
+        if(strncmp(input, "mount", 5) == 0) {
+            char server_ip[BUFFER_SIZE], port_number_string[BUFFER_SIZE], remote_path[BUFFER_SIZE];
+            int arguments_parsed = sscanf(input + 5, " %s %s %s", server_ip, port_number_string, remote_path);
+
+            if(arguments_parsed != 3) {
+                printf("Error: Invalid 'mount' command. Correct usage: mount <server_ip> <port> <remote_path>\n");
+                continue;
+            }
+
+            uint16_t port_number = parse_port_number(port_number_string);
+            if(port_number == 0) {
+                printf("Error: Invalid port number. Correct usage: mount <server_ip> <port> <remote_path>\n");
+                continue;
+            }
+
+            handle_mount(server_ip, port_number, remote_path);
+        }
+        else if(strcmp(input, "ls") == 0) {
+            handle_ls();
+        }
+        else if(strncmp(input, "cd", 2) == 0) {
+            char directory_name[BUFFER_SIZE];
+            int arguments_passed = sscanf(input + 2, " %s", directory_name);
+
+            if(arguments_passed != 1) {
+                printf("Error: Invalid 'cd' command. Correct usage: cd <directory name>\n");
+                continue;
+            }
+
+            handle_cd(directory_name);
+        }
+        else {
+            printf("Unrecognized command: '%s'\n", input);
+        }
     }
 
-    Mount__DirPath dirpath = MOUNT__DIR_PATH__INIT;
-    dirpath.path = "/nfs_share";
-    // do not both free and free_unapcked fhstatus! Do only one!
-    Mount__FhStatus *fhstatus = malloc(sizeof(Mount__FhStatus));
-    status = mount_procedure_1_add_mount_entry(dirpath, fhstatus);
-    if(status == 0) {
-        fprintf(stdout, "Successfully executed MOUNTPROC_MNT\n");
-        fprintf(stdout, "Status: %d\n", fhstatus->mnt_status->stat);
-        fprintf(stdout, "Filehandle: inode number - %lu\n", fhstatus->directory->nfs_filehandle->inode_number);
-
-        mount__fh_status__free_unpacked(fhstatus, NULL);
-    }
-    else{
-        fprintf(stdout, "MOUNTPROC_MNT failed - status %d\n", status);
-
-        free(fhstatus);
-    }
-
-
-    // TODO (QNFS-22) - Implement the parser app that waits for Linux file management commands and translates them to sequences of RPCs
+    return 0;
 }
