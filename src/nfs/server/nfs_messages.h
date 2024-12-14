@@ -17,4 +17,6 @@ Nfs__ReadRes *create_default_case_read_res(Nfs__Stat non_nfs_ok_status);
 
 Nfs__ReadDirRes *create_default_case_read_dir_res(Nfs__Stat non_nfs_ok_status);
 
+Nfs__StatFsRes *create_default_case_stat_fs_res(Nfs__Stat non_nfs_ok_status);
+
 #endif /* nfs_messages__header__INCLUDED */

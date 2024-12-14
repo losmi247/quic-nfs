@@ -42,6 +42,8 @@ typedef struct Nfs__ReadDirArgs Nfs__ReadDirArgs;
 typedef struct Nfs__DirectoryEntriesList Nfs__DirectoryEntriesList;
 typedef struct Nfs__ReadDirOk Nfs__ReadDirOk;
 typedef struct Nfs__ReadDirRes Nfs__ReadDirRes;
+typedef struct Nfs__FsInfo Nfs__FsInfo;
+typedef struct Nfs__StatFsRes Nfs__StatFsRes;
 
 
 /* --- enums --- */
@@ -631,6 +633,66 @@ struct  Nfs__ReadDirRes
     , NULL, NFS__READ_DIR_RES__BODY__NOT_SET, {0} }
 
 
+struct  Nfs__FsInfo
+{
+  ProtobufCMessage base;
+  /*
+   * optimum transfer size of the server in bytes
+   */
+  uint32_t tsize;
+  /*
+   * block size in bytes of the filesystem
+   */
+  uint64_t bsize;
+  /*
+   * total number of 'bsize' blocks on the filesystem
+   */
+  uint64_t blocks;
+  /*
+   * number of free 'bsize' blocks on the filesystem
+   */
+  uint64_t bfree;
+  /*
+   * number of 'bsize' blocks available to non-privileged users
+   */
+  uint64_t bavail;
+};
+#define NFS__FS_INFO__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__fs_info__descriptor) \
+    , 0, 0, 0, 0, 0 }
+
+
+typedef enum {
+  NFS__STAT_FS_RES__BODY__NOT_SET = 0,
+  NFS__STAT_FS_RES__BODY_FS_INFO = 2,
+  NFS__STAT_FS_RES__BODY_DEFAULT_CASE = 3
+    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__STAT_FS_RES__BODY__CASE)
+} Nfs__StatFsRes__BodyCase;
+
+/*
+ * Used for NFSPROC_STATFS results
+ */
+struct  Nfs__StatFsRes
+{
+  ProtobufCMessage base;
+  Nfs__NfsStat *nfs_status;
+  Nfs__StatFsRes__BodyCase body_case;
+  union {
+    /*
+     * case NFS_OK
+     */
+    Nfs__FsInfo *fs_info;
+    /*
+     * default case
+     */
+    Google__Protobuf__Empty *default_case;
+  };
+};
+#define NFS__STAT_FS_RES__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__stat_fs_res__descriptor) \
+    , NULL, NFS__STAT_FS_RES__BODY__NOT_SET, {0} }
+
+
 /* Nfs__NfsStat methods */
 void   nfs__nfs_stat__init
                      (Nfs__NfsStat         *message);
@@ -1106,6 +1168,44 @@ Nfs__ReadDirRes *
 void   nfs__read_dir_res__free_unpacked
                      (Nfs__ReadDirRes *message,
                       ProtobufCAllocator *allocator);
+/* Nfs__FsInfo methods */
+void   nfs__fs_info__init
+                     (Nfs__FsInfo         *message);
+size_t nfs__fs_info__get_packed_size
+                     (const Nfs__FsInfo   *message);
+size_t nfs__fs_info__pack
+                     (const Nfs__FsInfo   *message,
+                      uint8_t             *out);
+size_t nfs__fs_info__pack_to_buffer
+                     (const Nfs__FsInfo   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__FsInfo *
+       nfs__fs_info__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__fs_info__free_unpacked
+                     (Nfs__FsInfo *message,
+                      ProtobufCAllocator *allocator);
+/* Nfs__StatFsRes methods */
+void   nfs__stat_fs_res__init
+                     (Nfs__StatFsRes         *message);
+size_t nfs__stat_fs_res__get_packed_size
+                     (const Nfs__StatFsRes   *message);
+size_t nfs__stat_fs_res__pack
+                     (const Nfs__StatFsRes   *message,
+                      uint8_t             *out);
+size_t nfs__stat_fs_res__pack_to_buffer
+                     (const Nfs__StatFsRes   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__StatFsRes *
+       nfs__stat_fs_res__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__stat_fs_res__free_unpacked
+                     (Nfs__StatFsRes *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*Nfs__NfsStat_Closure)
@@ -1183,6 +1283,12 @@ typedef void (*Nfs__ReadDirOk_Closure)
 typedef void (*Nfs__ReadDirRes_Closure)
                  (const Nfs__ReadDirRes *message,
                   void *closure_data);
+typedef void (*Nfs__FsInfo_Closure)
+                 (const Nfs__FsInfo *message,
+                  void *closure_data);
+typedef void (*Nfs__StatFsRes_Closure)
+                 (const Nfs__StatFsRes *message,
+                  void *closure_data);
 
 /* --- services --- */
 
@@ -1216,6 +1322,8 @@ extern const ProtobufCMessageDescriptor nfs__read_dir_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__directory_entries_list__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_dir_ok__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_dir_res__descriptor;
+extern const ProtobufCMessageDescriptor nfs__fs_info__descriptor;
+extern const ProtobufCMessageDescriptor nfs__stat_fs_res__descriptor;
 
 PROTOBUF_C__END_DECLS
 
