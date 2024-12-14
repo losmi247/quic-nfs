@@ -9,15 +9,13 @@
 * Replaces any directories (from same or another NFS server) mounted so far with this new one, and sets the
 * current working directory to the mounted directory.
 */
-void handle_mount(const char *server_ip, uint16_t server_port, char *remote_path) {
-    // clean up any previously mounted directories
-    if(cwd_absolute_path != NULL) {
+void handle_mount(const char *server_ip, uint16_t server_port, char *remote_absolute_path) {
+    // clean up any previously mounted filesystem
+    if(filesystem_dag_root != NULL) {
         free(server_ipv4_addr);
-        free(cwd_filehandle->nfs_filehandle);
-        free(cwd_absolute_path);
+        clean_up_dag(filesystem_dag_root);
+        cwd_node = filesystem_dag_root = NULL;
 
-        cwd_filehandle = NULL;
-        cwd_absolute_path = NULL;
         server_ipv4_addr = NULL;
         server_port_number = 0;
     }
@@ -25,11 +23,11 @@ void handle_mount(const char *server_ip, uint16_t server_port, char *remote_path
     printf("Mounting NFS share...\n");
     printf("Server IP: %s\n", server_ip);
     printf("Port: %d\n", server_port);
-    printf("Remote Path: %s\n\n", remote_path);
+    printf("Remote Path: %s\n\n", remote_absolute_path);
 
     // mount the new NFS share
     Mount__DirPath dirpath = MOUNT__DIR_PATH__INIT;
-    dirpath.path = remote_path;
+    dirpath.path = remote_absolute_path;
 
     Mount__FhStatus *fhstatus = malloc(sizeof(Mount__FhStatus));
     int status = mount_procedure_1_add_mount_entry(server_ip, server_port, dirpath, fhstatus);
@@ -50,23 +48,37 @@ void handle_mount(const char *server_ip, uint16_t server_port, char *remote_path
     }
 
     if(fhstatus->mnt_status->stat != MOUNT__STAT__MNT_OK) {
-        mount__fh_status__free_unpacked(fhstatus, NULL);
-
         char *string_status = mount_stat_to_string(fhstatus->mnt_status->stat);
         printf("Error: Failed to mount the NFS share with status %s\n", string_status);
         free(string_status);
 
+        mount__fh_status__free_unpacked(fhstatus, NULL);
+
         return;
     }
 
-    // set the client state
-    server_ipv4_addr = strdup(server_ip);
-    server_port_number = server_port;
-
-    cwd_absolute_path = strdup(remote_path);
-
+    // initialize the filesystem DAG
     NfsFh__NfsFileHandle *nfs_filehandle_copy = malloc(sizeof(NfsFh__NfsFileHandle));
     *nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
     mount__fh_status__free_unpacked(fhstatus, NULL);
-    cwd_filehandle->nfs_filehandle = nfs_filehandle_copy;
+
+    Nfs__FHandle *fhandle = malloc(sizeof(Nfs__FHandle));
+    nfs__fhandle__init(fhandle);
+    fhandle->nfs_filehandle = nfs_filehandle_copy;
+
+    filesystem_dag_root = create_dag_node(strdup(remote_absolute_path), NFS__FTYPE__NFDIR, fhandle, 1);
+    if(filesystem_dag_root == NULL) {
+        free(nfs_filehandle_copy);
+        free(fhandle);
+
+        printf("Error: Failed to create a new filesystem DAG node\n");
+
+        return;
+    }
+
+    cwd_node = filesystem_dag_root;
+
+    // set the server address and port
+    server_ipv4_addr = strdup(server_ip);
+    server_port_number = server_port;
 }

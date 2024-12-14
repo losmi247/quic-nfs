@@ -18,25 +18,37 @@
 char *server_ipv4_addr;
 uint16_t server_port_number;
 
-char *cwd_absolute_path;
-Nfs__FHandle *cwd_filehandle;
+DAGNode *filesystem_dag_root;
+DAGNode *cwd_node;
 
 /*
 * Functions used by the REPL body.
 */
 
-void display_prompt() {
-    if(cwd_absolute_path == NULL) {
+/*
+* Displays the CWD and '>' at the start of the line in the REPL.
+*/
+void display_prompt(void) {
+    if(filesystem_dag_root == NULL) {
         printf(KRED "(no NFS share mounted)");
     }
     else {
-        printf(KRED "(%s:%s)", server_ipv4_addr, cwd_absolute_path);
+        printf(KRED "(%s:%s)", server_ipv4_addr, cwd_node->absolute_path);
     }
     
     printf(KGRN " >");
     printf(KNRM " ");   // so that user input hass normal colour
 
     fflush(stdout);
+}
+
+/*
+* Cleans up all Nfs client state before the REPL shuts down.
+*/
+void clean_up(void) {
+    free(server_ipv4_addr);
+
+    clean_up_dag(filesystem_dag_root);
 }
 
 int main(void) {
@@ -52,9 +64,8 @@ int main(void) {
     // initialize NFS client state
     server_ipv4_addr = NULL;
     server_port_number = 0;
-    cwd_absolute_path = NULL;
-    cwd_filehandle = malloc(sizeof(Nfs__FHandle));
-    nfs__fhandle__init(cwd_filehandle);
+    filesystem_dag_root = NULL;
+    cwd_node = NULL;
 
     // Read-Eval-Print Loop
     char input[BUFFER_SIZE];
@@ -72,7 +83,10 @@ int main(void) {
 
         // check for exit condition
         if(strcmp(input, "exit") == 0) {
+            clean_up();
+
             printf("Exiting REPL. Goodbye! \n");
+
             break;
         }
 

@@ -7,7 +7,7 @@
 * working directory.
 */
 void handle_ls() {
-    if(cwd_absolute_path == NULL) {
+    if(filesystem_dag_root == NULL) {
         printf("Error: No remote file system is currently mounted\n");
         return;
     }
@@ -16,7 +16,7 @@ void handle_ls() {
     nfs_cookie.value = 0;
 
     Nfs__ReadDirArgs readdirargs = NFS__READ_DIR_ARGS__INIT;
-    readdirargs.dir = cwd_filehandle;
+    readdirargs.dir = cwd_node->fhandle;
     readdirargs.cookie = &nfs_cookie;
     readdirargs.count = 1000;   // try to read all entries
 
@@ -39,11 +39,11 @@ void handle_ls() {
     }
 
     if(readdirres->nfs_status->stat != NFS__STAT__NFS_OK) {
-        nfs__read_dir_res__free_unpacked(readdirres, NULL);
-
         char *string_status = nfs_stat_to_string(readdirres->nfs_status->stat);
         printf("Error: Failed to read entries in cwd with status %s\n", string_status);
         free(string_status);
+
+        nfs__read_dir_res__free_unpacked(readdirres, NULL);
 
         return;
     }

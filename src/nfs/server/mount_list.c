@@ -42,7 +42,16 @@ void add_mount_list_entry(char *client_hostname, char *directory_absolute_path, 
     *current_list_head = new_mount_list_entry;
 }
 
+/*
+* Frees heap allocated space in the given Mount__MountList entry and the Mount__MountList entry itself.
+*
+* Does nothing if the given Mount__MountList is null.
+*/
 void free_mount_list_entry(Mount__MountList *mount_list_entry) {
+    if(mount_list_entry == NULL) {
+        return;
+    }
+
     free(mount_list_entry->hostname->name);
     free(mount_list_entry->hostname);
 

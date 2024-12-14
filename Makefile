@@ -11,6 +11,8 @@ PATH_BUILDING_SRCS = ./src/path_building/path_building.c
 
 FILEHANDLE_MANAGEMENT_SRCS = ./src/repl/filehandle_management.c
 
+FILESYSTEM_DAG_SRCS = ./src/repl/filesystem_dag/filesystem_dag.c
+
 SERIALIZATION_SRCS = ./src/serialization/mount/mount.pb-c.c \
 	./src/serialization/nfs/nfs.pb-c.c \
 	./src/serialization/nfs_fh/nfs_fh.pb-c.c \
@@ -44,7 +46,7 @@ TESTS_SRCS = ./tests/procedures/test_*.c \
 
 # files used by the Repl
 REPL_SRCS = ./src/repl/handlers/*.c ./src/repl/validation/validation.c \
-	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
+	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
 
 all: create-build-dir mount-and-nfs-server repl
 all-debug: create-build-dir mount-and-nfs-server-debug repl-debug
