@@ -257,3 +257,25 @@ message ReadDirRes {
         google.protobuf.Empty default_case = 3; // default case
     }
 }
+
+/*
+* STATFS (17)
+*/
+
+message FsInfo {
+    uint32 tsize = 1;   // optimum transfer size of the server in bytes
+    uint64 bsize = 2;   // block size in bytes of the filesystem
+    uint64 blocks = 3;  // total number of 'bsize' blocks on the filesystem
+    uint64 bfree = 4;   // number of free 'bsize' blocks on the filesystem
+    uint64 bavail = 5;  // number of 'bsize' blocks available to non-privileged users
+}
+
+// Used for NFSPROC_STATFS results
+message StatFsRes {
+    NfsStat nfs_status = 1;
+
+    oneof body {
+        FsInfo fs_info = 2;                     // case NFS_OK
+        google.protobuf.Empty default_case = 3; // default case
+    }
+}

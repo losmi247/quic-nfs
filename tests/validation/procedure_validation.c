@@ -1059,3 +1059,70 @@ void read_from_directory_fail(Nfs__FHandle *directory_fhandle, uint64_t cookie, 
 
     nfs__read_dir_res__free_unpacked(readdirres, NULL);
 }
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_STATFS to get filesystem attributes.
+* 
+* Returns the Nfs__StatFsRes returned by STATFS procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__stat_fs_res__free_unpacked()'
+* with the obtained StatFsRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__StatFsRes
+* and always call 'nfs__stat_fs_res__free_unpacked()' on it at some point.
+*/
+Nfs__StatFsRes *get_filesystem_attributes(Nfs__FHandle fhandle) {
+    Nfs__StatFsRes *statfsres = malloc(sizeof(Nfs__StatFsRes));
+    int status = nfs_procedure_17_get_filesystem_attributes(fhandle, statfsres);
+    if(status != 0) {
+        free(statfsres);
+        cr_fatal("NFSPROC_STATFS failed - status %d\n", status);
+    }
+
+    cr_assert_not_null(statfsres);
+
+    return statfsres;
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_STATFS to get filesystem attributes.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+*
+* Returns the Nfs__StatFsRes returned by STATFS procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__stat_fs_res__free_unpacked()'
+* with the obtained StatFsRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__StatFsRes
+* and always call 'nfs__stat_fs_res__free_unpacked()' on it at some point.
+*/
+Nfs__StatFsRes *get_filesystem_attributes_success(Nfs__FHandle fhandle) {
+    Nfs__StatFsRes *statfsres = get_filesystem_attributes(fhandle);
+
+    // validate StatFsRes
+    cr_assert_not_null(statfsres->nfs_status);
+    cr_assert_eq(statfsres->nfs_status->stat, NFS__STAT__NFS_OK);
+    cr_assert_eq(statfsres->body_case, NFS__STAT_FS_RES__BODY_FS_INFO);
+
+    // validate FsInfo
+    cr_assert_not_null(statfsres->fs_info);
+
+    return statfsres;
+}
+
+/*
+* Given the Nfs__FHandle of a file or a directory, calls NFSPROC_STATFS to get filesystem attributes.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void get_filesystem_attributes_fail(Nfs__FHandle fhandle, Nfs__Stat non_nfs_ok_status) {
+    Nfs__StatFsRes *statfsres = get_filesystem_attributes(fhandle);
+
+    cr_assert_not_null(statfsres->nfs_status);
+    cr_assert_eq(statfsres->nfs_status->stat, non_nfs_ok_status);
+    cr_assert_eq(statfsres->body_case, NFS__STAT_FS_RES__BODY_DEFAULT_CASE);
+    cr_assert_not_null(statfsres->default_case);
+
+    nfs__stat_fs_res__free_unpacked(statfsres, NULL);
+}

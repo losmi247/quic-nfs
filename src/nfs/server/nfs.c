@@ -53,6 +53,7 @@ Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number,
         case 16:
             return serve_nfs_procedure_16_read_from_directory(parameters);
         case 17:
+            return serve_nfs_procedure_17_get_filesystem_attributes(parameters);
         default:
     }
 
