@@ -52,7 +52,7 @@ void handle_mount(const char *server_ip, uint16_t server_port, char *remote_path
     if(fhstatus->mnt_status->stat != MOUNT__STAT__MNT_OK) {
         mount__fh_status__free_unpacked(fhstatus, NULL);
 
-        char *string_status = nfs_stat_to_string(fhstatus->mnt_status->stat);
+        char *string_status = mount_stat_to_string(fhstatus->mnt_status->stat);
         printf("Error: Failed to mount the NFS share with status %s\n", string_status);
         free(string_status);
 

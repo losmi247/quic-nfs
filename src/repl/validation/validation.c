@@ -18,6 +18,23 @@ int validate_mount_fhandle(Mount__FHandle *fhandle) {
 }
 
 /*
+* Validates the structure of the given FHandle.
+*
+* Returns 0 on success and > 0 on failure.
+*/
+int validate_nfs_fhandle(Nfs__FHandle *fhandle) {
+    if(fhandle == NULL) {
+        return 1;
+    }
+
+    if(fhandle->nfs_filehandle == NULL) {
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
 * Validates the structure of the given FhStatus.
 *
 * Returns 0 on success and > 0 on failure.
@@ -100,6 +117,82 @@ int validate_nfs_read_dir_res(Nfs__ReadDirRes *readdirres) {
             return 1;
         }
         if(readdirres->default_case == NULL) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*
+* Validates the structure of the given FAttr.
+*
+* Returns 0 on success and > 0 on failure.
+*/
+int validate_nfs_fattr(Nfs__FAttr *fattr) {
+    if(fattr == NULL) {
+        return 1;
+    }
+
+    if(fattr->nfs_ftype == NULL || fattr->atime == NULL || fattr->mtime == NULL || fattr->ctime == NULL) {
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
+* Validates the structure of the given DirOpOk.
+*
+* Returns 0 on success and > 0 on failure.
+*/
+int validate_nfs_dir_op_ok(Nfs__DirOpOk *diropok) {
+    if(diropok == NULL) {
+        return 1;
+    }
+
+    if(diropok->file == NULL) {
+        return 1;
+    }
+
+    if(validate_nfs_fhandle(diropok->file) > 0) {
+        return 1;
+    }
+
+    if(validate_nfs_fattr(diropok->attributes) > 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
+* Validates the structure of the given DirOpRes.
+*
+* Returns 0 on success and > 0 on failure.
+*/
+int validate_nfs_dir_op_res(Nfs__DirOpRes *diropres) {
+    if(diropres == NULL) {
+        return 1;
+    }
+
+    if(diropres->nfs_status == NULL) {
+        return 1;
+    }
+
+    if(diropres->nfs_status->stat == NFS__STAT__NFS_OK) {
+        if(diropres->body_case != NFS__DIR_OP_RES__BODY_DIROPOK) {
+            return 1;
+        }
+        if(validate_nfs_dir_op_ok(diropres->diropok) > 0) {
+            return 1;
+        }
+    }
+    else {
+        if(diropres->body_case != NFS__DIR_OP_RES__BODY_DEFAULT_CASE) {
+            return 1;
+        }
+        if(diropres->default_case == NULL) {
             return 1;
         }
     }

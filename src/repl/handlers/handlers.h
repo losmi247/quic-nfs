@@ -13,4 +13,6 @@ void handle_mount(const char *server_ip, uint16_t server_port, char *remote_path
 
 void handle_ls();
 
+void handle_cd(char *directory_name);
+
 #endif /* handlers__header__INCLUDED */

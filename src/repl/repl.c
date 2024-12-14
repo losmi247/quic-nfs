@@ -45,6 +45,7 @@ int main(void) {
     
     printf("mount <server_ip> <port> <remote_path>          - mount a remote NFS share\n");
     printf("ls                                              - list all entries in the current working directory\n");
+    printf("cd <directory name>                             - change cwd to the given directory name which is in the current working directory\n");
 
     printf("\nType 'exit' to quit the REPL.\n\n");
 
@@ -76,12 +77,12 @@ int main(void) {
         }
 
         // parse commands
-        if(strncmp(input, "mount ", 6) == 0) {
+        if(strncmp(input, "mount", 5) == 0) {
             char server_ip[BUFFER_SIZE], port_number_string[BUFFER_SIZE], remote_path[BUFFER_SIZE];
-            int arguments_parsed = sscanf(input + 6, "%s %s %s", server_ip, port_number_string, remote_path);
+            int arguments_parsed = sscanf(input + 5, " %s %s %s", server_ip, port_number_string, remote_path);
 
             if(arguments_parsed != 3) {
-                printf("Error: Invalid mount command. Correct usage: mount <server_ip> <port> <remote_path>\n");
+                printf("Error: Invalid 'mount' command. Correct usage: mount <server_ip> <port> <remote_path>\n");
                 continue;
             }
 
@@ -95,6 +96,17 @@ int main(void) {
         }
         else if(strcmp(input, "ls") == 0) {
             handle_ls();
+        }
+        else if(strncmp(input, "cd", 2) == 0) {
+            char directory_name[BUFFER_SIZE];
+            int arguments_passed = sscanf(input + 2, " %s", directory_name);
+
+            if(arguments_passed != 1) {
+                printf("Error: Invalid 'cd' command. Correct usage: cd <directory name>\n");
+                continue;
+            }
+
+            handle_cd(directory_name);
         }
         else {
             printf("Unrecognized command: '%s'\n", input);

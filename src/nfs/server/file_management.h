@@ -32,8 +32,6 @@
 
 int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehandle, InodeCache *inode_number_cache);
 
-char *get_file_absolute_path(char *directory_absolute_path, char *file_name);
-
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr);
 
 void clean_up_fattr(Nfs__FAttr *fattr);

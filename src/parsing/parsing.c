@@ -26,6 +26,28 @@ uint16_t parse_port_number(char *port_number_string) {
 }
 
 /*
+* Returns a string describing the given Mount__Stat.
+*
+* The user of this function takes the responsibility to free the returned string.
+*/
+char *mount_stat_to_string(Mount__Stat stat) {
+    switch(stat) {
+        case MOUNT__STAT__MNT_OK:
+            return strdup("MNT_OK");
+        case MOUNT__STAT__MNTERR_NOENT:
+            return strdup("MNTERR_NOENT");
+        case MOUNT__STAT__MNTERR_NOTEXP:
+            return strdup("MNTERR_NOTEXP");
+        case MOUNT__STAT__MNTERR_IO:
+            return strdup("MNTERR_IO");
+        case MOUNT__STAT__MNTERR_NOTDIR:
+            return strdup("MNTERR_NOTDIR");
+        default:
+            return strdup("Unknown");
+    }
+}
+
+/*
 * Returns a string describing the given Nfs__Stat.
 *
 * The user of this function takes the responsibility to free the returned string.
