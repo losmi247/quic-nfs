@@ -23,6 +23,8 @@ Rpc__AcceptedReply serve_nfs_procedure_10_remove_file(Google__Protobuf__Any *par
 
 Rpc__AcceptedReply serve_nfs_procedure_11_rename_file(Google__Protobuf__Any *parameters);
 
+Rpc__AcceptedReply serve_nfs_procedure_13_create_symbolic_link(Google__Protobuf__Any *parameters);
+
 Rpc__AcceptedReply serve_nfs_procedure_14_create_directory(Google__Protobuf__Any *parameters);
 
 Rpc__AcceptedReply serve_nfs_procedure_15_remove_directory(Google__Protobuf__Any *parameters);

@@ -37,6 +37,7 @@ typedef struct Nfs__ReadRes Nfs__ReadRes;
 typedef struct Nfs__WriteArgs Nfs__WriteArgs;
 typedef struct Nfs__CreateArgs Nfs__CreateArgs;
 typedef struct Nfs__RenameArgs Nfs__RenameArgs;
+typedef struct Nfs__SymLinkArgs Nfs__SymLinkArgs;
 typedef struct Nfs__NfsCookie Nfs__NfsCookie;
 typedef struct Nfs__ReadDirArgs Nfs__ReadDirArgs;
 typedef struct Nfs__DirectoryEntriesList Nfs__DirectoryEntriesList;
@@ -548,6 +549,21 @@ struct  Nfs__RenameArgs
 #define NFS__RENAME_ARGS__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nfs__rename_args__descriptor) \
     , NULL, NULL }
+
+
+struct  Nfs__SymLinkArgs
+{
+  ProtobufCMessage base;
+  Nfs__DirOpArgs *from;
+  Nfs__Path *to;
+  /*
+   * Unix-like NFS servers never use these 'attributes' as symlinks always have mode 0777
+   */
+  Nfs__SAttr *attributes;
+};
+#define NFS__SYM_LINK_ARGS__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&nfs__sym_link_args__descriptor) \
+    , NULL, NULL, NULL }
 
 
 /*
@@ -1073,6 +1089,25 @@ Nfs__RenameArgs *
 void   nfs__rename_args__free_unpacked
                      (Nfs__RenameArgs *message,
                       ProtobufCAllocator *allocator);
+/* Nfs__SymLinkArgs methods */
+void   nfs__sym_link_args__init
+                     (Nfs__SymLinkArgs         *message);
+size_t nfs__sym_link_args__get_packed_size
+                     (const Nfs__SymLinkArgs   *message);
+size_t nfs__sym_link_args__pack
+                     (const Nfs__SymLinkArgs   *message,
+                      uint8_t             *out);
+size_t nfs__sym_link_args__pack_to_buffer
+                     (const Nfs__SymLinkArgs   *message,
+                      ProtobufCBuffer     *buffer);
+Nfs__SymLinkArgs *
+       nfs__sym_link_args__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   nfs__sym_link_args__free_unpacked
+                     (Nfs__SymLinkArgs *message,
+                      ProtobufCAllocator *allocator);
 /* Nfs__NfsCookie methods */
 void   nfs__nfs_cookie__init
                      (Nfs__NfsCookie         *message);
@@ -1268,6 +1303,9 @@ typedef void (*Nfs__CreateArgs_Closure)
 typedef void (*Nfs__RenameArgs_Closure)
                  (const Nfs__RenameArgs *message,
                   void *closure_data);
+typedef void (*Nfs__SymLinkArgs_Closure)
+                 (const Nfs__SymLinkArgs *message,
+                  void *closure_data);
 typedef void (*Nfs__NfsCookie_Closure)
                  (const Nfs__NfsCookie *message,
                   void *closure_data);
@@ -1317,6 +1355,7 @@ extern const ProtobufCMessageDescriptor nfs__read_res__descriptor;
 extern const ProtobufCMessageDescriptor nfs__write_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__create_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__rename_args__descriptor;
+extern const ProtobufCMessageDescriptor nfs__sym_link_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__nfs_cookie__descriptor;
 extern const ProtobufCMessageDescriptor nfs__read_dir_args__descriptor;
 extern const ProtobufCMessageDescriptor nfs__directory_entries_list__descriptor;

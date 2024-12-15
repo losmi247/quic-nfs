@@ -1,6 +1,8 @@
 #ifndef common_validation__header__INCLUDED
 #define common_validation__header__INCLUDED
 
+#include <string.h>
+
 #include "criterion/criterion.h"
 #include <criterion/new/assert.h>
 

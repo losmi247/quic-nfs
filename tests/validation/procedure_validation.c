@@ -765,6 +765,88 @@ void rename_file_fail(Nfs__FHandle *from_directory_fhandle, char *from_filename,
 }
 
 /*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_SYMLINK to create a symbolic link with the given filename
+* inside this given directory, pointing to file given by 'target' absolute path.
+* 
+* Returns the Nfs__NfsStat returned by SYMLINK procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *create_symbolic_link(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target) {
+    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
+    file_name.filename = filename;
+
+    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
+    diropargs.dir = directory_fhandle;
+    diropargs.name = &file_name;
+
+    Nfs__SAttr sattr = NFS__SATTR__INIT;    // Unix-like NFS servers ignore 'attributes' for symbolic links, so just put -1 everywhere
+    sattr.mode = -1;
+    sattr.uid = sattr.gid = -1;
+    sattr.size = -1;
+    Nfs__TimeVal atime = NFS__TIME_VAL__INIT, mtime = NFS__TIME_VAL__INIT;
+    atime.seconds = atime.useconds = mtime.seconds = mtime.useconds = -1;
+    sattr.atime = &atime;
+    sattr.mtime = &mtime;
+
+    Nfs__SymLinkArgs symlinkargs = NFS__SYM_LINK_ARGS__INIT;
+    symlinkargs.from = &diropargs;
+    symlinkargs.to = target;
+    symlinkargs.attributes = &sattr;
+
+    Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
+    int status = nfs_procedure_13_create_symbolic_link(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, symlinkargs, nfsstat);
+    if(status != 0) {
+        free(nfsstat);
+        cr_fatal("NFSPROC_SYMLINK failed - status %d\n", status);
+    }
+
+    cr_assert_not_null(nfsstat);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_SYMLINK to create a symbolic link with the given filename
+* inside this given directory, pointing to file given by 'target' absolute path.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* 
+* Returns the Nfs__DirOpRes returned by SYMLINK procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *create_symbolic_link_success(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target) {     
+    Nfs__NfsStat *nfsstat = create_symbolic_link(directory_fhandle, filename, target);
+
+    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_SYMLINK to create a symbolic link with the given filename
+* inside this given directory, pointing to file given by 'target' absolute path.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void create_symbolic_link_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target, Nfs__Stat non_nfs_ok_status) {
+    Nfs__NfsStat *nfsstat = create_symbolic_link(directory_fhandle, filename, target);
+
+    cr_assert_eq(nfsstat->stat, non_nfs_ok_status);
+
+    nfs__nfs_stat__free_unpacked(nfsstat, NULL);
+}
+
+/*
 * Given the Nfs__FHandle of a directory, calls NFSPROC_MKDIR to create a directory with the given filename
 * inside the given directory. The directory is created with initial attributes specified in sattr argument.
 * 

@@ -26,6 +26,8 @@ int nfs_procedure_10_remove_file(const char *server_ipv4_addr, uint16_t server_p
 
 int nfs_procedure_11_rename_file(const char *server_ipv4_addr, uint16_t server_port, Nfs__RenameArgs renameargs, Nfs__NfsStat *result);
 
+int nfs_procedure_13_create_symbolic_link(const char *server_ipv4_addr, uint16_t server_port, Nfs__SymLinkArgs symlinkargs, Nfs__NfsStat *result);
+
 int nfs_procedure_14_create_directory(const char *server_ipv4_addr, uint16_t server_port, Nfs__CreateArgs createargs, Nfs__DirOpRes *result);
 
 int nfs_procedure_15_remove_directory(const char *server_ipv4_addr, uint16_t server_port, Nfs__DirOpArgs diropargs, Nfs__NfsStat *result);

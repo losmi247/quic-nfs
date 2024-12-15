@@ -1,11 +1,41 @@
 #include "common_validation.h"
 
 /*
+* Gives a string form of the given file type.
+*
+* The user of this function takes the responsibility to free the received string.
+*/
+char *file_type_to_string(Nfs__FType ftype) {
+    switch(ftype) {
+        case NFS__FTYPE__NFREG:
+            return strdup("NFREG");
+        case NFS__FTYPE__NFDIR:
+            return strdup("NFDIR");
+        case NFS__FTYPE__NFLNK:
+            return strdup("NFLNK");
+        case NFS__FTYPE__NFCHR:
+            return strdup("NFCHR");
+        case NFS__FTYPE__NFBLK:
+            return strdup("NFBLK");
+        case NFS__FTYPE__NFNON:
+            return strdup("NFNON");
+        default:
+            return strdup("Unknown");
+    }
+}
+
+/*
 * Validates FAttr fields that can be checked for correctnes from the client.
 */
 void validate_fattr(Nfs__FAttr *fattr, Nfs__FType ftype) {
+    cr_assert_not_null(fattr);
+
     cr_assert_not_null(fattr->nfs_ftype);
-    cr_assert_eq(fattr->nfs_ftype->ftype, ftype);
+
+    char *expected_file_type = file_type_to_string(ftype), *found_file_type = file_type_to_string(fattr->nfs_ftype->ftype);
+    cr_assert_eq(fattr->nfs_ftype->ftype, ftype, "Expected file type %s but found file type %s", expected_file_type, found_file_type);
+    free(expected_file_type);
+    free(found_file_type);
 
     cr_assert_not_null(fattr->atime);
     cr_assert_not_null(fattr->mtime);

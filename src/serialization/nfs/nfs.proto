@@ -222,6 +222,16 @@ message RenameArgs {
 }
 
 /*
+* SYMLINK (13)
+*/
+
+message SymLinkArgs {
+    DirOpArgs from = 1;
+    Path to = 2;
+    SAttr attributes = 3;   // Unix-like NFS servers never use these 'attributes' as symlinks always have mode 0777
+}
+
+/*
 * READDIR (16)
 */
 
