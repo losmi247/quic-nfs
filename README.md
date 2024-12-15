@@ -42,7 +42,7 @@ The NFSv2 server currently supports the following NFSv2 procedures:
 | 10  | **REMOVE**         | remove file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 11  | **RENAME**         | rename file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 12  | **LINK**           | create link to file                          |                     |                       |                    |
-| 13  | **SYMLINK**        | create symbolic link to file                 |                     |                       |                    |
+| 13  | **SYMLINK**        | create symbolic link to file                 |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 14  | **MKDIR**          | create directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 15  | **RMDIR**          | remove directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 16  | **READDIR**        | read from directory                          |   done &#10004;     |   done &#10004;       |   done &#10004;    |
@@ -56,8 +56,9 @@ The client REPL currently supports the following set of Unix-like commands:
 
 | **Command** | **Description**                                                                 |
 |-------------|---------------------------------------------------------------------------------|
-| `mount <server_ip> <port> <remote_path>`     | Mounts a remote file system to the client REPL.                                      |
+| `mount <server_ip> <port> <remote_path>`     | Mounts a remote file system to the client REPL.                           |
 | `ls`        | Lists all entries in the current working directory on the currently mounted remote file system.            |
+| `cd <directory name>`  | change cwd to the given directory name which is in the current working directory                |
 
 # Tests
 
