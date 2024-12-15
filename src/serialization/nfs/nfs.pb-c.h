@@ -556,6 +556,9 @@ struct  Nfs__SymLinkArgs
   ProtobufCMessage base;
   Nfs__DirOpArgs *from;
   Nfs__Path *to;
+  /*
+   * Unix-like NFS servers never use these 'attributes' as symlinks always have mode 0777
+   */
   Nfs__SAttr *attributes;
 };
 #define NFS__SYM_LINK_ARGS__INIT \
