@@ -38,6 +38,9 @@ RUN mkdir /nfs_share/rename_test && \
     touch /nfs_share/rename_test/dir4/rename_test_file.txt && \
     touch /nfs_share/rename_test/dir1/rename_test_file.txt
 
+RUN mkdir /nfs_share/symlink_test && \
+    touch /nfs_share/symlink_test/existing_file
+
 RUN mkdir /nfs_share/mkdir_test && \
     touch /nfs_share/mkdir_test/existing_directory
 

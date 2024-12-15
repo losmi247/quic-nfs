@@ -8,7 +8,7 @@
 */
 int get_inode_number(char *absolute_path, ino_t *inode_number) {
     struct stat file_stat;
-    if(stat(absolute_path, &file_stat) < 0) {
+    if(lstat(absolute_path, &file_stat) < 0) {
         perror_msg("Failed retrieving file stats for file/directory at absolute path %s", absolute_path);
         return 1;
     }
@@ -77,7 +77,7 @@ Nfs__FType decode_file_type(mode_t st_mode) {
 */
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr) {
     struct stat file_stat;
-    if(stat(absolute_path, &file_stat) < 0) {
+    if(lstat(absolute_path, &file_stat) < 0) {
         perror_msg("Failed retrieving file stats for file/directory at absolute path %s", absolute_path);
         return 1;
     }
