@@ -46,6 +46,7 @@ Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number,
             return serve_nfs_procedure_11_rename_file(parameters);
         case 12:
         case 13:
+            return serve_nfs_procedure_13_create_symbolic_link(parameters);
         case 14:
             return serve_nfs_procedure_14_create_directory(parameters);
         case 15:
