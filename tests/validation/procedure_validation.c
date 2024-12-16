@@ -22,7 +22,9 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
     dirpath.path = directory_absolute_path;
 
     Mount__FhStatus *fhstatus = malloc(sizeof(Mount__FhStatus));
-    int status = mount_procedure_1_add_mount_entry(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, dirpath, fhstatus);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = mount_procedure_1_add_mount_entry(rpc_connection_context, dirpath, fhstatus);
+    free_rpc_connection_context(rpc_connection_context);
     if (status != 0) {
         free(fhstatus);
         cr_fatal("MOUNTPROC_MNT failed - status %d\n", status);
@@ -89,7 +91,9 @@ void mount_directory_fail(char *directory_absolute_path, Mount__Stat non_mnt_ok_
 */
 Nfs__AttrStat *get_attributes(Nfs__FHandle file_fhandle) {
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
-    int status = nfs_procedure_1_get_file_attributes(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, file_fhandle, attrstat);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_1_get_file_attributes(rpc_connection_context, file_fhandle, attrstat);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(attrstat);
         cr_fatal("NFSPROC_GETATTR failed - status %d\n", status);
@@ -163,7 +167,9 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, Nfs__SAttr *sattr) {
     sattrargs.attributes = sattr;
 
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
-    int status = nfs_procedure_2_set_file_attributes(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, sattrargs, attrstat);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_2_set_file_attributes(rpc_connection_context, sattrargs, attrstat);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(attrstat);
         cr_fatal("NFSPROC_SETATTR failed - status %d\n", status);
@@ -260,7 +266,9 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
     diropargs.name = &file_name;
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_4_look_up_file_name(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, diropargs, diropres);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_4_look_up_file_name(rpc_connection_context, diropargs, diropres);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(diropres);
         cr_fatal("NFSPROC_LOOKUP failed - status %d\n", status);
@@ -345,7 +353,9 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
     readargs.totalcount = 0; // unused
 
     Nfs__ReadRes *readres = malloc(sizeof(Nfs__ReadRes));
-    int status = nfs_procedure_6_read_from_file(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, readargs, readres);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_6_read_from_file(rpc_connection_context, readargs, readres);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(readres);
         cr_fatal("NFSPROC_READ failed - status %d\n", status);
@@ -445,7 +455,9 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
     writeargs.nfsdata.len = byte_count;
 
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
-    int status = nfs_procedure_8_write_to_file(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, writeargs, attrstat);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_8_write_to_file(rpc_connection_context, writeargs, attrstat);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(attrstat);
         cr_fatal("NFSPROC_WRITE failed - status %d\n", status);
@@ -529,7 +541,9 @@ Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, Nfs_
     createargs.attributes = sattr;
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_9_create_file(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, createargs, diropres);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_9_create_file(rpc_connection_context, createargs, diropres);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(diropres);
         cr_fatal("NFSPROC_CREATE failed - status %d\n", status);
@@ -632,7 +646,9 @@ Nfs__NfsStat *remove_file(Nfs__FHandle *directory_fhandle, char *filename) {
     diropargs.name = &file_name;
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
-    int status = nfs_procedure_10_remove_file(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, diropargs, nfsstat);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_10_remove_file(rpc_connection_context, diropargs, nfsstat);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(nfsstat);
         cr_fatal("NFSPROC_REMOVE failed - status %d\n", status);
@@ -712,7 +728,9 @@ Nfs__NfsStat *rename_file(Nfs__FHandle *from_directory_fhandle, char *from_filen
     renameargs.to = &to;
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
-    int status = nfs_procedure_11_rename_file(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, renameargs, nfsstat);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_11_rename_file(rpc_connection_context, renameargs, nfsstat);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(nfsstat);
         cr_fatal("NFSPROC_RENAME failed - status %d\n", status);
@@ -799,7 +817,9 @@ Nfs__NfsStat *create_symbolic_link(Nfs__FHandle *directory_fhandle, char *filena
     symlinkargs.attributes = &sattr;
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
-    int status = nfs_procedure_13_create_symbolic_link(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, symlinkargs, nfsstat);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_13_create_symbolic_link(rpc_connection_context, symlinkargs, nfsstat);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(nfsstat);
         cr_fatal("NFSPROC_SYMLINK failed - status %d\n", status);
@@ -871,7 +891,9 @@ Nfs__DirOpRes *create_directory(Nfs__FHandle *directory_fhandle, char *filename,
     createargs.attributes = sattr;
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_14_create_directory(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, createargs, diropres);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_14_create_directory(rpc_connection_context, createargs, diropres);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(diropres);
         cr_fatal("NFSPROC_MKDIR failed - status %d\n", status);
@@ -974,7 +996,9 @@ Nfs__NfsStat *remove_directory(Nfs__FHandle *directory_fhandle, char *filename) 
     diropargs.name = &file_name;
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
-    int status = nfs_procedure_15_remove_directory(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, diropargs, nfsstat);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_15_remove_directory(rpc_connection_context, diropargs, nfsstat);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(nfsstat);
         cr_fatal("NFSPROC_RMDIR failed - status %d\n", status);
@@ -1043,7 +1067,9 @@ Nfs__ReadDirRes *read_from_directory(Nfs__FHandle *directory_fhandle, uint64_t c
     readdirargs.count = byte_count;
 
     Nfs__ReadDirRes *readdirres = malloc(sizeof(Nfs__ReadDirRes));
-    int status = nfs_procedure_16_read_from_directory(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, readdirargs, readdirres);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_16_read_from_directory(rpc_connection_context, readdirargs, readdirres);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(readdirres);
         cr_fatal("NFSPROC_READDIR failed - status %d\n", status);
@@ -1155,7 +1181,9 @@ void read_from_directory_fail(Nfs__FHandle *directory_fhandle, uint64_t cookie, 
 */
 Nfs__StatFsRes *get_filesystem_attributes(Nfs__FHandle fhandle) {
     Nfs__StatFsRes *statfsres = malloc(sizeof(Nfs__StatFsRes));
-    int status = nfs_procedure_17_get_filesystem_attributes(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, fhandle, statfsres);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = nfs_procedure_17_get_filesystem_attributes(rpc_connection_context, fhandle, statfsres);
+    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(statfsres);
         cr_fatal("NFSPROC_STATFS failed - status %d\n", status);

@@ -17,6 +17,8 @@ PROTOBUF_C__BEGIN_DECLS
 #include "src/serialization/google_protos/any.pb-c.h"
 #include "src/serialization/google_protos/empty.pb-c.h"
 
+typedef struct Rpc__AuthSysParams Rpc__AuthSysParams;
+typedef struct Rpc__OpaqueAuth Rpc__OpaqueAuth;
 typedef struct Rpc__CallBody Rpc__CallBody;
 typedef struct Rpc__MismatchInfo Rpc__MismatchInfo;
 typedef struct Rpc__AcceptedReply Rpc__AcceptedReply;
@@ -27,25 +29,16 @@ typedef struct Rpc__RpcMsg Rpc__RpcMsg;
 
 /* --- enums --- */
 
-/*
- * Message types
- */
 typedef enum _Rpc__MsgType {
   RPC__MSG_TYPE__CALL = 0,
   RPC__MSG_TYPE__REPLY = 1
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__MSG_TYPE)
 } Rpc__MsgType;
-/*
- * Reply status
- */
 typedef enum _Rpc__ReplyStat {
   RPC__REPLY_STAT__MSG_ACCEPTED = 0,
   RPC__REPLY_STAT__MSG_DENIED = 1
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__REPLY_STAT)
 } Rpc__ReplyStat;
-/*
- * Accept status
- */
 typedef enum _Rpc__AcceptStat {
   /*
    * RPC executed successfully
@@ -73,9 +66,6 @@ typedef enum _Rpc__AcceptStat {
   RPC__ACCEPT_STAT__SYSTEM_ERR = 5
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__ACCEPT_STAT)
 } Rpc__AcceptStat;
-/*
- * Reject status
- */
 typedef enum _Rpc__RejectStat {
   /*
    * RPC version number != 2
@@ -87,15 +77,143 @@ typedef enum _Rpc__RejectStat {
   RPC__REJECT_STAT__AUTH_ERROR = 1
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__REJECT_STAT)
 } Rpc__RejectStat;
-/*
- * Auth status
- */
 typedef enum _Rpc__AuthStat {
-  RPC__AUTH_STAT__AUTH_OK = 0
+  RPC__AUTH_STAT__AUTH_OK = 0,
+  /*
+   * failed at remote end
+   */
+  /*
+   * bad credential (seal broken)
+   */
+  RPC__AUTH_STAT__AUTH_BADCRED = 1,
+  /*
+   * client must begin new session
+   */
+  RPC__AUTH_STAT__AUTH_REJECTEDCRED = 2,
+  /*
+   * bad verifier (seal broken)
+   */
+  RPC__AUTH_STAT__AUTH_BADVERF = 3,
+  /*
+   * verifier expired or replayed
+   */
+  RPC__AUTH_STAT__AUTH_REJECTEDVERF = 4,
+  /*
+   * rejected for security reasons
+   */
+  RPC__AUTH_STAT__AUTH_TOOWEAK = 5,
+  /*
+   * failed locally
+   */
+  /*
+   * bogus response verifier
+   */
+  RPC__AUTH_STAT__AUTH_INVALIDRESP = 6,
+  /*
+   * reason unknown
+   */
+  RPC__AUTH_STAT__AUTH_FAILED = 7,
+  /*
+   * AUTH_KERB errors; deprecated.  See [RFC2695]
+   */
+  /*
+   * kerberos generic error
+   */
+  RPC__AUTH_STAT__AUTH_KERB_GENERIC = 8,
+  /*
+   * time of credential expired
+   */
+  RPC__AUTH_STAT__AUTH_TIMEEXPIRE = 9,
+  /*
+   * problem with ticket file
+   */
+  RPC__AUTH_STAT__AUTH_TKT_FILE = 10,
+  /*
+   * can't decode authenticator
+   */
+  RPC__AUTH_STAT__AUTH_DECODE = 11,
+  /*
+   * wrong net address in ticket
+   */
+  RPC__AUTH_STAT__AUTH_NET_ADDR = 12,
+  /*
+   * RPCSEC_GSS GSS related errors
+   */
+  /*
+   * no credentials for user
+   */
+  RPC__AUTH_STAT__RPCSEC_GSS_CREDPROBLEM = 13,
+  /*
+   * problem with context
+   */
+  RPC__AUTH_STAT__RPCSEC_GSS_CTXPROBLEM = 14
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__AUTH_STAT)
 } Rpc__AuthStat;
+typedef enum _Rpc__AuthFlavor {
+  RPC__AUTH_FLAVOR__AUTH_NONE = 0,
+  RPC__AUTH_FLAVOR__AUTH_SYS = 1,
+  RPC__AUTH_FLAVOR__AUTH_SHORT = 2,
+  RPC__AUTH_FLAVOR__AUTH_DH = 3,
+  RPC__AUTH_FLAVOR__RPCSEC_GSS = 6
+    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__AUTH_FLAVOR)
+} Rpc__AuthFlavor;
 
 /* --- messages --- */
+
+struct  Rpc__AuthSysParams
+{
+  ProtobufCMessage base;
+  uint64_t timestamp;
+  /*
+   * max length 255
+   */
+  char *machinename;
+  /*
+   * effective uid
+   */
+  uint32_t uid;
+  /*
+   * effective gid
+   */
+  uint32_t gid;
+  /*
+   * array of gids (max 16) of groups the client belongs to
+   */
+  size_t n_gids;
+  uint32_t *gids;
+};
+#define RPC__AUTH_SYS_PARAMS__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&rpc__auth_sys_params__descriptor) \
+    , 0, (char *)protobuf_c_empty_string, 0, 0, 0,NULL }
+
+
+typedef enum {
+  RPC__OPAQUE_AUTH__BODY__NOT_SET = 0,
+  RPC__OPAQUE_AUTH__BODY_EMPTY = 2,
+  RPC__OPAQUE_AUTH__BODY_AUTH_SYS = 3
+    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__OPAQUE_AUTH__BODY__CASE)
+} Rpc__OpaqueAuth__BodyCase;
+
+struct  Rpc__OpaqueAuth
+{
+  ProtobufCMessage base;
+  Rpc__AuthFlavor flavor;
+  Rpc__OpaqueAuth__BodyCase body_case;
+  union {
+    /*
+     * case AUTH_NONE
+     */
+    Google__Protobuf__Empty *empty;
+    /*
+     * case AUTH_SYS
+     */
+    Rpc__AuthSysParams *auth_sys;
+  };
+};
+#define RPC__OPAQUE_AUTH__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&rpc__opaque_auth__descriptor) \
+    , RPC__AUTH_FLAVOR__AUTH_NONE, RPC__OPAQUE_AUTH__BODY__NOT_SET, {0} }
+
 
 struct  Rpc__CallBody
 {
@@ -116,17 +234,16 @@ struct  Rpc__CallBody
    * procedure number
    */
   uint32_t proc;
+  Rpc__OpaqueAuth *credential;
+  Rpc__OpaqueAuth *verifier;
   /*
-   * Procedure-specific parameters can be added here as fields
-   */
-  /*
-   * Serialized params for the procedure
+   * procedure-specific serialized parameters
    */
   Google__Protobuf__Any *params;
 };
 #define RPC__CALL_BODY__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rpc__call_body__descriptor) \
-    , 0, 0, 0, 0, NULL }
+    , 0, 0, 0, 0, NULL, NULL, NULL }
 
 
 struct  Rpc__MismatchInfo
@@ -142,18 +259,16 @@ struct  Rpc__MismatchInfo
 
 typedef enum {
   RPC__ACCEPTED_REPLY__REPLY_DATA__NOT_SET = 0,
-  RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS = 2,
-  RPC__ACCEPTED_REPLY__REPLY_DATA_MISMATCH_INFO = 3,
-  RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE = 4
+  RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS = 3,
+  RPC__ACCEPTED_REPLY__REPLY_DATA_MISMATCH_INFO = 4,
+  RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE = 5
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__ACCEPTED_REPLY__REPLY_DATA__CASE)
 } Rpc__AcceptedReply__ReplyDataCase;
 
 struct  Rpc__AcceptedReply
 {
   ProtobufCMessage base;
-  /*
-   * here: opaque verf for auth protocol - length 0 when AUTH_NONE
-   */
+  Rpc__OpaqueAuth *verifier;
   Rpc__AcceptStat stat;
   Rpc__AcceptedReply__ReplyDataCase reply_data_case;
   union {
@@ -173,7 +288,7 @@ struct  Rpc__AcceptedReply
 };
 #define RPC__ACCEPTED_REPLY__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rpc__accepted_reply__descriptor) \
-    , RPC__ACCEPT_STAT__SUCCESS, RPC__ACCEPTED_REPLY__REPLY_DATA__NOT_SET, {0} }
+    , NULL, RPC__ACCEPT_STAT__SUCCESS, RPC__ACCEPTED_REPLY__REPLY_DATA__NOT_SET, {0} }
 
 
 typedef enum {
@@ -261,6 +376,44 @@ struct  Rpc__RpcMsg
     , 0, RPC__MSG_TYPE__CALL, RPC__RPC_MSG__BODY__NOT_SET, {0} }
 
 
+/* Rpc__AuthSysParams methods */
+void   rpc__auth_sys_params__init
+                     (Rpc__AuthSysParams         *message);
+size_t rpc__auth_sys_params__get_packed_size
+                     (const Rpc__AuthSysParams   *message);
+size_t rpc__auth_sys_params__pack
+                     (const Rpc__AuthSysParams   *message,
+                      uint8_t             *out);
+size_t rpc__auth_sys_params__pack_to_buffer
+                     (const Rpc__AuthSysParams   *message,
+                      ProtobufCBuffer     *buffer);
+Rpc__AuthSysParams *
+       rpc__auth_sys_params__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   rpc__auth_sys_params__free_unpacked
+                     (Rpc__AuthSysParams *message,
+                      ProtobufCAllocator *allocator);
+/* Rpc__OpaqueAuth methods */
+void   rpc__opaque_auth__init
+                     (Rpc__OpaqueAuth         *message);
+size_t rpc__opaque_auth__get_packed_size
+                     (const Rpc__OpaqueAuth   *message);
+size_t rpc__opaque_auth__pack
+                     (const Rpc__OpaqueAuth   *message,
+                      uint8_t             *out);
+size_t rpc__opaque_auth__pack_to_buffer
+                     (const Rpc__OpaqueAuth   *message,
+                      ProtobufCBuffer     *buffer);
+Rpc__OpaqueAuth *
+       rpc__opaque_auth__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   rpc__opaque_auth__free_unpacked
+                     (Rpc__OpaqueAuth *message,
+                      ProtobufCAllocator *allocator);
 /* Rpc__CallBody methods */
 void   rpc__call_body__init
                      (Rpc__CallBody         *message);
@@ -377,6 +530,12 @@ void   rpc__rpc_msg__free_unpacked
                       ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
+typedef void (*Rpc__AuthSysParams_Closure)
+                 (const Rpc__AuthSysParams *message,
+                  void *closure_data);
+typedef void (*Rpc__OpaqueAuth_Closure)
+                 (const Rpc__OpaqueAuth *message,
+                  void *closure_data);
 typedef void (*Rpc__CallBody_Closure)
                  (const Rpc__CallBody *message,
                   void *closure_data);
@@ -406,6 +565,9 @@ extern const ProtobufCEnumDescriptor    rpc__reply_stat__descriptor;
 extern const ProtobufCEnumDescriptor    rpc__accept_stat__descriptor;
 extern const ProtobufCEnumDescriptor    rpc__reject_stat__descriptor;
 extern const ProtobufCEnumDescriptor    rpc__auth_stat__descriptor;
+extern const ProtobufCEnumDescriptor    rpc__auth_flavor__descriptor;
+extern const ProtobufCMessageDescriptor rpc__auth_sys_params__descriptor;
+extern const ProtobufCMessageDescriptor rpc__opaque_auth__descriptor;
 extern const ProtobufCMessageDescriptor rpc__call_body__descriptor;
 extern const ProtobufCMessageDescriptor rpc__mismatch_info__descriptor;
 extern const ProtobufCMessageDescriptor rpc__accepted_reply__descriptor;

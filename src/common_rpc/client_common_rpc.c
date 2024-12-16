@@ -63,22 +63,27 @@ Rpc__RpcMsg *execute_rpc_call(int rpc_client_socket_fd, Rpc__RpcMsg *call_rpc_ms
 * The user of this function takes the responsibility to call 'rpc__rpc_msg__free_unpacked(rpc_reply, NULL)' 
 * when it's done using the rpc_reply and it's subfields (e.g. procedure parameters).
 */
-Rpc__RpcMsg *invoke_rpc_remote(const char *server_ipv4_addr, uint16_t server_port, uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any parameters) {
+Rpc__RpcMsg *invoke_rpc_remote(RpcConnectionContext *rpc_connection_context, uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any parameters) {
     // create TCP socket and verify
     int rpc_client_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if(rpc_client_socket_fd < 0) {
-        fprintf(stderr, "Socket creation failed.");
+        perror_msg("Socket creation failed");
+        return NULL;
+    }
+
+    if(rpc_connection_context == NULL) {
+        fprintf(stderr, "RpcConnectionContext is NULL\n");
         return NULL;
     }
 
     struct sockaddr_in rpc_server_addr;
     rpc_server_addr.sin_family = AF_INET;
-    rpc_server_addr.sin_addr.s_addr = inet_addr(server_ipv4_addr); 
-    rpc_server_addr.sin_port = htons(server_port);
+    rpc_server_addr.sin_addr.s_addr = inet_addr(rpc_connection_context->server_ipv4_addr); 
+    rpc_server_addr.sin_port = htons(rpc_connection_context->server_port);
 
     // connect the rpc client socket to rpc server socket
     if(connect(rpc_client_socket_fd, (struct sockaddr *) &rpc_server_addr, sizeof(rpc_server_addr)) < 0) {
-        fprintf(stderr, "Connection with the server failed.");
+        perror_msg("Connection with the server failed");
         return NULL;
     }
 
@@ -87,6 +92,10 @@ Rpc__RpcMsg *invoke_rpc_remote(const char *server_ipv4_addr, uint16_t server_por
     call_body.prog = program_number;
     call_body.vers = program_version;
     call_body.proc = procedure_number;
+
+    call_body.credential = rpc_connection_context->credential;
+    call_body.verifier = rpc_connection_context->verifier;
+
     call_body.params = &parameters;
 
     Rpc__RpcMsg call_rpc_msg = RPC__RPC_MSG__INIT;
@@ -172,42 +181,63 @@ int validate_rpc_reply_structure(Rpc__RpcMsg *rpc_reply) {
 
     Rpc__AcceptedReply *accepted_reply = reply_body->areply;
 
+    if(accepted_reply->verifier == NULL) {
+        fprintf(stderr, "Something went wrong at server - NULL verifier in received RPC reply.\n");
+        return 10;
+    }
+    Rpc__OpaqueAuth *verifier = accepted_reply->verifier;
+    if(verifier->flavor == RPC__AUTH_FLAVOR__AUTH_NONE) {
+        if(verifier->body_case != RPC__OPAQUE_AUTH__BODY_EMPTY) {
+            fprintf(stderr, "Something went wrong at server - inconsistent OpaqueAuth->flavor and body_case.\n");
+            return 11;
+        }
+        if(verifier->empty == NULL) {
+            fprintf(stderr, "Something went wrong at server - OpaqueAuth flavor is AUTH_NONE, but NULL OpaqueAuth->empty, in received RPC reply.\n");
+            return 12;
+        }
+    }
+    // TODO (QNFS-52): Implement AUTH_SHORT
+    else {
+        fprintf(stderr, "Something went wrong at server - verifier flavor is %d which is not supported, in received RPC reply.\n", verifier->flavor);
+        return 13;
+    }
+
     switch(accepted_reply->stat) {
         case RPC__ACCEPT_STAT__SUCCESS:
             if(accepted_reply->reply_data_case != RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS) {
                 fprintf(stderr, "Something went wrong at server - inconsistent AcceptStat and reply_data_case in received RPC reply.\n");
-                return 10;
+                return 14;
             }
 
             Google__Protobuf__Any *procedure_results = accepted_reply->results;
             if(procedure_results == NULL) {
                 fprintf(stderr, "Something went wrong at server - NULL results in received RPC reply.\n");
-                return 11;
+                return 15;
             }
 
             return 0;
         case RPC__ACCEPT_STAT__PROG_MISMATCH:
             if(accepted_reply->reply_data_case != RPC__ACCEPTED_REPLY__REPLY_DATA_MISMATCH_INFO) {
                 fprintf(stderr, "Something went wrong at server - inconsistent AcceptStat and reply_data_case in received RPC reply.\n");
-                return 12;
+                return 16;
             }
 
             Rpc__MismatchInfo *mismatch_info = accepted_reply->mismatch_info;
             if(mismatch_info == NULL) {
                 fprintf(stderr, "Something went wrong at server - NULL mismatch_info in received RPC reply.\n");
-                return 13;
+                return 17;
             }
 
             return 0;
         default:
             if(accepted_reply->reply_data_case != RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE) {
                 fprintf(stderr, "Something went wrong at server - inconsistent AcceptStat and reply_data_case in received RPC reply.\n");
-                return 14;
+                return 18;
             }
 
             if(accepted_reply->default_case == NULL) {
                 fprintf(stderr, "Something went wrong at server - NULL default_case in received RPC reply.\n");
-                return 15;
+                return 19;
             }
             return 0;
     }

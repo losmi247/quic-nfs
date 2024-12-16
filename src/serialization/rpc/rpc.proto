@@ -5,20 +5,20 @@ package rpc;
 import "src/serialization/google_protos/any.proto";
 import "src/serialization/google_protos/empty.proto";
 
+/*
+* RPC statuses
+*/
 
-// Message types
 enum MsgType {
     CALL = 0;
     REPLY = 1;
 }
 
-// Reply status
 enum ReplyStat {
     MSG_ACCEPTED = 0;
     MSG_DENIED = 1;
 }
 
-// Accept status
 enum AcceptStat {
     SUCCESS = 0;        // RPC executed successfully
     PROG_UNAVAIL = 1;   // remote hasn't exported program
@@ -28,18 +28,73 @@ enum AcceptStat {
     SYSTEM_ERR = 5;     // memory allocation failure
 }
 
-// Reject status
 enum RejectStat {
     RPC_MISMATCH = 0;   // RPC version number != 2
     AUTH_ERROR = 1;     // remote can't authenticate caller
 }
 
-// Auth status
+/*
+* Authentication
+*/
+
 enum AuthStat {
     AUTH_OK = 0;
 
-    // missing the authentication statuses
+    // failed at remote end
+    AUTH_BADCRED      = 1;      // bad credential (seal broken)
+    AUTH_REJECTEDCRED = 2;      // client must begin new session
+    AUTH_BADVERF      = 3;      // bad verifier (seal broken)
+    AUTH_REJECTEDVERF = 4;      // verifier expired or replayed
+    AUTH_TOOWEAK      = 5;      // rejected for security reasons
+
+    // failed locally
+    AUTH_INVALIDRESP  = 6;      // bogus response verifier
+    AUTH_FAILED       = 7;      // reason unknown
+
+    // AUTH_KERB errors; deprecated.  See [RFC2695]
+    AUTH_KERB_GENERIC = 8;      // kerberos generic error
+    AUTH_TIMEEXPIRE = 9;        // time of credential expired
+    AUTH_TKT_FILE = 10;         // problem with ticket file
+    AUTH_DECODE = 11;           // can't decode authenticator
+    AUTH_NET_ADDR = 12;         // wrong net address in ticket
+
+    // RPCSEC_GSS GSS related errors
+    RPCSEC_GSS_CREDPROBLEM = 13; // no credentials for user
+    RPCSEC_GSS_CTXPROBLEM = 14;  // problem with context
 }
+
+enum AuthFlavor {
+    AUTH_NONE  = 0;
+    AUTH_SYS   = 1;
+    AUTH_SHORT = 2;
+    AUTH_DH    = 3;
+    RPCSEC_GSS = 6;
+}
+
+/*
+* AUTH_SYS messages
+*/
+
+message AuthSysParams {
+    uint64 timestamp = 1;
+    string machinename = 2;     // max length 255
+    uint32 uid = 3;             // effective uid
+    uint32 gid = 4;             // effective gid
+    repeated uint32 gids = 5;   // array of gids (max 16) of groups the client belongs to
+}
+
+message OpaqueAuth {
+    AuthFlavor flavor = 1;
+
+    oneof body {
+        google.protobuf.Empty empty = 2;    // case AUTH_NONE
+        AuthSysParams auth_sys = 3;         // case AUTH_SYS
+    }
+}
+
+/*
+* RPC structures
+*/
 
 message CallBody {
     uint32 rpcvers = 1;  // RPC version number (must be 2)
@@ -47,10 +102,11 @@ message CallBody {
     uint32 vers = 3;     // version number of the program
     uint32 proc = 4;     // procedure number
 
-    // here: opaque cred+verf for auth protocol - length 0 when AUTH_NONE
+    OpaqueAuth credential = 5;
+    OpaqueAuth verifier = 6;
 
-    // Procedure-specific parameters can be added here as fields
-    google.protobuf.Any params = 5; // Serialized params for the procedure
+    // procedure-specific serialized parameters
+    google.protobuf.Any params = 7;
 }
 
 message MismatchInfo {
@@ -59,14 +115,14 @@ message MismatchInfo {
 }
 
 message AcceptedReply {
-    // here: opaque verf for auth protocol - length 0 when AUTH_NONE
-    AcceptStat stat = 1;
+    OpaqueAuth verifier = 1;
 
-    // The reply_data union from the original C structure
+    AcceptStat stat = 2;
+
     oneof reply_data {
-        google.protobuf.Any results = 2; // case SUCCESS
-        MismatchInfo mismatch_info = 3; // case PROG_MISMATCH
-        google.protobuf.Empty default_case = 4; // default case
+        google.protobuf.Any results = 3;        // case SUCCESS
+        MismatchInfo mismatch_info = 4;         // case PROG_MISMATCH
+        google.protobuf.Empty default_case = 5; // default case
     }
 }
 

@@ -6,6 +6,8 @@
 
 #include "record_marking.h"
 
+#include "src/authentication/authentication.h"
+
 /*
 * Functions implemented in server_common_rpc.c file.
 */

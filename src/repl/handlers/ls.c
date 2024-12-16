@@ -7,7 +7,7 @@
 * working directory.
 */
 void handle_ls() {
-    if(filesystem_dag_root == NULL) {
+    if(!is_filesystem_mounted()) {
         printf("Error: No remote file system is currently mounted\n");
         return;
     }
@@ -21,7 +21,7 @@ void handle_ls() {
     readdirargs.count = 1000;   // try to read all entries
 
     Nfs__ReadDirRes *readdirres = malloc(sizeof(Nfs__ReadDirRes));
-    int status = nfs_procedure_16_read_from_directory(server_ipv4_addr, server_port_number, readdirargs, readdirres);
+    int status = nfs_procedure_16_read_from_directory(rpc_connection_context, readdirargs, readdirres);
     if(status != 0) {
         free(readdirres);
 

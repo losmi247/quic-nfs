@@ -8,6 +8,7 @@ ERROR_HANDLING_SRCS = ./src/error_handling/error_handling.c
 
 PARSING_SRCS = ./src/parsing/parsing.c
 PATH_BUILDING_SRCS = ./src/path_building/path_building.c
+AUTHENTICATION_SRCS = ./src/authentication/authentication.c
 
 FILEHANDLE_MANAGEMENT_SRCS = ./src/repl/filehandle_management.c
 
@@ -25,7 +26,8 @@ RPC_PROGRAM_COMMON_SERVER_SRCS = ./src/common_rpc/server_common_rpc.c \
 	./src/common_rpc/record_marking.c
 RPC_PROGRAM_COMMON_CLIENT_SRCS = ./src/common_rpc/client_common_rpc.c \
 	./src/common_rpc/common_rpc.c \
-	./src/common_rpc/record_marking.c
+	./src/common_rpc/record_marking.c \
+	./src/common_rpc/rpc_connection_context.c
 
 CLIENTS_SRCS = ./src/nfs/clients/mount_client.c ./src/nfs/clients/nfs_client.c
 
@@ -37,16 +39,16 @@ MOUNT_AND_NFS_SERVER_SRCS = ./src/nfs/server/mount.c ./src/nfs/server/procedures
 	./src/nfs/server/file_management.c \
 	./src/nfs/server/mount_messages.c \
 	./src/nfs/server/nfs_messages.c \
-	${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${RPC_PROGRAM_COMMON_SERVER_SRCS}
+	${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${AUTHENTICATION_SRCS} ${RPC_PROGRAM_COMMON_SERVER_SRCS}
 
 # files used by the Tests
 TESTS_SRCS = ./tests/procedures/test_*.c \
 	./tests/test_common.c ./tests/validation/common_validation.c ./tests/validation/procedure_validation.c\
-	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
+	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${AUTHENTICATION_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
 
 # files used by the Repl
 REPL_SRCS = ./src/repl/handlers/*.c ./src/repl/validation/validation.c \
-	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
+	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${AUTHENTICATION_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
 
 all: create-build-dir mount-and-nfs-server repl
 all-debug: create-build-dir mount-and-nfs-server-debug repl-debug

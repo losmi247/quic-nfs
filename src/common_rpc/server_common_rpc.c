@@ -19,10 +19,12 @@
 * Wraps the procedure results given in the buffer 'results_buffer' of size 'results_size' into an Any
 * message, along with a type 'results_type' of the result (e.g. nfs/AttrStat).
 *
-* The user of this function takes the responsibility to free the Any message allocated in this function.
+* The user of this function takes the responsibility to free the Any and OpaqueAuth 
+* allocated here (this is done by the 'clean_up_accepted_reply' function after the RPC is sent).
 */
 Rpc__AcceptedReply wrap_procedure_results_in_successful_accepted_reply(size_t results_size, uint8_t *results_buffer, char *results_type) {
     Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
+    accepted_reply.verifier = create_auth_none_opaque_auth();
     accepted_reply.stat = RPC__ACCEPT_STAT__SUCCESS;
     accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
 
@@ -41,12 +43,12 @@ Rpc__AcceptedReply wrap_procedure_results_in_successful_accepted_reply(size_t re
 /*
 * Builds and returns an AcceptedReply with GARBAGE_ARGS AcceptStat.
 *
-* The user of this function takes the responsibility to free the Empty allocated here (this is
-* done by the 'clean_up_accepted_reply' function after the RPC is sent).
+* The user of this function takes the responsibility to free the Empty and OpaqueAuth 
+* allocated here (this is done by the 'clean_up_accepted_reply' function after the RPC is sent).
 */
 Rpc__AcceptedReply create_garbage_args_accepted_reply(void) {
     Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
-
+    accepted_reply.verifier = create_auth_none_opaque_auth();
     accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
     accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
 
@@ -60,12 +62,12 @@ Rpc__AcceptedReply create_garbage_args_accepted_reply(void) {
 /*
 * Builds and returns an AcceptedReply with SYSTEM_ERR AcceptStat.
 *
-* The user of this function takes the responsibility to free the Empty allocated here (this is
-* done by the 'clean_up_accepted_reply' function after the RPC is sent).
+* The user of this function takes the responsibility to free the Empty and OpaqueAuth 
+* allocated here (this is done by the 'clean_up_accepted_reply' function after the RPC is sent).
 */
 Rpc__AcceptedReply create_system_error_accepted_reply(void) {
     Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
-
+    accepted_reply.verifier = create_auth_none_opaque_auth();
     accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
     accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
 
@@ -80,6 +82,8 @@ Rpc__AcceptedReply create_system_error_accepted_reply(void) {
 * Frees up heap-allocated memory for procedure results or MismatchInfo in an AcceptedReply.
 */
 void clean_up_accepted_reply(Rpc__AcceptedReply accepted_reply) {
+    free_opaque_auth(accepted_reply.verifier);
+
     if(accepted_reply.stat == RPC__ACCEPT_STAT__SUCCESS) {
         // clean up procedure results
         Google__Protobuf__Any *results = accepted_reply.results;

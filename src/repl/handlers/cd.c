@@ -8,7 +8,7 @@
 * working directory.
 */
 void handle_cd(char *directory_name) {
-    if(filesystem_dag_root == NULL) {
+    if(!is_filesystem_mounted()) {
         printf("Error: No remote file system is currently mounted\n");
         return;
     }
@@ -21,7 +21,7 @@ void handle_cd(char *directory_name) {
     diropargs.name = &file_name;
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_4_look_up_file_name(server_ipv4_addr, server_port_number, diropargs, diropres);
+    int status = nfs_procedure_4_look_up_file_name(rpc_connection_context, diropargs, diropres);
     if(status != 0) {
         free(diropres);
 
