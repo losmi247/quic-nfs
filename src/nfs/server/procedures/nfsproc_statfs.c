@@ -4,8 +4,11 @@
 
 /*
 * Runs the NFSPROC_STATFS procedure (17).
+*
+* The user of this function takes the responsibility to deallocate the received AcceptedReply
+* using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply serve_nfs_procedure_17_get_filesystem_attributes(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/FHandle") != 0) {
         fprintf(stderr, "serve_nfs_procedure_17_get_filesystem_attributes: expected nfs/FHandle but received %s\n", parameters->type_url);
@@ -105,7 +108,7 @@ Rpc__AcceptedReply serve_nfs_procedure_17_get_filesystem_attributes(Google__Prot
     uint8_t *statfsres_buffer = malloc(statfsres_size);
     nfs__stat_fs_res__pack(&statfsres, statfsres_buffer);
 
-    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer, "nfs/StatFsRes");
+    Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer, "nfs/StatFsRes");
 
     nfs__fhandle__free_unpacked(fhandle, NULL);
 

@@ -1,7 +1,7 @@
 #ifndef rpc_connection_context__header__INCLUDED
 #define rpc_connection_context__header__INCLUDED
 
-#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200809L     // so we can use gethostname()
 
 #include <stdlib.h>
 #include <unistd.h>

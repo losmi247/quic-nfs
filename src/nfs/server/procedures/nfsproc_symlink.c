@@ -2,8 +2,11 @@
 
 /*
 * Runs the NFSPROC_SYMLINK procedure (13).
+*
+* The user of this function takes the responsibility to deallocate the received AcceptedReply
+* using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply serve_nfs_procedure_13_create_symbolic_link(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_13_create_symbolic_link(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/SymLinkArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_13_create_symbolic_link: expected nfs/SymLinkArgs but received %s\n", parameters->type_url);
@@ -275,7 +278,7 @@ Rpc__AcceptedReply serve_nfs_procedure_13_create_symbolic_link(Google__Protobuf_
     uint8_t *nfsstat_buffer = malloc(nfsstat_size);
     nfs__nfs_stat__pack(&nfsstat, nfsstat_buffer);
 
-    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
+    Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
 
     free(file_absolute_path);
     nfs__sym_link_args__free_unpacked(symlinkargs, NULL);

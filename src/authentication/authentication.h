@@ -16,4 +16,4 @@ Rpc__OpaqueAuth *create_auth_sys_opaque_auth(char *machine_name, uint32_t uid, u
 
 void free_opaque_auth(Rpc__OpaqueAuth *opaque_auth);
 
-#endif
+#endif /* authentication__header__INCLUDED */

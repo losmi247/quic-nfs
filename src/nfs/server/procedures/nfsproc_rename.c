@@ -2,8 +2,11 @@
 
 /*
 * Runs the NFSPROC_RENAME procedure (11).
+*
+* The user of this function takes the responsibility to deallocate the received AcceptedReply
+* using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply serve_nfs_procedure_11_rename_file(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_11_rename_file(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/RenameArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_11_rename_file: expected nfs/RenameArgs but received %s\n", parameters->type_url);
@@ -332,7 +335,7 @@ Rpc__AcceptedReply serve_nfs_procedure_11_rename_file(Google__Protobuf__Any *par
     uint8_t *nfsstat_buffer = malloc(nfsstat_size);
     nfs__nfs_stat__pack(&nfsstat, nfsstat_buffer);
 
-    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
+    Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
 
     free(old_file_absolute_path);
     free(new_file_absolute_path);

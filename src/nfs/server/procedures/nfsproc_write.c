@@ -2,8 +2,11 @@
 
 /*
 * Runs the NFSPROC_WRITE procedure (8).
+*
+* The user of this function takes the responsibility to deallocate the received AcceptedReply
+* using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/WriteArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_8_write_to_file: expected nfs/WriteArgs but received %s\n", parameters->type_url);
@@ -190,7 +193,7 @@ Rpc__AcceptedReply serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *pa
     uint8_t *attr_stat_buffer = malloc(attr_stat_size);
     nfs__attr_stat__pack(&attr_stat, attr_stat_buffer);
 
-    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
+    Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
 
     nfs__write_args__free_unpacked(writeargs, NULL);
 

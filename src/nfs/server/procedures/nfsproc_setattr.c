@@ -2,8 +2,11 @@
 
 /*
 * Runs the NFSPROC_SETATTR procedure (2).
+*
+* The user of this function takes the responsibility to deallocate the received AcceptedReply
+* using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/SAttrArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_2_set_file_attributes: expected nfs/SAttrArgs but received %s\n", parameters->type_url);
@@ -145,7 +148,7 @@ Rpc__AcceptedReply serve_nfs_procedure_2_set_file_attributes(Google__Protobuf__A
     uint8_t *attr_stat_buffer = malloc(attr_stat_size);
     nfs__attr_stat__pack(&attr_stat, attr_stat_buffer);
 
-    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
+    Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
 
     nfs__sattr_args__free_unpacked(sattrargs, NULL);
     clean_up_fattr(&fattr);

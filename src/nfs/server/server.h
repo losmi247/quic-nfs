@@ -26,7 +26,7 @@
 
 #include "src/path_building/path_building.h"
 
-#include "../nfs_common.h"
+#include "src/nfs/nfs_common.h"
 
 #include "mount_list.h"
 #include "inode_cache.h"
@@ -36,9 +36,9 @@
 * Functions implemented by RPC programs (Mount and Nfs).
 */
 
-extern Rpc__AcceptedReply call_mount(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
+extern Rpc__AcceptedReply *call_mount(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
-extern Rpc__AcceptedReply call_nfs(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
+extern Rpc__AcceptedReply *call_nfs(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
 /*
 * Mount+Nfs server state.

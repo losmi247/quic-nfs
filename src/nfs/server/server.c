@@ -17,8 +17,11 @@ InodeCache inode_cache;
 
 /*
 * Forwards the RPC call to the specific RPC program, and returns the AcceptedReply.
+*
+* The user of this function takes the responsibility to deallocate the returned AcceptedReply
+* and any heap-allocated fields in it (this is done by the 'clean_up_accepted_reply' function after the RPC is sent).
 */
-Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *forward_rpc_call_to_program(uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {
     if(program_number == MOUNT_RPC_PROGRAM_NUMBER) {
         return call_mount(program_version, procedure_number, parameters);
     }
@@ -27,15 +30,7 @@ Rpc__AcceptedReply forward_rpc_call_to_program(uint32_t program_number, uint32_t
     }
 
     fprintf(stderr, "Unknown program number");
-    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
-    accepted_reply.stat = RPC__ACCEPT_STAT__PROG_UNAVAIL;
-    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
-
-    Google__Protobuf__Empty *empty = malloc(sizeof(Google__Protobuf__Empty));
-    google__protobuf__empty__init(empty);
-    accepted_reply.default_case = empty;
-
-    return accepted_reply;
+    return create_default_case_accepted_reply(RPC__ACCEPT_STAT__PROG_UNAVAIL);
 }
 
 /*
