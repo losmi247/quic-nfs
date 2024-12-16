@@ -124,7 +124,9 @@ Test(nfs_test_suite, readdir_ok_read_directory_entries_in_batches, .description 
         readdirargs.count = 30; // aim to read only one directory entry
 
         Nfs__ReadDirRes *readdirres = malloc(sizeof(Nfs__ReadDirRes));
-        int status = nfs_procedure_16_read_from_directory(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT, readdirargs, readdirres);
+        RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+        int status = nfs_procedure_16_read_from_directory(rpc_connection_context, readdirargs, readdirres);
+        free_rpc_connection_context(rpc_connection_context);
         if(status != 0) {
             mount__fh_status__free_unpacked(fhstatus, NULL);
 

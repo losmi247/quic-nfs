@@ -2,8 +2,11 @@
 
 /*
 * Runs the NFSPROC_LOOKUP procedure (4).
+*
+* The user of this function takes the responsibility to deallocate the received AcceptedReply
+* using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/DirOpArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: expected nfs/DirOpArgs but received %s\n", parameters->type_url);
@@ -200,7 +203,7 @@ Rpc__AcceptedReply serve_nfs_procedure_4_look_up_file_name(Google__Protobuf__Any
     uint8_t *diropres_buffer = malloc(diropres_size);
     nfs__dir_op_res__pack(&diropres, diropres_buffer);
 
-    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+    Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
 
     nfs__dir_op_args__free_unpacked(diropargs, NULL);
 

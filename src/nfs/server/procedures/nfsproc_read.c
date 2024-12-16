@@ -2,8 +2,11 @@
 
 /*
 * Runs the NFSPROC_READ procedure (6).
+*
+* The user of this function takes the responsibility to deallocate the received AcceptedReply
+* using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/ReadArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_6_read_from_file: expected nfs/ReadArgs but received %s\n", parameters->type_url);
@@ -144,7 +147,7 @@ Rpc__AcceptedReply serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *p
     uint8_t *readres_buffer = malloc(readres_size);
     nfs__read_res__pack(&readres, readres_buffer);
 
-    Rpc__AcceptedReply accepted_reply = wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
+    Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
 
     nfs__read_args__free_unpacked(readargs, NULL);
 

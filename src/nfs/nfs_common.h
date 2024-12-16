@@ -1,6 +1,9 @@
 #ifndef nfs_common__header__INCLUDED
 #define nfs_common__header__INCLUDED
 
+#define NFS_VERSION_LOW 2
+#define NFS_VERSION_HIGH 2
+
 #define NFS_RPC_PROGRAM_NUMBER 10003
 #define MOUNT_RPC_PROGRAM_NUMBER 10005
 

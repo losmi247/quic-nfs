@@ -10,7 +10,9 @@ TestSuite(mount_test_suite);
 
 // MOUNTPROC_NULL (0)
 Test(mount_test_suite, null, .description = "MOUNTPROC_NULL") {
-    int status = mount_procedure_0_do_nothing(NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR, NFS_AND_MOUNT_TEST_RPC_SERVER_PORT);
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    int status = mount_procedure_0_do_nothing(rpc_connection_context);
+    free_rpc_connection_context(rpc_connection_context);
     if (status != 0) {
         cr_fatal("MOUNTPROC_NULL failed - status %d\n", status);
     }

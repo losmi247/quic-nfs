@@ -15,11 +15,14 @@
 * Define Nfs Client state.
 */
 
-char *server_ipv4_addr;
-uint16_t server_port_number;
+RpcConnectionContext *rpc_connection_context;
 
 DAGNode *filesystem_dag_root;
 DAGNode *cwd_node;
+
+int is_filesystem_mounted(void) {
+    return rpc_connection_context != NULL && filesystem_dag_root != NULL && cwd_node != NULL;
+}
 
 /*
 * Functions used by the REPL body.
@@ -29,11 +32,11 @@ DAGNode *cwd_node;
 * Displays the CWD and '>' at the start of the line in the REPL.
 */
 void display_prompt(void) {
-    if(filesystem_dag_root == NULL) {
+    if(!is_filesystem_mounted()) {
         printf(KRED "(no NFS share mounted)");
     }
     else {
-        printf(KRED "(%s:%s)", server_ipv4_addr, cwd_node->absolute_path);
+        printf(KRED "(%s:%s)", rpc_connection_context->server_ipv4_addr, cwd_node->absolute_path);
     }
     
     printf(KGRN " >");
@@ -46,7 +49,7 @@ void display_prompt(void) {
 * Cleans up all Nfs client state before the REPL shuts down.
 */
 void clean_up(void) {
-    free(server_ipv4_addr);
+    free_rpc_connection_context(rpc_connection_context);
 
     clean_up_dag(filesystem_dag_root);
 }
@@ -62,8 +65,7 @@ int main(void) {
     printf("\nType 'exit' to quit the REPL.\n\n");
 
     // initialize NFS client state
-    server_ipv4_addr = NULL;
-    server_port_number = 0;
+    rpc_connection_context = NULL;
     filesystem_dag_root = NULL;
     cwd_node = NULL;
 

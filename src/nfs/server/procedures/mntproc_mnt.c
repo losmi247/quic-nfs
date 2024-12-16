@@ -40,8 +40,11 @@ int is_directory_exported(const char *absolute_path) {
 
 /*
 * Runs the MOUNTPROC_MNT procedure (1).
+*
+* The user of this function takes the responsibility to deallocate the received AcceptedReply
+* using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "mount/DirPath") != 0) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: Expected mount/DirPath but received %s\n", parameters->type_url);

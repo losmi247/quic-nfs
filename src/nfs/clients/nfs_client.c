@@ -1,14 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "src/common_rpc/common_rpc.h"
-#include "src/common_rpc/client_common_rpc.h"
-
-#include "../nfs_common.h"
 #include "nfs_client.h"
-
-#include "src/serialization/rpc/rpc.pb-c.h"
 
 /*
 * Calls the NFSPROC_NULL Nfs procedure.
@@ -17,10 +7,10 @@
 * the validation error code, and returns error code < 0 if validation of procedure results (type checking
 * and deserialization) failed.
 */
-int nfs_procedure_0_do_nothing(const char *server_ipv4_addr, uint16_t server_port) {
+int nfs_procedure_0_do_nothing(RpcConnectionContext *rpc_connection_context) {
     // no parameters, so an empty Any
     Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 0, parameters);
 
     int error_code = validate_successful_accepted_reply(rpc_reply);
     Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
@@ -56,7 +46,7 @@ int nfs_procedure_0_do_nothing(const char *server_ipv4_addr, uint16_t server_por
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__attr_stat__free_unpacked(attrstat, NULL) on the received Nfs__AttrStat eventually.
 */
-int nfs_procedure_1_get_file_attributes(const char *server_ipv4_addr, uint16_t server_port, Nfs__FHandle fhandle, Nfs__AttrStat *result) {
+int nfs_procedure_1_get_file_attributes(RpcConnectionContext *rpc_connection_context, Nfs__FHandle fhandle, Nfs__AttrStat *result) {
     // serialize the FHandle
     size_t fhandle_size = nfs__fhandle__get_packed_size(&fhandle);
     uint8_t *fhandle_buffer = malloc(fhandle_size);
@@ -69,7 +59,7 @@ int nfs_procedure_1_get_file_attributes(const char *server_ipv4_addr, uint16_t s
     parameters.value.len = fhandle_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 1, parameters);
     free(fhandle_buffer);
 
     // validate RPC reply
@@ -125,7 +115,7 @@ int nfs_procedure_1_get_file_attributes(const char *server_ipv4_addr, uint16_t s
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__attr_stat__free_unpacked(attrstat, NULL) on the received Nfs__AttrStat eventually.
 */
-int nfs_procedure_2_set_file_attributes(const char *server_ipv4_addr, uint16_t server_port, Nfs__SAttrArgs sattrargs, Nfs__AttrStat *result) {
+int nfs_procedure_2_set_file_attributes(RpcConnectionContext *rpc_connection_context, Nfs__SAttrArgs sattrargs, Nfs__AttrStat *result) {
     // serialize the SAttrArgs
     size_t sattrargs_size = nfs__sattr_args__get_packed_size(&sattrargs);
     uint8_t *sattrargs_buffer = malloc(sattrargs_size);
@@ -138,7 +128,7 @@ int nfs_procedure_2_set_file_attributes(const char *server_ipv4_addr, uint16_t s
     parameters.value.len = sattrargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 2, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 2, parameters);
     free(sattrargs_buffer);
 
     // validate RPC reply
@@ -194,7 +184,7 @@ int nfs_procedure_2_set_file_attributes(const char *server_ipv4_addr, uint16_t s
 * In case this function returns 0, the user of this function takes responsibility 
 * to call Nfs__dir_op_res__free_unpacked(diropres) on the received Nfs__DirOpRes eventually.
 */
-int nfs_procedure_4_look_up_file_name(const char *server_ipv4_addr, uint16_t server_port, Nfs__DirOpArgs diropargs, Nfs__DirOpRes *result) {
+int nfs_procedure_4_look_up_file_name(RpcConnectionContext *rpc_connection_context, Nfs__DirOpArgs diropargs, Nfs__DirOpRes *result) {
     // serialize the DirOpArgs
     size_t diropargs_size = nfs__dir_op_args__get_packed_size(&diropargs);
     uint8_t *diropargs_buffer = malloc(diropargs_size);
@@ -207,7 +197,7 @@ int nfs_procedure_4_look_up_file_name(const char *server_ipv4_addr, uint16_t ser
     parameters.value.len = diropargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 4, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 4, parameters);
     free(diropargs_buffer);
 
     // validate RPC reply
@@ -263,7 +253,7 @@ int nfs_procedure_4_look_up_file_name(const char *server_ipv4_addr, uint16_t ser
 * In case this function returns 0, the user of this function takes responsibility 
 * to call Nfs__dir_op_res__free_unpacked(diropres) on the received Nfs__DirOpRes eventually.
 */
-int nfs_procedure_6_read_from_file(const char *server_ipv4_addr, uint16_t server_port, Nfs__ReadArgs readargs, Nfs__ReadRes *result) {
+int nfs_procedure_6_read_from_file(RpcConnectionContext *rpc_connection_context, Nfs__ReadArgs readargs, Nfs__ReadRes *result) {
     // serialize the ReadArgs
     size_t readargs_size = nfs__read_args__get_packed_size(&readargs);
     uint8_t *readargs_buffer = malloc(readargs_size);
@@ -276,7 +266,7 @@ int nfs_procedure_6_read_from_file(const char *server_ipv4_addr, uint16_t server
     parameters.value.len = readargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 6, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 6, parameters);
     free(readargs_buffer);
 
     // validate RPC reply
@@ -332,7 +322,7 @@ int nfs_procedure_6_read_from_file(const char *server_ipv4_addr, uint16_t server
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__attr_stat__free_unpacked(attrstat, NULL) on the received Nfs__AttrStat eventually.
 */
-int nfs_procedure_8_write_to_file(const char *server_ipv4_addr, uint16_t server_port, Nfs__WriteArgs writeargs, Nfs__AttrStat *result) {
+int nfs_procedure_8_write_to_file(RpcConnectionContext *rpc_connection_context, Nfs__WriteArgs writeargs, Nfs__AttrStat *result) {
     // serialize the ReadArgs
     size_t writeargs_size = nfs__write_args__get_packed_size(&writeargs);
     uint8_t *writeargs_buffer = malloc(writeargs_size);
@@ -345,7 +335,7 @@ int nfs_procedure_8_write_to_file(const char *server_ipv4_addr, uint16_t server_
     parameters.value.len = writeargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 8, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 8, parameters);
     free(writeargs_buffer);
 
     // validate RPC reply
@@ -401,7 +391,7 @@ int nfs_procedure_8_write_to_file(const char *server_ipv4_addr, uint16_t server_
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__dir_op_res__free_unpacked(diropres, NULL) on the received Nfs__DirOpRes eventually.
 */
-int nfs_procedure_9_create_file(const char *server_ipv4_addr, uint16_t server_port, Nfs__CreateArgs createargs, Nfs__DirOpRes *result) {
+int nfs_procedure_9_create_file(RpcConnectionContext *rpc_connection_context, Nfs__CreateArgs createargs, Nfs__DirOpRes *result) {
     // serialize the CreateArgs
     size_t createargs_size = nfs__create_args__get_packed_size(&createargs);
     uint8_t *createargs_buffer = malloc(createargs_size);
@@ -414,7 +404,7 @@ int nfs_procedure_9_create_file(const char *server_ipv4_addr, uint16_t server_po
     parameters.value.len = createargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 9, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 9, parameters);
     free(createargs_buffer);
 
     // validate RPC reply
@@ -470,7 +460,7 @@ int nfs_procedure_9_create_file(const char *server_ipv4_addr, uint16_t server_po
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__nfs_stat__free_unpacked(nfsstat, NULL) on the received Nfs__NfsStat eventually.
 */
-int nfs_procedure_10_remove_file(const char *server_ipv4_addr, uint16_t server_port, Nfs__DirOpArgs diropargs, Nfs__NfsStat *result) {
+int nfs_procedure_10_remove_file(RpcConnectionContext *rpc_connection_context, Nfs__DirOpArgs diropargs, Nfs__NfsStat *result) {
     // serialize the DirOpArgs
     size_t diropargs_size = nfs__dir_op_args__get_packed_size(&diropargs);
     uint8_t *diropargs_buffer = malloc(diropargs_size);
@@ -483,7 +473,7 @@ int nfs_procedure_10_remove_file(const char *server_ipv4_addr, uint16_t server_p
     parameters.value.len = diropargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 10, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 10, parameters);
     free(diropargs_buffer);
 
     // validate RPC reply
@@ -539,7 +529,7 @@ int nfs_procedure_10_remove_file(const char *server_ipv4_addr, uint16_t server_p
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__nfs_stat__free_unpacked(nfsstat, NULL) on the received Nfs__NfsStat eventually.
 */
-int nfs_procedure_11_rename_file(const char *server_ipv4_addr, uint16_t server_port, Nfs__RenameArgs renameargs, Nfs__NfsStat *result) {
+int nfs_procedure_11_rename_file(RpcConnectionContext *rpc_connection_context, Nfs__RenameArgs renameargs, Nfs__NfsStat *result) {
     // serialize the RenameArgs
     size_t renameargs_size = nfs__rename_args__get_packed_size(&renameargs);
     uint8_t *renameargs_buffer = malloc(renameargs_size);
@@ -552,7 +542,7 @@ int nfs_procedure_11_rename_file(const char *server_ipv4_addr, uint16_t server_p
     parameters.value.len = renameargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 11, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 11, parameters);
     free(renameargs_buffer);
 
     // validate RPC reply
@@ -608,7 +598,7 @@ int nfs_procedure_11_rename_file(const char *server_ipv4_addr, uint16_t server_p
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__nfs_stat__free_unpacked(diropres, NULL) on the received Nfs__NfsStat eventually.
 */
-int nfs_procedure_13_create_symbolic_link(const char *server_ipv4_addr, uint16_t server_port, Nfs__SymLinkArgs symlinkargs, Nfs__NfsStat *result) {
+int nfs_procedure_13_create_symbolic_link(RpcConnectionContext *rpc_connection_context, Nfs__SymLinkArgs symlinkargs, Nfs__NfsStat *result) {
     // serialize the SymLinkArgs
     size_t symlinkargs_size = nfs__sym_link_args__get_packed_size(&symlinkargs);
     uint8_t *symlinkargs_buffer = malloc(symlinkargs_size);
@@ -621,7 +611,7 @@ int nfs_procedure_13_create_symbolic_link(const char *server_ipv4_addr, uint16_t
     parameters.value.len = symlinkargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 13, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 13, parameters);
     free(symlinkargs_buffer);
 
     // validate RPC reply
@@ -677,7 +667,7 @@ int nfs_procedure_13_create_symbolic_link(const char *server_ipv4_addr, uint16_t
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__dir_op_res__free_unpacked(diropres, NULL) on the received Nfs__DirOpRes eventually.
 */
-int nfs_procedure_14_create_directory(const char *server_ipv4_addr, uint16_t server_port, Nfs__CreateArgs createargs, Nfs__DirOpRes *result) {
+int nfs_procedure_14_create_directory(RpcConnectionContext *rpc_connection_context, Nfs__CreateArgs createargs, Nfs__DirOpRes *result) {
     // serialize the CreateArgs
     size_t createargs_size = nfs__create_args__get_packed_size(&createargs);
     uint8_t *createargs_buffer = malloc(createargs_size);
@@ -690,7 +680,7 @@ int nfs_procedure_14_create_directory(const char *server_ipv4_addr, uint16_t ser
     parameters.value.len = createargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 14, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 14, parameters);
     free(createargs_buffer);
 
     // validate RPC reply
@@ -746,7 +736,7 @@ int nfs_procedure_14_create_directory(const char *server_ipv4_addr, uint16_t ser
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__nfs_stat__free_unpacked(nfsstat, NULL) on the received Nfs__NfsStat eventually.
 */
-int nfs_procedure_15_remove_directory(const char *server_ipv4_addr, uint16_t server_port, Nfs__DirOpArgs diropargs, Nfs__NfsStat *result) {
+int nfs_procedure_15_remove_directory(RpcConnectionContext *rpc_connection_context, Nfs__DirOpArgs diropargs, Nfs__NfsStat *result) {
     // serialize the DirOpArgs
     size_t diropargs_size = nfs__dir_op_args__get_packed_size(&diropargs);
     uint8_t *diropargs_buffer = malloc(diropargs_size);
@@ -759,7 +749,7 @@ int nfs_procedure_15_remove_directory(const char *server_ipv4_addr, uint16_t ser
     parameters.value.len = diropargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 15, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 15, parameters);
     free(diropargs_buffer);
 
     // validate RPC reply
@@ -815,7 +805,7 @@ int nfs_procedure_15_remove_directory(const char *server_ipv4_addr, uint16_t ser
 * In case this function returns 0, the user of this function takes responsibility 
 * to call Nfs__read_dir_res__free_unpacked(readdirres) on the received Nfs__ReadDirRes eventually.
 */
-int nfs_procedure_16_read_from_directory(const char *server_ipv4_addr, uint16_t server_port, Nfs__ReadDirArgs readdirargs, Nfs__ReadDirRes *result) {
+int nfs_procedure_16_read_from_directory(RpcConnectionContext *rpc_connection_context, Nfs__ReadDirArgs readdirargs, Nfs__ReadDirRes *result) {
     // serialize the ReadDirArgs
     size_t readdirargs_size = nfs__read_dir_args__get_packed_size(&readdirargs);
     uint8_t *readdirargs_buffer = malloc(readdirargs_size);
@@ -828,7 +818,7 @@ int nfs_procedure_16_read_from_directory(const char *server_ipv4_addr, uint16_t 
     parameters.value.len = readdirargs_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 16, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 16, parameters);
     free(readdirargs_buffer);
 
     // validate RPC reply
@@ -884,7 +874,7 @@ int nfs_procedure_16_read_from_directory(const char *server_ipv4_addr, uint16_t 
 * In case this function returns 0, the user of this function takes responsibility 
 * to call nfs__stat_fs_res__free_unpacked(attrstat, NULL) on the received Nfs__StatFsRes eventually.
 */
-int nfs_procedure_17_get_filesystem_attributes(const char *server_ipv4_addr, uint16_t server_port, Nfs__FHandle fhandle, Nfs__StatFsRes *result) {
+int nfs_procedure_17_get_filesystem_attributes(RpcConnectionContext *rpc_connection_context, Nfs__FHandle fhandle, Nfs__StatFsRes *result) {
     // serialize the FHandle
     size_t fhandle_size = nfs__fhandle__get_packed_size(&fhandle);
     uint8_t *fhandle_buffer = malloc(fhandle_size);
@@ -897,7 +887,7 @@ int nfs_procedure_17_get_filesystem_attributes(const char *server_ipv4_addr, uin
     parameters.value.len = fhandle_size;
 
     // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(server_ipv4_addr, server_port, NFS_RPC_PROGRAM_NUMBER, 2, 17, parameters);
+    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 17, parameters);
     free(fhandle_buffer);
 
     // validate RPC reply

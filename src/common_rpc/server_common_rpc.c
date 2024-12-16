@@ -16,15 +16,49 @@
 #include "record_marking.h"
 
 /*
+* Sends the given ReplyBody back to the RPC client in a RpcMsg, given the opened socket for that client.
+*
+* Returns 0 on success, and > 0 on failure.
+*/
+int send_rpc_reply_body(int rpc_client_socket_fd, Rpc__ReplyBody *reply_body) {
+    Rpc__RpcMsg rpc_msg = RPC__RPC_MSG__INIT;
+    rpc_msg.xid = generate_rpc_xid();
+    rpc_msg.mtype = RPC__MSG_TYPE__REPLY;
+    rpc_msg.body_case = RPC__RPC_MSG__BODY_RBODY; // this body_case enum is not actually sent over the network
+    rpc_msg.rbody = reply_body;
+
+    // serialize the RpcMsg
+    size_t rpc_msg_size = rpc__rpc_msg__get_packed_size(&rpc_msg);
+    uint8_t *rpc_msg_buffer = malloc(rpc_msg_size);
+    rpc__rpc_msg__pack(&rpc_msg, rpc_msg_buffer);
+
+    // send the serialized RpcMsg back to the client as a single Record Marking record
+    int error_code = send_rm_record(rpc_client_socket_fd, rpc_msg_buffer, rpc_msg_size);
+    free(rpc_msg_buffer);
+    if(error_code > 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
 * Wraps the procedure results given in the buffer 'results_buffer' of size 'results_size' into an Any
 * message, along with a type 'results_type' of the result (e.g. nfs/AttrStat).
 *
-* The user of this function takes the responsibility to free the Any message allocated in this function.
+* The user of this function takes the responsibility to free the Any, the OpaqueAuth, and the
+* AcceptedReply itself, using the the 'free_accepted_reply' function.
 */
-Rpc__AcceptedReply wrap_procedure_results_in_successful_accepted_reply(size_t results_size, uint8_t *results_buffer, char *results_type) {
-    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
-    accepted_reply.stat = RPC__ACCEPT_STAT__SUCCESS;
-    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
+Rpc__AcceptedReply *wrap_procedure_results_in_successful_accepted_reply(size_t results_size, uint8_t *results_buffer, char *results_type) {
+    Rpc__AcceptedReply *accepted_reply = malloc(sizeof(Rpc__AcceptedReply));
+    rpc__accepted_reply__init(accepted_reply);
+
+    // currently supported AUTH_NONE and AUTH_SYS can always just send a AUTH_NONE OpaqueAuth from server
+    // TODO (QNFS-52): Implement AUTH_SHORT
+    accepted_reply->verifier = create_auth_none_opaque_auth();
+
+    accepted_reply->stat = RPC__ACCEPT_STAT__SUCCESS;
+    accepted_reply->reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_RESULTS;
 
     // wrap procedure results into Any
     Google__Protobuf__Any *results = malloc(sizeof(Google__Protobuf__Any));
@@ -33,56 +67,105 @@ Rpc__AcceptedReply wrap_procedure_results_in_successful_accepted_reply(size_t re
     results->value.data = results_buffer;
     results->value.len = results_size;
 
-    accepted_reply.results = results;
+    accepted_reply->results = results;
 
+    return accepted_reply;
+}
+
+/*
+* Builds and returns an AcceptedReply with PROG_MISMATCH AcceptStat, specifying the given 'low' and 'high' as
+* lowest and highest versions of the RPC program available.
+*
+* The user of this function takes the responsibility to free the MismatchInfo, the OpaqueAuth, and the
+* AcceptedReply itself, using the 'free_accepted_reply' function.
+*/
+Rpc__AcceptedReply *create_prog_mismatch_accepted_reply(uint32_t low, uint32_t high) {
+    Rpc__AcceptedReply *accepted_reply = malloc(sizeof(Rpc__AcceptedReply));
+    rpc__accepted_reply__init(accepted_reply);
+
+    // currently supported AUTH_NONE and AUTH_SYS can always just send a AUTH_NONE OpaqueAuth from server
+    // TODO (QNFS-52): Implement AUTH_SHORT
+    accepted_reply->verifier = create_auth_none_opaque_auth();
+
+    accepted_reply->stat = RPC__ACCEPT_STAT__PROG_MISMATCH;
+    accepted_reply->reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_MISMATCH_INFO;
+
+    Rpc__MismatchInfo *mismatch_info = malloc(sizeof(Rpc__MismatchInfo));
+    rpc__mismatch_info__init(mismatch_info);
+    mismatch_info->low = 2;
+    mismatch_info->high = 2;
+
+    accepted_reply->mismatch_info = mismatch_info;
+
+    return accepted_reply;
+}
+
+/*
+* Builds and returns an AcceptedReply with the given 'default_case_accept_stat' AcceptStat.
+*
+* If the given AcceptStat is RPC__ACCEPT_STAT__SUCCESS or RPC__ACCEPT_STAT__PROG_MISMATCH (so not default case
+* AcceptStat), NULL is returned.
+*
+* The user of this function takes the responsibility to free the Empty, the OpaqueAuth, and the
+* AcceptedReply itself, using the 'free_accepted_reply' function.
+*/
+Rpc__AcceptedReply *create_default_case_accepted_reply(Rpc__AcceptStat default_case_accept_stat) {
+    if(default_case_accept_stat == RPC__ACCEPT_STAT__SUCCESS || default_case_accept_stat == RPC__ACCEPT_STAT__PROG_MISMATCH) {
+        return NULL;
+    }
+
+    Rpc__AcceptedReply *accepted_reply = malloc(sizeof(Rpc__AcceptedReply));
+    rpc__accepted_reply__init(accepted_reply);
+
+    // currently supported AUTH_NONE and AUTH_SYS can always just send a AUTH_NONE OpaqueAuth from server
+    // TODO (QNFS-52): Implement AUTH_SHORT
+    accepted_reply->verifier = create_auth_none_opaque_auth();
+
+    accepted_reply->stat = default_case_accept_stat;
+    accepted_reply->reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
+
+    Google__Protobuf__Empty *empty = malloc(sizeof(Google__Protobuf__Empty));
+    google__protobuf__empty__init(empty);
+    accepted_reply->default_case = empty;
+    
     return accepted_reply;
 }
 
 /*
 * Builds and returns an AcceptedReply with GARBAGE_ARGS AcceptStat.
 *
-* The user of this function takes the responsibility to free the Empty allocated here (this is
-* done by the 'clean_up_accepted_reply' function after the RPC is sent).
+* The user of this function takes the responsibility to deallocate the received
+* AcceptedReply, using the 'free_accepted_reply' function.
 */
-Rpc__AcceptedReply create_garbage_args_accepted_reply(void) {
-    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
-
-    accepted_reply.stat = RPC__ACCEPT_STAT__GARBAGE_ARGS;
-    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
-
-    Google__Protobuf__Empty *empty = malloc(sizeof(Google__Protobuf__Empty));
-    google__protobuf__empty__init(empty);
-    accepted_reply.default_case = empty;
-    
-    return accepted_reply;
+Rpc__AcceptedReply *create_garbage_args_accepted_reply(void) {
+    return create_default_case_accepted_reply(RPC__ACCEPT_STAT__GARBAGE_ARGS);
 }
 
 /*
 * Builds and returns an AcceptedReply with SYSTEM_ERR AcceptStat.
 *
-* The user of this function takes the responsibility to free the Empty allocated here (this is
-* done by the 'clean_up_accepted_reply' function after the RPC is sent).
+* The user of this function takes the responsibility to deallocate the received
+* AcceptedReply, using the 'free_accepted_reply' function.
 */
-Rpc__AcceptedReply create_system_error_accepted_reply(void) {
-    Rpc__AcceptedReply accepted_reply = RPC__ACCEPTED_REPLY__INIT;
-
-    accepted_reply.stat = RPC__ACCEPT_STAT__SYSTEM_ERR;
-    accepted_reply.reply_data_case = RPC__ACCEPTED_REPLY__REPLY_DATA_DEFAULT_CASE;
-
-    Google__Protobuf__Empty *empty = malloc(sizeof(Google__Protobuf__Empty));
-    google__protobuf__empty__init(empty);
-    accepted_reply.default_case = empty;
-    
-    return accepted_reply;
+Rpc__AcceptedReply *create_system_error_accepted_reply(void) {
+    return create_default_case_accepted_reply(RPC__ACCEPT_STAT__SYSTEM_ERR);
 }
 
 /*
-* Frees up heap-allocated memory for procedure results or MismatchInfo in an AcceptedReply.
+* Frees up heap-allocated memory in an AcceptedReply.
+*
+* Does nothing if 'accepted_reply' is NULL.
 */
-void clean_up_accepted_reply(Rpc__AcceptedReply accepted_reply) {
-    if(accepted_reply.stat == RPC__ACCEPT_STAT__SUCCESS) {
+void free_accepted_reply(Rpc__AcceptedReply *accepted_reply) {
+    if(accepted_reply == NULL) {
+        return;
+    }
+
+    free_opaque_auth(accepted_reply->verifier);
+
+    if(accepted_reply->stat == RPC__ACCEPT_STAT__SUCCESS) {
         // clean up procedure results
-        Google__Protobuf__Any *results = accepted_reply.results;
+        Google__Protobuf__Any *results = accepted_reply->results;
 
         if(results == NULL) {
             return;
@@ -93,114 +176,104 @@ void clean_up_accepted_reply(Rpc__AcceptedReply accepted_reply) {
             free(results->value.data);
         }
         free(results);
-
-        return;
+    }
+    else if(accepted_reply->stat == RPC__ACCEPT_STAT__PROG_MISMATCH) {
+        free(accepted_reply->mismatch_info);
+    }
+    else {
+        // for all other AcceptStat's - PROG_UNAVAIL, GARBAGE_ARGS, SYSTEM_ERR, etc. we only need to free the Empty default_case
+        free(accepted_reply->default_case);
     }
 
-    if(accepted_reply.stat == RPC__ACCEPT_STAT__PROG_MISMATCH) {
-        free(accepted_reply.mismatch_info);
-        return;
-    }
-
-    // for all other AcceptStat's - PROG_UNAVAIL, GARBAGE_ARGS, SYSTEM_ERR, etc. we only need to free the Empty default_case
-    free(accepted_reply.default_case);
+    free(accepted_reply);
 }
 
 /*
-* Sends an accepted RPC Reply back to the RPC client, given the opened socket for that client.
-* Returns 0 on success, and > 0 on failure.
+* Sends the given AcceptedReply back to the RPC client, given the opened socket for that client.
 *
-* Heap-allocated state for procedure results in accepted_reply is freed here after the RPC reply is sent to 
-* client using the clean_up_accepted_reply().
+* Returns 0 on success, and > 0 on failure.
 */
-int send_rpc_accepted_reply_message(int rpc_client_socket_fd, Rpc__AcceptedReply accepted_reply) {
+int send_rpc_accepted_reply_message(int rpc_client_socket_fd, Rpc__AcceptedReply *accepted_reply) {
     Rpc__ReplyBody reply_body = RPC__REPLY_BODY__INIT;
     reply_body.stat = RPC__REPLY_STAT__MSG_ACCEPTED;
     reply_body.reply_case = RPC__REPLY_BODY__REPLY_AREPLY;  // reply_case is not actually transfered over network
-    reply_body.areply = &accepted_reply;
+    reply_body.areply = accepted_reply;
 
-    Rpc__RpcMsg rpc_msg = RPC__RPC_MSG__INIT;
-    rpc_msg.xid = generate_rpc_xid();
-    rpc_msg.mtype = RPC__MSG_TYPE__REPLY;
-    rpc_msg.body_case = RPC__RPC_MSG__BODY_RBODY; // this body_case enum is not actually sent over the network
-    rpc_msg.rbody = &reply_body;
-
-    // serialize RpcMsg
-    size_t rpc_msg_size = rpc__rpc_msg__get_packed_size(&rpc_msg);
-    uint8_t *rpc_msg_buffer = malloc(rpc_msg_size);
-    rpc__rpc_msg__pack(&rpc_msg, rpc_msg_buffer);
-
-    // send serialized RpcMsg back to the client as a single Record Marking record
-    int error_code = send_rm_record(rpc_client_socket_fd, rpc_msg_buffer, rpc_msg_size);
-    if(error_code > 0) {
-        free(rpc_msg_buffer);
-        clean_up_accepted_reply(accepted_reply);
-
-        return 1;
-    }
-
-    free(rpc_msg_buffer);
-    clean_up_accepted_reply(accepted_reply);
-
-    return 0;
+    return send_rpc_reply_body(rpc_client_socket_fd, &reply_body);
 }
 
 /*
-* Sends a rejected RPC Reply back to the RPC client, given the opened socket for that client.
-* Returns 0 on success, and > 0 on failure.
+* Builds and returns a RejectedReply with RPC_MISMATCH RejectStat (requested RPC version not supported),
+* specifying 'low' and 'high' as lowest and highest version of RPC available.
 *
-* If RejectStat is RPC_MISMATCH (requested rpc version not supported), set non-NULL mismatch-info when calling, and NULL for auth_stat.
-* If RejectStat is AUTH_ERROR (rpc auth failed), leave mismatch_info NULL when invoking, and set non-NULL auth_stat.
+* The user of this function takes the responsibility to free the MismatchInfo and the
+* RejectedReply itself, using the 'free_rejected_reply' function.
 */
-int send_rpc_rejected_reply_message(int rpc_client_socket_fd, Rpc__ReplyStat reply_stat, Rpc__RejectStat reject_stat, Rpc__MismatchInfo *mismatch_info, Rpc__AuthStat *auth_stat) {
-    Rpc__RejectedReply rejected_reply = RPC__REJECTED_REPLY__INIT;
-    rejected_reply.stat = reject_stat;
-    switch(reject_stat) {
-        case RPC__REJECT_STAT__RPC_MISMATCH:
-            rejected_reply.reply_data_case = RPC__REJECTED_REPLY__REPLY_DATA_MISMATCH_INFO; // reply_data_case is not actually sent over network
-            if(mismatch_info == NULL || auth_stat != NULL) {
-                return 1;
-            }
-            rejected_reply.mismatch_info = mismatch_info;
-        case RPC__REJECT_STAT__AUTH_ERROR:
-            rejected_reply.reply_data_case = RPC__REJECTED_REPLY__REPLY_DATA_AUTH_STAT;
-            if(mismatch_info != NULL || auth_stat == NULL) {
-                return 1;
-            }
-            rejected_reply.auth_stat = *auth_stat;
-        default:
-            return 2; // reject_stat can't be anything other that the two cases above
+Rpc__RejectedReply *create_rpc_mismatch_rejected_reply(uint32_t low, uint32_t high) {
+    Rpc__RejectedReply *rejected_reply = malloc(sizeof(Rpc__RejectedReply));
+    rpc__rejected_reply__init(rejected_reply);
+
+    rejected_reply->stat = RPC__REJECT_STAT__RPC_MISMATCH;
+    rejected_reply->reply_data_case = RPC__REJECTED_REPLY__REPLY_DATA_MISMATCH_INFO;
+
+    Rpc__MismatchInfo *mismatch_info = malloc(sizeof(Rpc__MismatchInfo));
+    rpc__mismatch_info__init(mismatch_info);
+    mismatch_info->low = low;
+    mismatch_info->high = high;
+
+    rejected_reply->mismatch_info = mismatch_info;
+
+    return rejected_reply;
+}
+
+/*
+* Builds and returns a RejectedReply with AUTH_ERROR RejectStat (RPC authentication failed), with the
+* given AuthStat 'stat'.
+*
+* The user of this function takes the responsibility to free the RejectedReply 
+* using the 'free_rejected_reply' function.
+*/
+Rpc__RejectedReply *create_auth_error_rejected_reply(Rpc__AuthStat stat) {
+    Rpc__RejectedReply *rejected_reply = malloc(sizeof(Rpc__RejectedReply));
+    rpc__rejected_reply__init(rejected_reply);
+
+    rejected_reply->stat = RPC__REJECT_STAT__AUTH_ERROR;
+    rejected_reply->reply_data_case = RPC__REJECTED_REPLY__REPLY_DATA_AUTH_STAT;
+
+    rejected_reply->auth_stat = stat;
+
+    return rejected_reply;
+}
+
+/*
+* Frees up heap-allocated memory in a RejectedReply.
+*
+* Does nothing if 'rejected_reply' is NULL.
+*/
+void free_rejected_reply(Rpc__RejectedReply *rejected_reply) {
+    if(rejected_reply == NULL) {
+        return;
     }
 
+    if(rejected_reply->stat == RPC__REJECT_STAT__RPC_MISMATCH) {
+        free(rejected_reply->mismatch_info);
+    }
+
+    free(rejected_reply);
+}
+
+/*
+* Sends the given RejectedReply back to the RPC client, given the opened socket for that client.
+*
+* Returns 0 on success, and > 0 on failure.
+*/
+int send_rpc_rejected_reply_message(int rpc_client_socket_fd, Rpc__RejectedReply *rejected_reply) {
     Rpc__ReplyBody reply_body = RPC__REPLY_BODY__INIT;
-    reply_body.stat = reply_stat;
-    if(reply_stat != RPC__REPLY_STAT__MSG_DENIED) {
-        return 3;
-    }
+    reply_body.stat = RPC__REPLY_STAT__MSG_DENIED;
     reply_body.reply_case = RPC__REPLY_BODY__REPLY_RREPLY;  // reply_case is not actually transfered over network
-    reply_body.rreply = &rejected_reply;
+    reply_body.rreply = rejected_reply;
 
-    Rpc__RpcMsg rpc_msg = RPC__RPC_MSG__INIT;
-    rpc_msg.xid = generate_rpc_xid();
-    rpc_msg.mtype = RPC__MSG_TYPE__REPLY;
-    rpc_msg.body_case = RPC__RPC_MSG__BODY_RBODY; // this body_case enum is not actually sent over the network
-    rpc_msg.rbody = &reply_body;
-
-    // serialize RpcMsg
-    size_t rpc_msg_size = rpc__rpc_msg__get_packed_size(&rpc_msg);
-    uint8_t *rpc_msg_buffer = malloc(rpc_msg_size);
-    rpc__rpc_msg__pack(&rpc_msg, rpc_msg_buffer);
-
-    // send serialized RpcMsg back to the client as a single Record Marking record
-    int error_code = send_rm_record(rpc_client_socket_fd, rpc_msg_buffer, rpc_msg_size);
-    if(error_code > 0) {
-        free(rpc_msg_buffer);
-        return 1;
-    }
-
-    free(rpc_msg_buffer);
-
-    return 0;
+    return send_rpc_reply_body(rpc_client_socket_fd, &reply_body);
 }
 
 /*
@@ -238,20 +311,29 @@ int handle_client(int rpc_client_socket_fd) {
     if(call_body->rpcvers != 2) {
         fprintf(stdout, "Server received an RPC call with RPC version not equal to 2.\n");
 
-        Rpc__MismatchInfo mismatch_info = RPC__MISMATCH_INFO__INIT;
-        mismatch_info.low = 2;
-        mismatch_info.high = 2;
-        send_rpc_rejected_reply_message(rpc_client_socket_fd, RPC__REPLY_STAT__MSG_DENIED, RPC__REJECT_STAT__RPC_MISMATCH, &mismatch_info, NULL);
+        Rpc__RejectedReply *rejected_reply = create_rpc_mismatch_rejected_reply(2, 2);
+    
+        int error_code = send_rpc_rejected_reply_message(rpc_client_socket_fd, rejected_reply);
+        free_rejected_reply(rejected_reply);
+        if(error_code > 0) {
+            fprintf(stdout, "Server failed to send RPC mismatch RejectedReply\n");
+            return 5;
+        }
 
         return 0;
     }
 
     Google__Protobuf__Any *parameters = call_body->params;
 
-    Rpc__AcceptedReply accepted_reply = forward_rpc_call_to_program(call_body->prog, call_body->vers, call_body->proc, parameters);
-    send_rpc_accepted_reply_message(rpc_client_socket_fd, accepted_reply);
-    
+    Rpc__AcceptedReply *accepted_reply = forward_rpc_call_to_program(call_body->prog, call_body->vers, call_body->proc, parameters);
     rpc__rpc_msg__free_unpacked(rpc_call, NULL);
+
+    int error_code = send_rpc_accepted_reply_message(rpc_client_socket_fd, accepted_reply);
+    free_accepted_reply(accepted_reply);
+    if(error_code > 0) {
+        fprintf(stdout, "Server failed to send AcceptedReply\n");
+        return 6;
+    }
 
     return 0;
 }

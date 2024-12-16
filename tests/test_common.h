@@ -25,4 +25,12 @@
 #include "src/repl/filehandle_management.h"
 #include "src/parsing/parsing.h"
 
+#include "src/common_rpc/rpc_connection_context.h"
+
+/*
+* Common test functions
+*/
+
+RpcConnectionContext *create_test_rpc_connection_context(void);
+
 #endif /* test_common__header__INCLUDED */

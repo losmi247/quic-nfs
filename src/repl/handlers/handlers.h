@@ -8,8 +8,9 @@
 
 #include "src/parsing/parsing.h"
 #include "src/repl/filehandle_management.h"
+#include "src/common_rpc/rpc_connection_context.h"
 
-void handle_mount(const char *server_ip, uint16_t server_port, char *remote_absolute_path);
+void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_path);
 
 void handle_ls();
 
