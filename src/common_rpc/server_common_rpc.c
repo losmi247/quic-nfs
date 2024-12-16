@@ -277,6 +277,87 @@ int send_rpc_rejected_reply_message(int rpc_client_socket_fd, Rpc__RejectedReply
 }
 
 /*
+* Prints out the given error message, and sends an AUTH_ERROR RejectedReply with the given AuthStat to the 
+* given opened client socket.
+*
+* Returns 0 on success and > 0 on failure.
+*/
+int send_auth_error_rejected_reply(int rpc_client_socket_fd, char *error_msg, Rpc__AuthStat auth_stat) {
+    fprintf(stdout, "%s", error_msg);
+
+    Rpc__RejectedReply *rejected_reply = create_auth_error_rejected_reply(auth_stat);
+
+    int error_code = send_rpc_rejected_reply_message(rpc_client_socket_fd, rejected_reply);
+    free_rejected_reply(rejected_reply);
+    if(error_code > 0) {
+        fprintf(stdout, "Server failed to send AUTH_ERROR RejectedReply\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
+* Validates the 'credential' and 'verifier' OpaqueAuth pair from some RPC CallBody, to check that they have the correct
+* structure (no NULL fields) and correspond to a supported authentication flavor.
+*
+* Returns 0 if the credential and verifier pair are correct. If the credential and verifier pair are incorrect, returns > 0
+* and sends an appropriate RejectedReply to the given opened 'rpc_client_socket_fd'.
+*/
+int validate_credential_and_verifier(int rpc_client_socket_fd, Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier) {
+    if(credential == NULL) {
+        return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with 'credential' being NULL.\n", RPC__AUTH_STAT__AUTH_BADCRED);
+    }
+    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_NONE) {
+        if(credential->body_case != RPC__OPAQUE_AUTH__BODY_EMPTY) {
+            return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with inconsistent credential->flavor and credential->body_case.\n", RPC__AUTH_STAT__AUTH_BADCRED);
+        }
+        if(credential->empty == NULL) {
+            return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with AUTH_NONE credential, with credential->empty being NULL.\n", RPC__AUTH_STAT__AUTH_BADCRED);
+        }
+    }
+    else if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        if(credential->body_case != RPC__OPAQUE_AUTH__BODY_AUTH_SYS) {
+            return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with inconsistent credential->flavor and credential->body_case.\n", RPC__AUTH_STAT__AUTH_BADCRED);
+        }
+
+        if(credential->auth_sys == NULL) {
+            return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with AUTH_SYS credential, with credential->auth_sys being NULL.\n", RPC__AUTH_STAT__AUTH_BADCRED);
+        }
+        Rpc__AuthSysParams *authsysparams = credential->auth_sys;
+
+        if(authsysparams->machinename == NULL) {
+            return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with AUTH_SYS credential, with credential->auth_sys->machinename being NULL.\n", RPC__AUTH_STAT__AUTH_BADCRED);
+        }
+        if(authsysparams->gids == NULL) {
+            return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with AUTH_SYS credential, with credential->auth_sys->gids being NULL.\n", RPC__AUTH_STAT__AUTH_BADCRED);
+        }
+    }
+    else {
+        // TODO (QNFS-52): Implement AUTH_SHORT
+        return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with unsupported authentication flavor %d.\n", RPC__AUTH_STAT__AUTH_BADCRED);
+    }
+
+    if(verifier == NULL) {
+        return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with 'verifier' being NULL.\n", RPC__AUTH_STAT__AUTH_BADVERF);
+    }
+    if(verifier->flavor == RPC__AUTH_FLAVOR__AUTH_NONE) {
+        if(verifier->body_case != RPC__OPAQUE_AUTH__BODY_EMPTY) {
+            return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with inconsistent verifier->flavor and verifier->body_case.\n", RPC__AUTH_STAT__AUTH_BADVERF);
+        }
+        if(verifier->empty == NULL) {
+            return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with AUTH_NONE verifier, with verifier->empty being NULL.\n", RPC__AUTH_STAT__AUTH_BADVERF);
+        }
+    }
+    else {
+        // in AUTH_NONE, AUTH_SYS, and AUTH_SHORT, verifier in CallBody always has AUTH_NONE flavor
+        return send_auth_error_rejected_reply(rpc_client_socket_fd, "Server received an RPC call with 'verifier' having unsupported flavor.\n", RPC__AUTH_STAT__AUTH_BADVERF);
+    }
+
+    return 0;
+}
+
+/*
 * Takes an opened client socket and reads and processes one RPC from it.
 *
 * Returns 0 on success and > 0 on failure.
@@ -307,7 +388,7 @@ int handle_client(int rpc_client_socket_fd) {
     }
     log_rpc_call_body_info(call_body);
 
-    // now we have a valid RPC, so reply to it
+    // check RPC version
     if(call_body->rpcvers != 2) {
         fprintf(stdout, "Server received an RPC call with RPC version not equal to 2.\n");
 
@@ -323,16 +404,23 @@ int handle_client(int rpc_client_socket_fd) {
         return 0;
     }
 
+    // check authentication fields
+    int error_code = validate_credential_and_verifier(rpc_client_socket_fd, call_body->credential, call_body->verifier);
+    if(error_code > 0) {
+        return 6;
+    }
+
+    // reply with a AcceptedReply
     Google__Protobuf__Any *parameters = call_body->params;
 
     Rpc__AcceptedReply *accepted_reply = forward_rpc_call_to_program(call_body->prog, call_body->vers, call_body->proc, parameters);
     rpc__rpc_msg__free_unpacked(rpc_call, NULL);
 
-    int error_code = send_rpc_accepted_reply_message(rpc_client_socket_fd, accepted_reply);
+    error_code = send_rpc_accepted_reply_message(rpc_client_socket_fd, accepted_reply);
     free_accepted_reply(accepted_reply);
     if(error_code > 0) {
         fprintf(stdout, "Server failed to send AcceptedReply\n");
-        return 6;
+        return 7;
     }
 
     return 0;
