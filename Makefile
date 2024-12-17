@@ -39,6 +39,7 @@ MOUNT_AND_NFS_SERVER_SRCS = ./src/nfs/server/mount.c ./src/nfs/server/procedures
 	./src/nfs/server/file_management.c \
 	./src/nfs/server/mount_messages.c \
 	./src/nfs/server/nfs_messages.c \
+	./src/nfs/server/permissions.c \
 	${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${AUTHENTICATION_SRCS} ${RPC_PROGRAM_COMMON_SERVER_SRCS}
 
 # files used by the Tests

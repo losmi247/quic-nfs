@@ -9,6 +9,8 @@
 
 #include "src/error_handling/error_handling.h"
 
+#include "src/parsing/parsing.h"
+
 /*
 * Functions implemented in client_common_rpc.c file.
 */

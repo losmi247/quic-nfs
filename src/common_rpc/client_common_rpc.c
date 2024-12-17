@@ -287,7 +287,7 @@ int validate_successful_accepted_reply(Rpc__RpcMsg *rpc_reply) {
                 return 2;
 
             case RPC__REJECT_STAT__AUTH_ERROR:
-                fprintf(stdout, "Rejected RPC Reply: authentication failed with AuthStat %d\n", rejected_reply->auth_stat);
+                fprintf(stdout, "Rejected RPC Reply: authentication failed with AuthStat %s\n", auth_stat_to_string(rejected_reply->auth_stat));
                 return 3;
             // no other RejectStat exists
         }

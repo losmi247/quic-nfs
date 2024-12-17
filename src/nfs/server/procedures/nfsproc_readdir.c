@@ -3,10 +3,15 @@
 /*
 * Runs the NFSPROC_READDIR procedure (16).
 *
+* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
+* flavor) before being passed here.
+* This procedure must not be given AUTH_NONE credential+verifier pair.
+*
 * The user of this function takes the responsibility to deallocate the received AcceptedReply
 * using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/ReadDirArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: Expected nfs/ReadDirArgs but received %s\n", parameters->type_url);
@@ -102,6 +107,37 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Google__Protobuf_
         return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
     }
     clean_up_fattr(&fattr);
+
+    // check permissions
+    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat = check_readdir_proc_permissions(directory_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
+        if(stat < 0) {
+            fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed checking READDIR permissions for reading entries in the directory at absolute path '%s' with error code %d\n", directory_absolute_path, stat);
+
+            nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+
+        // client does not have correct permission to read entries in this directory
+        if(stat == 1) {
+            // build the procedure results
+            Nfs__ReadDirRes *readdirres = create_default_case_read_dir_res(NFS__STAT__NFSERR_ACCES);
+
+            // serialize the procedure results
+            size_t readdirres_size = nfs__read_dir_res__get_packed_size(readdirres);
+            uint8_t *readdirres_buffer = malloc(readdirres_size);
+            nfs__read_dir_res__pack(readdirres, readdirres_buffer);
+
+            nfs__read_dir_args__free_unpacked(readdirargs, NULL);
+            free(readdirres->nfs_status);
+            free(readdirres->default_case);
+            free(readdirres);
+
+            return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
+        }
+    }
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
     // read entries from the directory
     Nfs__DirectoryEntriesList *directory_entries = NULL;

@@ -3,10 +3,15 @@
 /*
 * Runs the NFSPROC_SYMLINK procedure (13).
 *
+* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
+* flavor) before being passed here.
+* This procedure must not be given AUTH_NONE credential+verifier pair.
+*
 * The user of this function takes the responsibility to deallocate the received AcceptedReply
 * using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply *serve_nfs_procedure_13_create_symbolic_link(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_13_create_symbolic_link(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/SymLinkArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_13_create_symbolic_link: expected nfs/SymLinkArgs but received %s\n", parameters->type_url);
@@ -216,6 +221,37 @@ Rpc__AcceptedReply *serve_nfs_procedure_13_create_symbolic_link(Google__Protobuf
         return create_system_error_accepted_reply();
     }
     // now we know we got a ENOENT from access() i.e. the file client wants to create does not exist
+
+    // check permissions
+    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat = check_symlink_proc_permissions(directory_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
+        if(stat < 0) {
+            fprintf(stderr, "serve_nfs_procedure_13_create_symbolic_link: failed checking SYMLINK permissions for creating a symbolic link at absolute path '%s' to target '%s' with error code %d\n", file_absolute_path, to->path, stat);
+
+            free(file_absolute_path);
+            nfs__sym_link_args__free_unpacked(symlinkargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+
+        // client does not have correct permission to create this symbolic link
+        if(stat == 1) {
+            // build the procedure results
+            Nfs__NfsStat *nfs_status = create_nfs_stat(NFS__STAT__NFSERR_ACCES);
+
+            // serialize the procedure results
+            size_t nfsstat_size = nfs__nfs_stat__get_packed_size(nfs_status);
+            uint8_t *nfsstat_buffer = malloc(nfsstat_size);
+            nfs__nfs_stat__pack(nfs_status, nfsstat_buffer);
+
+            free(file_absolute_path);
+            nfs__sym_link_args__free_unpacked(symlinkargs, NULL);
+            free(nfs_status);
+
+            return wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
+        }
+    }
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
     // create the symbolic link
     error_code = symlink(to->path, file_absolute_path);

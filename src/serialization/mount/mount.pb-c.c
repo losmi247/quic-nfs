@@ -762,22 +762,24 @@ const ProtobufCMessageDescriptor mount__export_list__descriptor =
   (ProtobufCMessageInit) mount__export_list__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCEnumValue mount__stat__enum_values_by_number[5] =
+static const ProtobufCEnumValue mount__stat__enum_values_by_number[6] =
 {
   { "MNT_OK", "MOUNT__STAT__MNT_OK", 0 },
   { "MNTERR_NOENT", "MOUNT__STAT__MNTERR_NOENT", 2 },
   { "MNTERR_NOTEXP", "MOUNT__STAT__MNTERR_NOTEXP", 3 },
   { "MNTERR_IO", "MOUNT__STAT__MNTERR_IO", 5 },
+  { "MNTERR_ACCES", "MOUNT__STAT__MNTERR_ACCES", 13 },
   { "MNTERR_NOTDIR", "MOUNT__STAT__MNTERR_NOTDIR", 20 },
 };
 static const ProtobufCIntRange mount__stat__value_ranges[] = {
-{0, 0},{2, 1},{5, 3},{20, 4},{0, 5}
+{0, 0},{2, 1},{5, 3},{13, 4},{20, 5},{0, 6}
 };
-static const ProtobufCEnumValueIndex mount__stat__enum_values_by_name[5] =
+static const ProtobufCEnumValueIndex mount__stat__enum_values_by_name[6] =
 {
+  { "MNTERR_ACCES", 4 },
   { "MNTERR_IO", 3 },
   { "MNTERR_NOENT", 1 },
-  { "MNTERR_NOTDIR", 4 },
+  { "MNTERR_NOTDIR", 5 },
   { "MNTERR_NOTEXP", 2 },
   { "MNT_OK", 0 },
 };
@@ -788,11 +790,11 @@ const ProtobufCEnumDescriptor mount__stat__descriptor =
   "Stat",
   "Mount__Stat",
   "mount",
-  5,
+  6,
   mount__stat__enum_values_by_number,
-  5,
+  6,
   mount__stat__enum_values_by_name,
-  4,
+  5,
   mount__stat__value_ranges,
   NULL,NULL,NULL,NULL   /* reserved[1234] */
 };

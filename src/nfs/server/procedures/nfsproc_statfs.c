@@ -5,10 +5,15 @@
 /*
 * Runs the NFSPROC_STATFS procedure (17).
 *
+* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
+* flavor) before being passed here.
+* This procedure must not be given AUTH_NONE credential+verifier pair.
+*
 * The user of this function takes the responsibility to deallocate the received AcceptedReply
 * using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/FHandle") != 0) {
         fprintf(stderr, "serve_nfs_procedure_17_get_filesystem_attributes: expected nfs/FHandle but received %s\n", parameters->type_url);
@@ -54,6 +59,37 @@ Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Google__Pro
 
         return wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer, "nfs/StatFsRes");
     }
+
+    // check permissions
+    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat = check_statfs_proc_permissions(file_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
+        if(stat < 0) {
+            fprintf(stderr, "serve_nfs_procedure_17_get_filesystem_attributes: failed checking STATFS permissions for getting attributes of the file system which contains the file '%s' with error code %d\n", file_absolute_path, stat);
+
+            nfs__fhandle__free_unpacked(fhandle, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+
+        // client does not have correct permission to get attributes of this file system
+        if(stat == 1) {
+             // build the procedure results
+            Nfs__StatFsRes *statfsres = create_default_case_stat_fs_res(NFS__STAT__NFSERR_ACCES);
+
+            // serialize the procedure results
+            size_t statfsres_size = nfs__stat_fs_res__get_packed_size(statfsres);
+            uint8_t *statfsres_buffer = malloc(statfsres_size);
+            nfs__stat_fs_res__pack(statfsres, statfsres_buffer);
+        
+            nfs__fhandle__free_unpacked(fhandle, NULL);
+            free(statfsres->nfs_status);
+            free(statfsres->default_case);
+            free(statfsres);
+
+            return wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer, "nfs/StatFsRes");
+        }
+    }
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
     // get file system attributes for the filesystem this file is on
     struct statvfs fs_stat;

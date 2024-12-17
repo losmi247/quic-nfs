@@ -26,6 +26,8 @@ typedef struct RpcConnectionContext {
     Rpc__OpaqueAuth *verifier;
 } RpcConnectionContext;
 
+RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier);
+
 RpcConnectionContext *create_auth_none_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port);
 
 RpcConnectionContext *create_auth_sys_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port);

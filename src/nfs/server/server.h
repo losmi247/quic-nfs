@@ -36,9 +36,9 @@
 * Functions implemented by RPC programs (Mount and Nfs).
 */
 
-extern Rpc__AcceptedReply *call_mount(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
+extern Rpc__AcceptedReply *call_mount(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
-extern Rpc__AcceptedReply *call_nfs(uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
+extern Rpc__AcceptedReply *call_nfs(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
 /*
 * Mount+Nfs server state.

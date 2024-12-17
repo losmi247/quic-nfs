@@ -59,6 +59,8 @@ Rpc__OpaqueAuth *create_auth_sys_opaque_auth(char *machine_name, uint32_t uid, u
         authsysparams->gids[offset] = gids[offset];
     }
 
+    opaque_auth->auth_sys = authsysparams;
+
     return opaque_auth;
 }
 

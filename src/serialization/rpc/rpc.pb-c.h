@@ -99,7 +99,7 @@ typedef enum _Rpc__AuthStat {
    */
   RPC__AUTH_STAT__AUTH_REJECTEDVERF = 4,
   /*
-   * rejected for security reasons
+   * rejected for security reasons (e.g. server received AUTH_NONE credential but AUTH_SYS is required for this procedure)
    */
   RPC__AUTH_STAT__AUTH_TOOWEAK = 5,
   /*

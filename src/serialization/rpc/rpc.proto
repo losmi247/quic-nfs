@@ -45,7 +45,7 @@ enum AuthStat {
     AUTH_REJECTEDCRED = 2;      // client must begin new session
     AUTH_BADVERF      = 3;      // bad verifier (seal broken)
     AUTH_REJECTEDVERF = 4;      // verifier expired or replayed
-    AUTH_TOOWEAK      = 5;      // rejected for security reasons
+    AUTH_TOOWEAK      = 5;      // rejected for security reasons (e.g. server received AUTH_NONE credential but AUTH_SYS is required for this procedure)
 
     // failed locally
     AUTH_INVALIDRESP  = 6;      // bogus response verifier

@@ -15,8 +15,9 @@ message FHandle {
 enum Stat {
     MNT_OK = 0;
     MNTERR_NOENT = 2;           // no such file or directory
-    MNTERR_NOTEXP = 3;           // the file is not exported for NFS
+    MNTERR_NOTEXP = 3;          // the file is not exported for NFS
     MNTERR_IO = 5;              // hard error e.g. disk error
+    MNTERR_ACCES = 13;          // the caller does not have the correct permission to perform the requested operation
     MNTERR_NOTDIR = 20;         // not a directory - caller specified a non-directory in a directory operation
 }
 
