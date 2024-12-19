@@ -7,8 +7,10 @@
 * NFSPROC_READDIR (16) tests
 */
 
-Test(nfs_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
-    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+TestSuite(nfs_readdir_test_suite);
+
+Test(nfs_readdir_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // read all entries from the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -19,13 +21,13 @@ Test(nfs_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
     int expected_number_of_entries = NFS_SHARE_NUMBER_OF_ENTRIES;
     char *expected_filenames[NFS_SHARE_NUMBER_OF_ENTRIES] = NFS_SHARE_ENTRIES;
 
-    Nfs__ReadDirRes *readdirres = read_from_directory_success(&fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
+    Nfs__ReadDirRes *readdirres = read_from_directory_success(NULL, &fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
 
     nfs__read_dir_res__free_unpacked(readdirres, NULL);
 }
 
-Test(nfs_test_suite, readdir_no_such_directory, .description = "NFSPROC_READDIR no such directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+Test(nfs_readdir_test_suite, readdir_no_such_directory, .description = "NFSPROC_READDIR no such directory") {
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // try to read from a nonexistent directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -34,13 +36,13 @@ Test(nfs_test_suite, readdir_no_such_directory, .description = "NFSPROC_READDIR 
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = &nfs_filehandle;
 
-    read_from_directory_fail(&fhandle, 0, 1000, NFS__STAT__NFSERR_NOENT);  // cookie=0, start from beginning of the directory stream
+    read_from_directory_fail(NULL, &fhandle, 0, 1000, NFS__STAT__NFSERR_NOENT);  // cookie=0, start from beginning of the directory stream
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
 }
 
-Test(nfs_test_suite, readdir_not_a_directory, .description = "NFSPROC_READDIR not a directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+Test(nfs_readdir_test_suite, readdir_not_a_directory, .description = "NFSPROC_READDIR not a directory") {
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -48,7 +50,7 @@ Test(nfs_test_suite, readdir_not_a_directory, .description = "NFSPROC_READDIR no
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(&fhandle, "test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(NULL, &fhandle, "test_file.txt", NFS__FTYPE__NFREG);
 
     // try to readdir this test_file.txt (non-directory)
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -56,11 +58,11 @@ Test(nfs_test_suite, readdir_not_a_directory, .description = "NFSPROC_READDIR no
     nfs__dir_op_res__free_unpacked(diropres, NULL);
     file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
 
-    read_from_directory_fail(&file_fhandle, 0, 1000, NFS__STAT__NFSERR_NOTDIR);  // cookie=0, start from beginning of the directory stream
+    read_from_directory_fail(NULL, &file_fhandle, 0, 1000, NFS__STAT__NFSERR_NOTDIR);  // cookie=0, start from beginning of the directory stream
 }
 
-Test(nfs_test_suite, readdir_ok_lookup_then_readdir, .description = "NFSPROC_READDIR ok lookup then readdir") {
-    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+Test(nfs_readdir_test_suite, readdir_ok_lookup_then_readdir, .description = "NFSPROC_READDIR ok lookup then readdir") {
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // lookup directory write_test inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -68,7 +70,7 @@ Test(nfs_test_suite, readdir_ok_lookup_then_readdir, .description = "NFSPROC_REA
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(&fhandle, "write_test", NFS__FTYPE__NFDIR);
+    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(NULL, &fhandle, "write_test", NFS__FTYPE__NFDIR);
 
     // read all entries in this directory write_test
     Nfs__FHandle dir_fhandle = NFS__FHANDLE__INIT;
@@ -79,13 +81,13 @@ Test(nfs_test_suite, readdir_ok_lookup_then_readdir, .description = "NFSPROC_REA
     int expected_number_of_entries = 3;
     char *expected_filenames[5] = {"..", ".", "write_test_file.txt"};
 
-    Nfs__ReadDirRes *readdirres = read_from_directory_success(&dir_fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
+    Nfs__ReadDirRes *readdirres = read_from_directory_success(NULL, &dir_fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
 
     nfs__read_dir_res__free_unpacked(readdirres, NULL);
 }
 
-Test(nfs_test_suite, readdir_ok_read_only_first_directory_entry, .description = "NFSPROC_READDIR ok read only first two directory entries") {
-    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+Test(nfs_readdir_test_suite, readdir_ok_read_only_first_directory_entry, .description = "NFSPROC_READDIR ok read only first two directory entries") {
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // read the first entry from the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -96,13 +98,13 @@ Test(nfs_test_suite, readdir_ok_read_only_first_directory_entry, .description = 
     int expected_number_of_entries = 2;
     char *expected_filenames[2] = {"..", "."};
 
-    Nfs__ReadDirRes *readdirres = read_from_directory_success(&fhandle, 0, 40, expected_number_of_entries, expected_filenames);
+    Nfs__ReadDirRes *readdirres = read_from_directory_success(NULL, &fhandle, 0, 40, expected_number_of_entries, expected_filenames);
 
     nfs__read_dir_res__free_unpacked(readdirres, NULL);
 }
 
-Test(nfs_test_suite, readdir_ok_read_directory_entries_in_batches, .description = "NFSPROC_READDIR ok read directory entries in batches") {
-    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+Test(nfs_readdir_test_suite, readdir_ok_read_directory_entries_in_batches, .description = "NFSPROC_READDIR ok read directory entries in batches") {
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // read from the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -190,4 +192,84 @@ Test(nfs_test_suite, readdir_ok_read_directory_entries_in_batches, .description 
     cr_assert_eq(eof, 1);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
+}
+
+/*
+* Permission tests
+*/
+
+Test(nfs_readdir_test_suite, readdir_no_execute_permission, .description = "NFSPROC_READDIR no execute permission") {
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+
+    // lookup the permission_test directory inside the mounted directory
+    Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
+    mount__fh_status__free_unpacked(fhstatus, NULL);
+    fhandle.nfs_filehandle = &nfs_filehandle_copy;
+
+    Nfs__DirOpRes *permission_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "permission_test", NFS__FTYPE__NFDIR);
+
+    // lookup the only_owner_execute directory inside the permission_test directory
+    Nfs__FHandle permission_test_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle permission_test_nfs_filehandle_copy = deep_copy_nfs_filehandle(permission_test_dir_diropres->diropok->file->nfs_filehandle);
+    nfs__dir_op_res__free_unpacked(permission_test_dir_diropres, NULL);
+    permission_test_fhandle.nfs_filehandle = &permission_test_nfs_filehandle_copy;
+
+    Nfs__DirOpRes *only_owner_execute_dir_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_execute", NFS__FTYPE__NFDIR);
+
+    // now try to read entries in this directory /nfs_share/permission_test/only_owner_execute, without having execute permission on it
+    Nfs__FHandle only_owner_execute_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle only_owner_execute_nfs_filehandle_copy = deep_copy_nfs_filehandle(only_owner_execute_dir_diropres->diropok->file->nfs_filehandle);
+    nfs__dir_op_res__free_unpacked(only_owner_execute_dir_diropres, NULL);
+    only_owner_execute_fhandle.nfs_filehandle = &only_owner_execute_nfs_filehandle_copy;
+
+    uint32_t gids[1] = {NON_DOCKER_IMAGE_TESTUSER_UID};
+    Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
+    Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
+
+    // fail since you don't have execute permission
+    read_from_directory_fail(rpc_connection_context, &only_owner_execute_fhandle, 0, 1000, NFS__STAT__NFSERR_ACCES);
+
+    free_rpc_connection_context(rpc_connection_context);
+}
+
+Test(nfs_readdir_test_suite, rmdir_has_write_permission_on_containing_directory, .description = "NFSPROC_RMDIR has write permission on containing directory") {
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+
+    // lookup the permission_test directory inside the mounted directory
+    Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
+    mount__fh_status__free_unpacked(fhstatus, NULL);
+    fhandle.nfs_filehandle = &nfs_filehandle_copy;
+
+    Nfs__DirOpRes *permission_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "permission_test", NFS__FTYPE__NFDIR);
+
+    // lookup the only_owner_execute directory inside the permission_test directory
+    Nfs__FHandle permission_test_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle permission_test_nfs_filehandle_copy = deep_copy_nfs_filehandle(permission_test_dir_diropres->diropok->file->nfs_filehandle);
+    nfs__dir_op_res__free_unpacked(permission_test_dir_diropres, NULL);
+    permission_test_fhandle.nfs_filehandle = &permission_test_nfs_filehandle_copy;
+
+    Nfs__DirOpRes *only_owner_execute_dir_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_execute", NFS__FTYPE__NFDIR);
+
+    // read entries in this directory /nfs_share/permission_test/only_owner_execute
+    Nfs__FHandle only_owner_execute_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle only_owner_execute_nfs_filehandle_copy = deep_copy_nfs_filehandle(only_owner_execute_dir_diropres->diropok->file->nfs_filehandle);
+    nfs__dir_op_res__free_unpacked(only_owner_execute_dir_diropres, NULL);
+    only_owner_execute_fhandle.nfs_filehandle = &only_owner_execute_nfs_filehandle_copy;
+
+    uint32_t gids[1] = {DOCKER_IMAGE_TESTUSER_UID};
+    Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
+    Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
+
+    int expected_number_of_entries = 4;
+    char *expected_entries[] = {".", "..", "dir", "file.txt"};
+
+    // succeed since you have write permission on containing directory
+    Nfs__ReadDirRes *readdires = read_from_directory_success(rpc_connection_context, &only_owner_execute_fhandle, 0, 1000, expected_number_of_entries, expected_entries);
+    nfs__read_dir_res__free_unpacked(readdires, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
