@@ -38,7 +38,14 @@ void handle_ls() {
         return;
     }
 
-    if(readdirres->nfs_status->stat != NFS__STAT__NFS_OK) {
+    if(readdirres->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
+        printf("ls: Permission denied\n");
+        
+        nfs__read_dir_res__free_unpacked(readdirres, NULL);
+
+        return;
+    }
+    else if(readdirres->nfs_status->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(readdirres->nfs_status->stat);
         printf("Error: Failed to read entries in cwd with status %s\n", string_status);
         free(string_status);

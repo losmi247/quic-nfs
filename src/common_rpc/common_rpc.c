@@ -64,11 +64,19 @@ void log_rpc_call_body_info(Rpc__CallBody *call_body) {
         return;
     }
 
-    printf("program number: %d\nprogram version: %d\nprocedure number: %d\n",
-        call_body->prog, call_body->vers, call_body->proc);
+    printf("program number: %d\nprogram version: %d\nprocedure number: %d\n", call_body->prog, call_body->vers, call_body->proc);
+
+    if(call_body->credential == NULL) {
+        return;
+    }
+
     printf("auth flavor: %d\n", call_body->credential->flavor);
     if(call_body->credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        if(call_body->credential->auth_sys == NULL) {
+            return;
+        }
         Rpc__AuthSysParams *authsysparams = call_body->credential->auth_sys;
+
         printf("sender name: %s\nuid: %d\ngid: %d\n", authsysparams->machinename, authsysparams->uid, authsysparams->gid);
     }
     printf("\n");

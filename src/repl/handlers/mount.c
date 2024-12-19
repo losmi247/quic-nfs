@@ -53,7 +53,15 @@ void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_p
         return;
     }
 
-    if(fhstatus->mnt_status->stat != MOUNT__STAT__MNT_OK) {
+    if(fhstatus->mnt_status->stat == MOUNT__STAT__MNTERR_ACCES) {
+        printf("mount: Permission denied: %s\n", remote_absolute_path);
+        
+        free_rpc_connection_context(new_rpc_connection_context);
+        mount__fh_status__free_unpacked(fhstatus, NULL);
+
+        return;
+    }
+    else if(fhstatus->mnt_status->stat != MOUNT__STAT__MNT_OK) {
         char *string_status = mount_stat_to_string(fhstatus->mnt_status->stat);
         printf("Error: Failed to mount the NFS share with status %s\n", string_status);
         free(string_status);
@@ -73,7 +81,7 @@ void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_p
     nfs__fhandle__init(fhandle);
     fhandle->nfs_filehandle = nfs_filehandle_copy;
 
-    filesystem_dag_root = create_dag_node(strdup(remote_absolute_path), NFS__FTYPE__NFDIR, fhandle, 1);
+    filesystem_dag_root = create_dag_node(remote_absolute_path, NFS__FTYPE__NFDIR, fhandle, 1);
     if(filesystem_dag_root == NULL) {
         free_rpc_connection_context(new_rpc_connection_context);
         free(nfs_filehandle_copy);

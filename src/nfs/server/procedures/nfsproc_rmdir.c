@@ -3,10 +3,15 @@
 /*
 * Runs the NFSPROC_RMDIR procedure (15).
 *
+* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
+* flavor) before being passed here.
+* This procedure must not be given AUTH_NONE credential+verifier pair.
+*
 * The user of this function takes the responsibility to deallocate the received AcceptedReply
 * using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/DirOpArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_15_remove_directory: expected nfs/DirOpArgs but received %s\n", parameters->type_url);
@@ -107,19 +112,19 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__An
     clean_up_fattr(&directory_fattr);
 
     // check that the directory client wants to delete exists
-    char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
-    error_code = access(file_absolute_path, F_OK);
+    char *child_directory_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
+    error_code = access(child_directory_absolute_path, F_OK);
     if(error_code < 0) {
         if(errno == EIO || errno == ENOENT) {
             Nfs__Stat nfs_stat;
             switch(errno) {
                 case EIO:
                     nfs_stat = NFS__STAT__NFSERR_IO;
-                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: physical IO error occurred while checking if file/directory at absolute path '%s' exists\n", file_absolute_path);
+                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: physical IO error occurred while checking if file/directory at absolute path '%s' exists\n", child_directory_absolute_path);
                     break;
                 case ENOENT:
                     nfs_stat = NFS__STAT__NFSERR_NOENT;
-                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory '%s' that does not exist\n", file_absolute_path);
+                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory '%s' that does not exist\n", child_directory_absolute_path);
                     break;
             }
 
@@ -131,16 +136,16 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__An
             uint8_t *nfsstat_buffer = malloc(nfsstat_size);
             nfs__nfs_stat__pack(nfs_status, nfsstat_buffer);
 
-            free(file_absolute_path);
+            free(child_directory_absolute_path);
             nfs__dir_op_args__free_unpacked(diropargs, NULL);
             free(nfs_status);
 
             return wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
         }
         else {
-            perror_msg("serve_nfs_procedure_15_remove_directory: failed checking if file to be deleted at absolute path '%s' already exists", file_absolute_path);
+            perror_msg("serve_nfs_procedure_15_remove_directory: failed checking if file to be deleted at absolute path '%s' already exists", child_directory_absolute_path);
 
-            free(file_absolute_path);
+            free(child_directory_absolute_path);
             nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
             return create_system_error_accepted_reply();
@@ -149,12 +154,12 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__An
 
     // get the attributes of the directory to be deleted, to check that that it is actually a directory
     Nfs__FAttr fattr = NFS__FATTR__INIT;
-    error_code = get_attributes(file_absolute_path, &fattr);
+    error_code = get_attributes(child_directory_absolute_path, &fattr);
     if(error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_15_remove_directory: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", file_absolute_path, error_code);
+        fprintf(stderr, "serve_nfs_procedure_15_remove_directory: failed getting attributes for file/directory at absolute path '%s' with error code %d\n", child_directory_absolute_path, error_code);
 
-        free(file_absolute_path);
+        free(child_directory_absolute_path);
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this file back to its absolute path
@@ -162,7 +167,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__An
     }
     if(fattr.nfs_ftype->ftype != NFS__FTYPE__NFDIR) {
         // if the file is not a directory, return ReadRes with 'directory specified in a non-directory operation' status
-        fprintf(stderr, "serve_nfs_procedure_15_remove_directory: a non-directory '%s' was specified for 'rmdir' which is a directory operation\n", file_absolute_path);
+        fprintf(stderr, "serve_nfs_procedure_15_remove_directory: a non-directory '%s' was specified for 'rmdir' which is a directory operation\n", child_directory_absolute_path);
 
         // build the procedure results
         Nfs__NfsStat *nfs_status = create_nfs_stat(NFS__STAT__NFSERR_NOTDIR);
@@ -173,7 +178,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__An
         nfs__nfs_stat__pack(nfs_status, nfsstat_buffer);
 
         clean_up_fattr(&fattr);
-        free(file_absolute_path);
+        free(child_directory_absolute_path);
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
         free(nfs_status);
 
@@ -181,23 +186,54 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__An
     }
     clean_up_fattr(&fattr);
 
+    // check permissions
+    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat = check_rmdir_proc_permissions(directory_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
+        if(stat < 0) {
+            fprintf(stderr, "serve_nfs_procedure_15_remove_directory: failed checking RMDIR permissions for removing the directory at absolute path '%s' with error code %d\n", child_directory_absolute_path, stat);
+
+            free(child_directory_absolute_path);
+            nfs__dir_op_args__free_unpacked(diropargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+
+        // client does not have correct permission to remove a directory here
+        if(stat == 1) {
+            // build the procedure results
+            Nfs__NfsStat *nfs_status = create_nfs_stat(NFS__STAT__NFSERR_ACCES);
+
+            // serialize the procedure results
+            size_t nfsstat_size = nfs__nfs_stat__get_packed_size(nfs_status);
+            uint8_t *nfsstat_buffer = malloc(nfsstat_size);
+            nfs__nfs_stat__pack(nfs_status, nfsstat_buffer);
+
+            free(child_directory_absolute_path);
+            nfs__dir_op_args__free_unpacked(diropargs, NULL);
+            free(nfs_status);
+
+            return wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
+        }
+    }
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
+
     // delete the directory file name
-    error_code = rmdir(file_absolute_path);
+    error_code = rmdir(child_directory_absolute_path);
     if(error_code < 0) {
         if(errno == ENAMETOOLONG || errno == ENOTEMPTY || errno == EROFS) {
             Nfs__Stat nfs_stat;
             switch(errno) {
                 case ENAMETOOLONG:
                     nfs_stat = NFS__STAT__NFSERR_NAMETOOLONG;
-                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory at absolute path '%s' which exceeds system limit on pathname length\n", file_absolute_path);
+                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory at absolute path '%s' which exceeds system limit on pathname length\n", child_directory_absolute_path);
                     break;
                 case ENOTEMPTY:
                     nfs_stat = NFS__STAT__NFSERR_NOTEMPTY;
-                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory at absolute path '%s' which is non-empty i.e. contains entries other than '.' and '..'\n", file_absolute_path);
+                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory at absolute path '%s' which is non-empty i.e. contains entries other than '.' and '..'\n", child_directory_absolute_path);
                     break;
                 case EROFS:
                     nfs_stat = NFS__STAT__NFSERR_ROFS;
-                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory at absolute path '%s' on a read-only file system\n", file_absolute_path);
+                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory at absolute path '%s' on a read-only file system\n", child_directory_absolute_path);
                     break;
             }
 
@@ -209,16 +245,16 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__An
             uint8_t *nfsstat_buffer = malloc(nfsstat_size);
             nfs__nfs_stat__pack(nfs_status, nfsstat_buffer);
 
-            free(file_absolute_path);
+            free(child_directory_absolute_path);
             nfs__dir_op_args__free_unpacked(diropargs, NULL);
             free(nfs_status);
 
             return wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
         }
         else {
-            perror_msg("serve_nfs_procedure_15_remove_directory: failed to 'rmdir' the directory at absolute path '%s'\n", file_absolute_path);
+            perror_msg("serve_nfs_procedure_15_remove_directory: failed to 'rmdir' the directory at absolute path '%s'\n", child_directory_absolute_path);
 
-            free(file_absolute_path);
+            free(child_directory_absolute_path);
             nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
             return create_system_error_accepted_reply();
@@ -226,11 +262,11 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__An
     }
 
     // remove the inode mapping of the deleted directory from the inode cache
-    error_code = remove_inode_mapping_by_absolute_path(file_absolute_path, &inode_cache);
+    error_code = remove_inode_mapping_by_absolute_path(child_directory_absolute_path, &inode_cache);
     if(error_code > 1) {
-        perror_msg("serve_nfs_procedure_15_remove_directory: failed to remove the inode mapping for directory at absolute path '%s'\n", file_absolute_path);
+        perror_msg("serve_nfs_procedure_15_remove_directory: failed to remove the inode mapping for directory at absolute path '%s'\n", child_directory_absolute_path);
 
-        free(file_absolute_path);
+        free(child_directory_absolute_path);
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
         return create_system_error_accepted_reply();
@@ -248,7 +284,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Google__Protobuf__An
 
     Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
 
-    free(file_absolute_path);
+    free(child_directory_absolute_path);
     nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
     return accepted_reply;

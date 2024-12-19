@@ -17,14 +17,12 @@ uint64_t get_time(Nfs__TimeVal *timeval) {
 * so the user of this function should always assume this function returns a valid non-NULL Mount__FhStatus
 * and always call 'mount_fh_status_free_unpacked()' on it at some point.
 */
-Mount__FhStatus *mount_directory(char *directory_absolute_path) {
+Mount__FhStatus *mount_directory(RpcConnectionContext *rpc_connection_context, char *directory_absolute_path) {
     Mount__DirPath dirpath = MOUNT__DIR_PATH__INIT;
     dirpath.path = directory_absolute_path;
 
     Mount__FhStatus *fhstatus = malloc(sizeof(Mount__FhStatus));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = mount_procedure_1_add_mount_entry(rpc_connection_context, dirpath, fhstatus);
-    free_rpc_connection_context(rpc_connection_context);
     if (status != 0) {
         free(fhstatus);
         cr_fatal("MOUNTPROC_MNT failed - status %d\n", status);
@@ -36,7 +34,10 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
 }
 
 /*
-* Mounts the directory given by absolute path.
+* Mounts the directory given by absolute path. 
+*
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
 *
 * The procedure results are validated assuming MOUNT__STAT__MNT_OK Mount status.
 *
@@ -48,11 +49,22 @@ Mount__FhStatus *mount_directory(char *directory_absolute_path) {
 * so the user of this function should always assume this function returns a valid non-NULL Mount__FhStatus
 * and always call 'mount_fh_status_free_unpacked()' on it at some point.
 */
-Mount__FhStatus *mount_directory_success(char *directory_absolute_path) {
-    Mount__FhStatus *fhstatus = mount_directory(directory_absolute_path);
+Mount__FhStatus *mount_directory_success(RpcConnectionContext *rpc_connection_context, char *directory_absolute_path) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Mount__FhStatus *fhstatus = mount_directory(rpc_connection_context, directory_absolute_path);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(fhstatus->mnt_status);
-    cr_assert_eq(fhstatus->mnt_status->stat, MOUNT__STAT__MNT_OK);
+    char *expected_mnt_stat = mount_stat_to_string(MOUNT__STAT__MNT_OK), *found_mount_stat = mount_stat_to_string(fhstatus->mnt_status->stat);
+    cr_assert_eq(fhstatus->mnt_status->stat, MOUNT__STAT__MNT_OK, "Expected NfsStat %s but got %s", expected_mnt_stat, found_mount_stat);
+    free(expected_mnt_stat);
+    free(found_mount_stat);
     cr_assert_eq(fhstatus->fhstatus_body_case, MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY);
 
     cr_assert_not_null(fhstatus->directory);
@@ -63,15 +75,29 @@ Mount__FhStatus *mount_directory_success(char *directory_absolute_path) {
 }
 
 /*
-* Mounts the directory given by absolute path.
+* Mounts the directory given by absolute path, by calling the MOUNTPROC_MNT procedure.
+*
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
 *
 * The procedure results are validated assuming a non-MOUNT__STAT__MNT_OK Mount status, given in argument 'non_mnt_ok_status'.
 */
-void mount_directory_fail(char *directory_absolute_path, Mount__Stat non_mnt_ok_status) {
-    Mount__FhStatus *fhstatus = mount_directory(directory_absolute_path);
+void mount_directory_fail(RpcConnectionContext *rpc_connection_context, char *directory_absolute_path, Mount__Stat non_mnt_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Mount__FhStatus *fhstatus = mount_directory(rpc_connection_context, directory_absolute_path);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(fhstatus->mnt_status);
-    cr_assert_eq(fhstatus->mnt_status->stat, non_mnt_ok_status);
+    char *expected_mnt_stat = mount_stat_to_string(non_mnt_ok_status), *found_mount_stat = mount_stat_to_string(fhstatus->mnt_status->stat);
+    cr_assert_eq(fhstatus->mnt_status->stat, non_mnt_ok_status, "Expected NfsStat %s but got %s", expected_mnt_stat, found_mount_stat);
+    free(expected_mnt_stat);
+    free(found_mount_stat);
     cr_assert_eq(fhstatus->fhstatus_body_case, MOUNT__FH_STATUS__FHSTATUS_BODY_DEFAULT_CASE);
     cr_assert_not_null(fhstatus->default_case);
 
@@ -89,11 +115,9 @@ void mount_directory_fail(char *directory_absolute_path, Mount__Stat non_mnt_ok_
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *get_attributes(Nfs__FHandle file_fhandle) {
+Nfs__AttrStat *get_attributes(RpcConnectionContext *rpc_connection_context, Nfs__FHandle file_fhandle) {
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_1_get_file_attributes(rpc_connection_context, file_fhandle, attrstat);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(attrstat);
         cr_fatal("NFSPROC_GETATTR failed - status %d\n", status);
@@ -107,6 +131,9 @@ Nfs__AttrStat *get_attributes(Nfs__FHandle file_fhandle) {
 /*
 * Given the Nfs__FHandle of a file or a directory, calls NFSPROC_GETATTR to get its attributes.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The file attributes received in procedure results are validated assuming the file has type given in 'expected_ftype'.
 *
@@ -118,12 +145,23 @@ Nfs__AttrStat *get_attributes(Nfs__FHandle file_fhandle) {
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *get_attributes_success(Nfs__FHandle file_fhandle, Nfs__FType expected_ftype) {
-    Nfs__AttrStat *attrstat = get_attributes(file_fhandle);
+Nfs__AttrStat *get_attributes_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle file_fhandle, Nfs__FType expected_ftype) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__AttrStat *attrstat = get_attributes(rpc_connection_context, file_fhandle);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate AttrStat
     cr_assert_not_null(attrstat->nfs_status);
-    cr_assert_eq(attrstat->nfs_status->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(attrstat->nfs_status->stat);
+    cr_assert_eq(attrstat->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
 
     // validate attributes
@@ -136,13 +174,27 @@ Nfs__AttrStat *get_attributes_success(Nfs__FHandle file_fhandle, Nfs__FType expe
 /*
 * Given the Nfs__FHandle of a file or a directory, calls NFSPROC_GETATTR to get its attributes.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void get_attributes_fail(Nfs__FHandle file_fhandle, Nfs__Stat non_nfs_ok_status) {
-    Nfs__AttrStat *attrstat = get_attributes(file_fhandle);
+void get_attributes_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle file_fhandle, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__AttrStat *attrstat = get_attributes(rpc_connection_context, file_fhandle);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(attrstat->nfs_status);
-    cr_assert_eq(attrstat->nfs_status->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(attrstat->nfs_status->stat);
+    cr_assert_eq(attrstat->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
     cr_assert_not_null(attrstat->default_case);
 
@@ -161,15 +213,13 @@ void get_attributes_fail(Nfs__FHandle file_fhandle, Nfs__Stat non_nfs_ok_status)
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, Nfs__SAttr *sattr) {
+Nfs__AttrStat *set_attributes(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, Nfs__SAttr *sattr) {
     Nfs__SAttrArgs sattrargs = NFS__SATTR_ARGS__INIT;
     sattrargs.file = file_fhandle;
     sattrargs.attributes = sattr;
 
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_2_set_file_attributes(rpc_connection_context, sattrargs, attrstat);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(attrstat);
         cr_fatal("NFSPROC_SETATTR failed - status %d\n", status);
@@ -184,6 +234,9 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, Nfs__SAttr *sattr) {
 * Given the Nfs__FHandle of a file or a directory, calls NFSPROC_SETATTR to update the attributes of
 * the given file to the values given in 'mode', 'uid', 'gid,' 'size', 'atime', 'mtime' arguments.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The new file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
 * 
@@ -195,7 +248,7 @@ Nfs__AttrStat *set_attributes(Nfs__FHandle *file_fhandle, Nfs__SAttr *sattr) {
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *set_attributes_success(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) {
+Nfs__AttrStat *set_attributes_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) {
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = mode;
     sattr.uid = uid;
@@ -204,11 +257,22 @@ Nfs__AttrStat *set_attributes_success(Nfs__FHandle *file_fhandle, mode_t mode, u
     sattr.atime = atime;
     sattr.mtime = mtime;
 
-    Nfs__AttrStat *attrstat = set_attributes(file_fhandle, &sattr);
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__AttrStat *attrstat = set_attributes(rpc_connection_context, file_fhandle, &sattr);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate AttrStat
     cr_assert_not_null(attrstat->nfs_status);
-    cr_assert_eq(attrstat->nfs_status->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(attrstat->nfs_status->stat);
+    cr_assert_eq(attrstat->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
     
     // validate attributes
@@ -224,9 +288,12 @@ Nfs__AttrStat *set_attributes_success(Nfs__FHandle *file_fhandle, mode_t mode, u
 * Given the Nfs__FHandle of a file or a directory, calls NFSPROC_SETATTR to update the attributes of
 * the given file to the values given in 'mode', 'uid', 'gid,' 'size', 'atime', 'mtime' arguments.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void set_attributes_fail(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
+void set_attributes_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = mode;
     sattr.uid = uid;
@@ -235,10 +302,21 @@ void set_attributes_fail(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid
     sattr.atime = atime;
     sattr.mtime = mtime;
 
-    Nfs__AttrStat *attrstat = set_attributes(file_fhandle, &sattr);
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__AttrStat *attrstat = set_attributes(rpc_connection_context, file_fhandle, &sattr);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(attrstat->nfs_status);
-    cr_assert_eq(attrstat->nfs_status->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(attrstat->nfs_status->stat);
+    cr_assert_eq(attrstat->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
     cr_assert_not_null(attrstat->default_case);
 
@@ -257,7 +335,7 @@ void set_attributes_fail(Nfs__FHandle *file_fhandle, mode_t mode, uid_t uid, uid
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
 * and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
 */
-Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *filename) {
+Nfs__DirOpRes *lookup_file_or_directory(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename) {
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = filename;
 
@@ -266,9 +344,7 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
     diropargs.name = &file_name;
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_4_look_up_file_name(rpc_connection_context, diropargs, diropres);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(diropres);
         cr_fatal("NFSPROC_LOOKUP failed - status %d\n", status);
@@ -283,6 +359,9 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
 * Given the Nfs__FHandle of a directory, calls NFSPROC_LOOKUP to lookup the given filename
 * inside the given directory.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The file attributes received in procedure results are validated assuming the file has type given in 'expected_ftype'.
 * 
@@ -294,12 +373,23 @@ Nfs__DirOpRes *lookup_file_or_directory(Nfs__FHandle *directory_fhandle, char *f
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
 * and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
 */
-Nfs__DirOpRes *lookup_file_or_directory_success(Nfs__FHandle *directory_fhandle, char *filename, Nfs__FType expected_ftype) {
-    Nfs__DirOpRes *diropres = lookup_file_or_directory(directory_fhandle, filename);
+Nfs__DirOpRes *lookup_file_or_directory_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__FType expected_ftype) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__DirOpRes *diropres = lookup_file_or_directory(rpc_connection_context, directory_fhandle, filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate DirOpRes
     cr_assert_not_null(diropres->nfs_status);
-    cr_assert_eq(diropres->nfs_status->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(diropres->nfs_status->stat);
+    cr_assert_eq(diropres->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
     cr_assert_not_null(diropres->diropok);
 
@@ -319,14 +409,28 @@ Nfs__DirOpRes *lookup_file_or_directory_success(Nfs__FHandle *directory_fhandle,
 * Given the Nfs__FHandle of a directory, calls NFSPROC_LOOKUP to lookup the given filename
 * inside the given directory.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void lookup_file_or_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
-    Nfs__DirOpRes *diropres = lookup_file_or_directory(directory_fhandle, filename);
+void lookup_file_or_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__DirOpRes *diropres = lookup_file_or_directory(rpc_connection_context, directory_fhandle, filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate DirOpRes
     cr_assert_not_null(diropres->nfs_status);
-    cr_assert_eq(diropres->nfs_status->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(diropres->nfs_status->stat);
+    cr_assert_eq(diropres->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(diropres->default_case);
 
@@ -345,7 +449,7 @@ void lookup_file_or_directory_fail(Nfs__FHandle *directory_fhandle, char *filena
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadRes
 * and always call 'nfs__read_res__free_unpacked()' on it at some point.
 */
-Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count) {
+Nfs__ReadRes *read_from_file(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count) {
     Nfs__ReadArgs readargs = NFS__READ_ARGS__INIT;
     readargs.file = file_fhandle;
     readargs.offset = offset;
@@ -353,9 +457,7 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
     readargs.totalcount = 0; // unused
 
     Nfs__ReadRes *readres = malloc(sizeof(Nfs__ReadRes));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_6_read_from_file(rpc_connection_context, readargs, readres);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(readres);
         cr_fatal("NFSPROC_READ failed - status %d\n", status);
@@ -369,6 +471,9 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 /*
 * Given the Nfs__FHandle of a file, calls NFSPROC_READ to read up to 'byte_count' from 'offset' in the
 * specified file.
+*
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
 *
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The file attributes received in procedure results are validated assuming the file attributes before the read
@@ -384,12 +489,23 @@ Nfs__ReadRes *read_from_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadRes
 * and always call 'nfs__read_res__free_unpacked()' on it at some point.
 */
-Nfs__ReadRes *read_from_file_success(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read, uint32_t expected_read_size, uint8_t *expected_read_content) {
-    Nfs__ReadRes *readres = read_from_file(file_fhandle, offset, byte_count);
+Nfs__ReadRes *read_from_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read, uint32_t expected_read_size, uint8_t *expected_read_content) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__ReadRes *readres = read_from_file(rpc_connection_context, file_fhandle, offset, byte_count);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate ReadRes
     cr_assert_not_null(readres->nfs_status);
-    cr_assert_eq(readres->nfs_status->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(readres->nfs_status->stat);
+    cr_assert_eq(readres->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(readres->body_case, NFS__READ_RES__BODY_READRESBODY);
     cr_assert_not_null(readres->readresbody);
 
@@ -418,14 +534,28 @@ Nfs__ReadRes *read_from_file_success(Nfs__FHandle *file_fhandle, uint32_t offset
 * Given the Nfs__FHandle of a file, calls NFSPROC_READ to read up to 'byte_count' from 'offset' in the
 * specified file.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void read_from_file_fail(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__Stat non_nfs_ok_status) {
-    Nfs__ReadRes *readres = read_from_file(file_fhandle, offset, byte_count);
+void read_from_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__ReadRes *readres = read_from_file(rpc_connection_context, file_fhandle, offset, byte_count);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate ReadRes
     cr_assert_not_null(readres->nfs_status);
-    cr_assert_eq(readres->nfs_status->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(readres->nfs_status->stat);
+    cr_assert_eq(readres->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(readres->body_case, NFS__READ_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(readres->default_case);
 
@@ -444,7 +574,7 @@ void read_from_file_fail(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t b
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer) {
+Nfs__AttrStat *write_to_file(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer) {
     Nfs__WriteArgs writeargs = NFS__WRITE_ARGS__INIT;
     writeargs.file = file_fhandle;
     writeargs.beginoffset = 0; // unused
@@ -455,9 +585,7 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
     writeargs.nfsdata.len = byte_count;
 
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_8_write_to_file(rpc_connection_context, writeargs, attrstat);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(attrstat);
         cr_fatal("NFSPROC_WRITE failed - status %d\n", status);
@@ -472,6 +600,9 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 * Given the Nfs__FHandle of a file, calls NFSPROC_WRITE to write the given 'byte_count' at 'offset' in
 * that file, from the specified source buffer.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
 * 
@@ -483,12 +614,23 @@ Nfs__AttrStat *write_to_file(Nfs__FHandle *file_fhandle, uint32_t offset, uint32
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__AttrStat
 * and always call 'nfs__attr_stat__free_unpacked()' on it at some point.
 */
-Nfs__AttrStat *write_to_file_success(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__FType ftype) {
-    Nfs__AttrStat *attrstat = write_to_file(file_fhandle, offset, byte_count, source_buffer);
+Nfs__AttrStat *write_to_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__FType ftype) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__AttrStat *attrstat = write_to_file(rpc_connection_context, file_fhandle, offset, byte_count, source_buffer);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate AttrStat
     cr_assert_not_null(attrstat->nfs_status);
-    cr_assert_eq(attrstat->nfs_status->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(attrstat->nfs_status->stat);
+    cr_assert_eq(attrstat->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_ATTRIBUTES);
 
     // validate attributes
@@ -503,13 +645,27 @@ Nfs__AttrStat *write_to_file_success(Nfs__FHandle *file_fhandle, uint32_t offset
 * Given the Nfs__FHandle of a file, calls NFSPROC_WRITE to write the given 'byte_count' at 'offset' in
 * that file, from the specified source buffer.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void write_to_file_fail(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__Stat non_nfs_ok_status) {
-    Nfs__AttrStat *attrstat = write_to_file(file_fhandle, offset, byte_count, source_buffer);
+void write_to_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__AttrStat *attrstat = write_to_file(rpc_connection_context, file_fhandle, offset, byte_count, source_buffer);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(attrstat->nfs_status);
-    cr_assert_eq(attrstat->nfs_status->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(attrstat->nfs_status->stat);
+    cr_assert_eq(attrstat->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(attrstat->body_case, NFS__ATTR_STAT__BODY_DEFAULT_CASE);
     cr_assert_not_null(attrstat->default_case);
 
@@ -528,7 +684,7 @@ void write_to_file_fail(Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t by
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
 * and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
 */
-Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, Nfs__SAttr *sattr) {
+Nfs__DirOpRes *create_file(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__SAttr *sattr) {
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = filename;
 
@@ -541,9 +697,7 @@ Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, Nfs_
     createargs.attributes = sattr;
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_9_create_file(rpc_connection_context, createargs, diropres);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(diropres);
         cr_fatal("NFSPROC_CREATE failed - status %d\n", status);
@@ -559,6 +713,9 @@ Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, Nfs_
 * inside the given directory. The file is created with initial attributes specified in mode, uid, gid, size,
 * atime, mtime arguments.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
 * 
@@ -570,7 +727,7 @@ Nfs__DirOpRes *create_file(Nfs__FHandle *directory_fhandle, char *filename, Nfs_
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
 * and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
 */
-Nfs__DirOpRes *create_file_success(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) { 
+Nfs__DirOpRes *create_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) { 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = mode;
     sattr.uid = uid;
@@ -579,10 +736,21 @@ Nfs__DirOpRes *create_file_success(Nfs__FHandle *directory_fhandle, char *filena
     sattr.atime = atime;
     sattr.mtime = mtime;
     
-    Nfs__DirOpRes *diropres = create_file(directory_fhandle, filename, &sattr);
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__DirOpRes *diropres = create_file(rpc_connection_context, directory_fhandle, filename, &sattr);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(diropres->nfs_status);
-    cr_assert_eq(diropres->nfs_status->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(diropres->nfs_status->stat);
+    cr_assert_eq(diropres->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
     cr_assert_not_null(diropres->diropok);
 
@@ -604,9 +772,12 @@ Nfs__DirOpRes *create_file_success(Nfs__FHandle *directory_fhandle, char *filena
 * inside the given directory. The file is created with initial attributes specified in mode, uid, gid, size,
 * atime, mtime arguments.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
+void create_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, size_t size, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = mode;
     sattr.uid = uid;
@@ -615,10 +786,21 @@ void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mo
     sattr.atime = atime;
     sattr.mtime = mtime;
 
-    Nfs__DirOpRes *diropres = create_file(directory_fhandle, filename, &sattr);
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__DirOpRes *diropres = create_file(rpc_connection_context, directory_fhandle, filename, &sattr);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(diropres->nfs_status);
-    cr_assert_eq(diropres->nfs_status->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(diropres->nfs_status->stat);
+    cr_assert_eq(diropres->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(diropres->default_case);
 
@@ -637,7 +819,7 @@ void create_file_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mo
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
 * and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
 */
-Nfs__NfsStat *remove_file(Nfs__FHandle *directory_fhandle, char *filename) {
+Nfs__NfsStat *remove_file(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename) {
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = filename;
 
@@ -646,9 +828,7 @@ Nfs__NfsStat *remove_file(Nfs__FHandle *directory_fhandle, char *filename) {
     diropargs.name = &file_name;
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_10_remove_file(rpc_connection_context, diropargs, nfsstat);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(nfsstat);
         cr_fatal("NFSPROC_REMOVE failed - status %d\n", status);
@@ -663,6 +843,9 @@ Nfs__NfsStat *remove_file(Nfs__FHandle *directory_fhandle, char *filename) {
 * Given the Nfs__FHandle of a directory, calls NFSPROC_REMOVE to delete the file with the given filename
 * inside the given directory.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * 
 * Returns the Nfs__NfsStat returned by REMOVE procedure.
@@ -673,10 +856,21 @@ Nfs__NfsStat *remove_file(Nfs__FHandle *directory_fhandle, char *filename) {
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
 * and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
 */
-Nfs__NfsStat *remove_file_success(Nfs__FHandle *directory_fhandle, char *filename) { 
-    Nfs__NfsStat *nfsstat = remove_file(directory_fhandle, filename);
+Nfs__NfsStat *remove_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = remove_file(rpc_connection_context, directory_fhandle, filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
-    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
 
     return nfsstat;
 }
@@ -685,12 +879,26 @@ Nfs__NfsStat *remove_file_success(Nfs__FHandle *directory_fhandle, char *filenam
 * Given the Nfs__FHandle of a directory, calls NFSPROC_REMOVE to delete the file with the given filename
 * inside the given directory.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void remove_file_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
-    Nfs__NfsStat *nfsstat = remove_file(directory_fhandle, filename);
+void remove_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = remove_file(rpc_connection_context, directory_fhandle, filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
-    cr_assert_eq(nfsstat->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
 
     nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 }
@@ -708,7 +916,7 @@ void remove_file_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
 * and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
 */
-Nfs__NfsStat *rename_file(Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename) {
+Nfs__NfsStat *rename_file(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename) {
     Nfs__FileName from_file_name = NFS__FILE_NAME__INIT;
     from_file_name.filename = from_filename;
 
@@ -728,9 +936,7 @@ Nfs__NfsStat *rename_file(Nfs__FHandle *from_directory_fhandle, char *from_filen
     renameargs.to = &to;
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_11_rename_file(rpc_connection_context, renameargs, nfsstat);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(nfsstat);
         cr_fatal("NFSPROC_RENAME failed - status %d\n", status);
@@ -746,6 +952,9 @@ Nfs__NfsStat *rename_file(Nfs__FHandle *from_directory_fhandle, char *from_filen
 * inside the 'from' and 'to' directores, calls NFSPROC_RENAME to rename the file with the given 'from' filename in the
 * 'from' directory to the 'to' directory with the 'to' filename.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * 
 * Returns the Nfs__NfsStat returned by RENAME procedure.
@@ -756,10 +965,21 @@ Nfs__NfsStat *rename_file(Nfs__FHandle *from_directory_fhandle, char *from_filen
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
 * and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
 */
-Nfs__NfsStat *rename_file_success(Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename) {
-    Nfs__NfsStat *nfsstat = rename_file(from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
+Nfs__NfsStat *rename_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = rename_file(rpc_connection_context, from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
-    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
 
     return nfsstat;
 }
@@ -769,10 +989,21 @@ Nfs__NfsStat *rename_file_success(Nfs__FHandle *from_directory_fhandle, char *fr
 * inside the 'from' and 'to' directores, calls NFSPROC_RENAME to rename the file with the given 'from' filename in the
 * 'from' directory to the 'to' directory with the 'to' filename.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void rename_file_fail(Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename, Nfs__Stat non_nfs_ok_status) {
-    Nfs__NfsStat *nfsstat = rename_file(from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
+void rename_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = rename_file(rpc_connection_context, from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
     cr_assert_eq(nfsstat->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
@@ -794,7 +1025,7 @@ void rename_file_fail(Nfs__FHandle *from_directory_fhandle, char *from_filename,
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
 * and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
 */
-Nfs__NfsStat *create_symbolic_link(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target) {
+Nfs__NfsStat *create_symbolic_link(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target) {
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = filename;
 
@@ -817,9 +1048,7 @@ Nfs__NfsStat *create_symbolic_link(Nfs__FHandle *directory_fhandle, char *filena
     symlinkargs.attributes = &sattr;
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_13_create_symbolic_link(rpc_connection_context, symlinkargs, nfsstat);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(nfsstat);
         cr_fatal("NFSPROC_SYMLINK failed - status %d\n", status);
@@ -834,6 +1063,9 @@ Nfs__NfsStat *create_symbolic_link(Nfs__FHandle *directory_fhandle, char *filena
 * Given the Nfs__FHandle of a directory, calls NFSPROC_SYMLINK to create a symbolic link with the given filename
 * inside this given directory, pointing to file given by 'target' absolute path.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * 
 * Returns the Nfs__DirOpRes returned by SYMLINK procedure.
@@ -844,10 +1076,21 @@ Nfs__NfsStat *create_symbolic_link(Nfs__FHandle *directory_fhandle, char *filena
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
 * and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
 */
-Nfs__NfsStat *create_symbolic_link_success(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target) {     
-    Nfs__NfsStat *nfsstat = create_symbolic_link(directory_fhandle, filename, target);
+Nfs__NfsStat *create_symbolic_link_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = create_symbolic_link(rpc_connection_context, directory_fhandle, filename, target);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
-    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
 
     return nfsstat;
 }
@@ -856,12 +1099,26 @@ Nfs__NfsStat *create_symbolic_link_success(Nfs__FHandle *directory_fhandle, char
 * Given the Nfs__FHandle of a directory, calls NFSPROC_SYMLINK to create a symbolic link with the given filename
 * inside this given directory, pointing to file given by 'target' absolute path.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void create_symbolic_link_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target, Nfs__Stat non_nfs_ok_status) {
-    Nfs__NfsStat *nfsstat = create_symbolic_link(directory_fhandle, filename, target);
+void create_symbolic_link_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = create_symbolic_link(rpc_connection_context, directory_fhandle, filename, target);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
-    cr_assert_eq(nfsstat->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
 
     nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 }
@@ -878,7 +1135,7 @@ void create_symbolic_link_fail(Nfs__FHandle *directory_fhandle, char *filename, 
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
 * and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
 */
-Nfs__DirOpRes *create_directory(Nfs__FHandle *directory_fhandle, char *filename, Nfs__SAttr *sattr) {
+Nfs__DirOpRes *create_directory(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__SAttr *sattr) {
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = filename;
 
@@ -891,9 +1148,7 @@ Nfs__DirOpRes *create_directory(Nfs__FHandle *directory_fhandle, char *filename,
     createargs.attributes = sattr;
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_14_create_directory(rpc_connection_context, createargs, diropres);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(diropres);
         cr_fatal("NFSPROC_MKDIR failed - status %d\n", status);
@@ -909,6 +1164,9 @@ Nfs__DirOpRes *create_directory(Nfs__FHandle *directory_fhandle, char *filename,
 * inside the given directory. The file is created with initial attributes specified in mode, uid, gid, atime, 
 * mtime arguments (size attribute not used, as it can not be set for directories).
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The file attributes received in procedure results are validated assuming the file has type given in 'ftype'.
 * 
@@ -920,7 +1178,7 @@ Nfs__DirOpRes *create_directory(Nfs__FHandle *directory_fhandle, char *filename,
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__DirOpRes
 * and always call 'nfs__dir_op_res__free_unpacked()' on it at some point.
 */
-Nfs__DirOpRes *create_directory_success(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) { 
+Nfs__DirOpRes *create_directory_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__FType ftype) { 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = mode;
     sattr.uid = uid;
@@ -929,10 +1187,21 @@ Nfs__DirOpRes *create_directory_success(Nfs__FHandle *directory_fhandle, char *f
     sattr.atime = atime;
     sattr.mtime = mtime;
     
-    Nfs__DirOpRes *diropres = create_directory(directory_fhandle, filename, &sattr);
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__DirOpRes *diropres = create_directory(rpc_connection_context, directory_fhandle, filename, &sattr);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(diropres->nfs_status);
-    cr_assert_eq(diropres->nfs_status->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(diropres->nfs_status->stat);
+    cr_assert_eq(diropres->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DIROPOK);
     cr_assert_not_null(diropres->diropok);
 
@@ -954,9 +1223,12 @@ Nfs__DirOpRes *create_directory_success(Nfs__FHandle *directory_fhandle, char *f
 * inside the given directory. The file is created with initial attributes specified in mode, uid, gid, atime, 
 * mtime arguments (size attribute not used, as it can not be set for directories).
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void create_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
+void create_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, mode_t mode, uid_t uid, uid_t gid, Nfs__TimeVal *atime, Nfs__TimeVal *mtime, Nfs__Stat non_nfs_ok_status) {
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = mode;
     sattr.uid = uid;
@@ -965,10 +1237,21 @@ void create_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, mode
     sattr.atime = atime;
     sattr.mtime = mtime;
 
-    Nfs__DirOpRes *diropres = create_directory(directory_fhandle, filename, &sattr);
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__DirOpRes *diropres = create_directory(rpc_connection_context, directory_fhandle, filename, &sattr);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(diropres->nfs_status);
-    cr_assert_eq(diropres->nfs_status->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(diropres->nfs_status->stat);
+    cr_assert_eq(diropres->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(diropres->body_case, NFS__DIR_OP_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(diropres->default_case);
 
@@ -987,7 +1270,7 @@ void create_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, mode
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
 * and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
 */
-Nfs__NfsStat *remove_directory(Nfs__FHandle *directory_fhandle, char *filename) {
+Nfs__NfsStat *remove_directory(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename) {
     Nfs__FileName file_name = NFS__FILE_NAME__INIT;
     file_name.filename = filename;
 
@@ -996,9 +1279,7 @@ Nfs__NfsStat *remove_directory(Nfs__FHandle *directory_fhandle, char *filename) 
     diropargs.name = &file_name;
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_15_remove_directory(rpc_connection_context, diropargs, nfsstat);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(nfsstat);
         cr_fatal("NFSPROC_RMDIR failed - status %d\n", status);
@@ -1013,6 +1294,9 @@ Nfs__NfsStat *remove_directory(Nfs__FHandle *directory_fhandle, char *filename) 
 * Given the Nfs__FHandle of a directory, calls NFSPROC_RMDIR to delete the directory with the given
 * filename inside the given directory.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * 
 * Returns the Nfs__NfsStat returned by RMDIR procedure.
@@ -1023,10 +1307,21 @@ Nfs__NfsStat *remove_directory(Nfs__FHandle *directory_fhandle, char *filename) 
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
 * and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
 */
-Nfs__NfsStat *remove_directory_success(Nfs__FHandle *directory_fhandle, char *filename) { 
-    Nfs__NfsStat *nfsstat = remove_directory(directory_fhandle, filename);
+Nfs__NfsStat *remove_directory_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = remove_directory(rpc_connection_context, directory_fhandle, filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
-    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
 
     return nfsstat;
 }
@@ -1035,12 +1330,26 @@ Nfs__NfsStat *remove_directory_success(Nfs__FHandle *directory_fhandle, char *fi
 * Given the Nfs__FHandle of a directory, calls NFSPROC_RMDIR to delete the directory with the given 
 * filename inside the given directory.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void remove_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
-    Nfs__NfsStat *nfsstat = remove_directory(directory_fhandle, filename);
+void remove_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = remove_directory(rpc_connection_context, directory_fhandle, filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
-    cr_assert_eq(nfsstat->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
 
     nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 }
@@ -1057,7 +1366,7 @@ void remove_directory_fail(Nfs__FHandle *directory_fhandle, char *filename, Nfs_
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadDirRes
 * and always call 'nfs__read_dir_res__free_unpacked()' on it at some point.
 */
-Nfs__ReadDirRes *read_from_directory(Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count) {
+Nfs__ReadDirRes *read_from_directory(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count) {
     Nfs__NfsCookie nfs_cookie = NFS__NFS_COOKIE__INIT;
     nfs_cookie.value = cookie;
 
@@ -1067,9 +1376,7 @@ Nfs__ReadDirRes *read_from_directory(Nfs__FHandle *directory_fhandle, uint64_t c
     readdirargs.count = byte_count;
 
     Nfs__ReadDirRes *readdirres = malloc(sizeof(Nfs__ReadDirRes));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_16_read_from_directory(rpc_connection_context, readdirargs, readdirres);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(readdirres);
         cr_fatal("NFSPROC_READDIR failed - status %d\n", status);
@@ -1084,6 +1391,9 @@ Nfs__ReadDirRes *read_from_directory(Nfs__FHandle *directory_fhandle, uint64_t c
 * Given the Nfs__FHandle of a directory, calls NFSPROC_READDIR to read entries from this directory starting at
 * offset specified by the Nfs 'cookie', with total size up to 'byte_count'.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * The filenames in the directory entries in the procedure results are checked to exactly be equal to the set of
 * filenames given in 'expected_filenames' argument which consists of 'expected_number_of_entries' filenames.
@@ -1096,12 +1406,23 @@ Nfs__ReadDirRes *read_from_directory(Nfs__FHandle *directory_fhandle, uint64_t c
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadDirRes
 * and always call 'nfs__read_dir_res__free_unpacked()' on it at some point.
 */
-Nfs__ReadDirRes *read_from_directory_success(Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, int expected_number_of_entries, char *expected_filenames[]) {
-    Nfs__ReadDirRes *readdirres = read_from_directory(directory_fhandle, cookie, byte_count);
+Nfs__ReadDirRes *read_from_directory_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, int expected_number_of_entries, char *expected_filenames[]) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__ReadDirRes *readdirres = read_from_directory(rpc_connection_context, directory_fhandle, cookie, byte_count);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate ReadDirRes
     cr_assert_not_null(readdirres->nfs_status);
-    cr_assert_eq(readdirres->nfs_status->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(readdirres->nfs_status->stat);
+    cr_assert_eq(readdirres->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(readdirres->body_case, NFS__READ_DIR_RES__BODY_READDIROK);
     cr_assert_not_null(readdirres->readdirok);
 
@@ -1154,14 +1475,28 @@ Nfs__ReadDirRes *read_from_directory_success(Nfs__FHandle *directory_fhandle, ui
 * Given the Nfs__FHandle of a directory, calls NFSPROC_READDIR to read entries from this directory starting at
 * offset specified by the Nfs 'cookie', with total size up to 'byte_count'.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void read_from_directory_fail(Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, Nfs__Stat non_nfs_ok_status) {
-    Nfs__ReadDirRes *readdirres = read_from_directory(directory_fhandle, cookie, byte_count);
+void read_from_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__ReadDirRes *readdirres = read_from_directory(rpc_connection_context, directory_fhandle, cookie, byte_count);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate ReadDirRes
     cr_assert_not_null(readdirres->nfs_status);
-    cr_assert_eq(readdirres->nfs_status->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(readdirres->nfs_status->stat);
+    cr_assert_eq(readdirres->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(readdirres->body_case, NFS__READ_DIR_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(readdirres->default_case);
 
@@ -1179,11 +1514,9 @@ void read_from_directory_fail(Nfs__FHandle *directory_fhandle, uint64_t cookie, 
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__StatFsRes
 * and always call 'nfs__stat_fs_res__free_unpacked()' on it at some point.
 */
-Nfs__StatFsRes *get_filesystem_attributes(Nfs__FHandle fhandle) {
+Nfs__StatFsRes *get_filesystem_attributes(RpcConnectionContext *rpc_connection_context, Nfs__FHandle fhandle) {
     Nfs__StatFsRes *statfsres = malloc(sizeof(Nfs__StatFsRes));
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
     int status = nfs_procedure_17_get_filesystem_attributes(rpc_connection_context, fhandle, statfsres);
-    free_rpc_connection_context(rpc_connection_context);
     if(status != 0) {
         free(statfsres);
         cr_fatal("NFSPROC_STATFS failed - status %d\n", status);
@@ -1197,6 +1530,9 @@ Nfs__StatFsRes *get_filesystem_attributes(Nfs__FHandle fhandle) {
 /*
 * Given the Nfs__FHandle of a file or a directory, calls NFSPROC_STATFS to get filesystem attributes.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 *
 * Returns the Nfs__StatFsRes returned by STATFS procedure.
@@ -1207,12 +1543,23 @@ Nfs__StatFsRes *get_filesystem_attributes(Nfs__FHandle fhandle) {
 * so the user of this function should always assume this function returns a valid non-NULL Nfs__StatFsRes
 * and always call 'nfs__stat_fs_res__free_unpacked()' on it at some point.
 */
-Nfs__StatFsRes *get_filesystem_attributes_success(Nfs__FHandle fhandle) {
-    Nfs__StatFsRes *statfsres = get_filesystem_attributes(fhandle);
+Nfs__StatFsRes *get_filesystem_attributes_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle fhandle) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__StatFsRes *statfsres = get_filesystem_attributes(rpc_connection_context, fhandle);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     // validate StatFsRes
     cr_assert_not_null(statfsres->nfs_status);
-    cr_assert_eq(statfsres->nfs_status->stat, NFS__STAT__NFS_OK);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(statfsres->nfs_status->stat);
+    cr_assert_eq(statfsres->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(statfsres->body_case, NFS__STAT_FS_RES__BODY_FS_INFO);
 
     // validate FsInfo
@@ -1224,13 +1571,27 @@ Nfs__StatFsRes *get_filesystem_attributes_success(Nfs__FHandle fhandle) {
 /*
 * Given the Nfs__FHandle of a file or a directory, calls NFSPROC_STATFS to get filesystem attributes.
 *
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
 * The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
 */
-void get_filesystem_attributes_fail(Nfs__FHandle fhandle, Nfs__Stat non_nfs_ok_status) {
-    Nfs__StatFsRes *statfsres = get_filesystem_attributes(fhandle);
+void get_filesystem_attributes_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle fhandle, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__StatFsRes *statfsres = get_filesystem_attributes(rpc_connection_context, fhandle);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
 
     cr_assert_not_null(statfsres->nfs_status);
-    cr_assert_eq(statfsres->nfs_status->stat, non_nfs_ok_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(statfsres->nfs_status->stat);
+    cr_assert_eq(statfsres->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
     cr_assert_eq(statfsres->body_case, NFS__STAT_FS_RES__BODY_DEFAULT_CASE);
     cr_assert_not_null(statfsres->default_case);
 

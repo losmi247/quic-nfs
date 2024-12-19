@@ -41,10 +41,15 @@ int is_directory_exported(const char *absolute_path) {
 /*
 * Runs the MOUNTPROC_MNT procedure (1).
 *
+* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
+* flavor) before being passed here.
+* This procedure must not be given AUTH_NONE credential+verifier pair.
+*
 * The user of this function takes the responsibility to deallocate the received AcceptedReply
 * using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply *serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_mnt_procedure_1_add_mount_entry(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "mount/DirPath") != 0) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: Expected mount/DirPath but received %s\n", parameters->type_url);
@@ -53,7 +58,6 @@ Rpc__AcceptedReply *serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any 
     }
 
     // deserialize parameters
-    // if valid, this DirPath is freed at server shutdown as part of mountlist cleanup - it needs to be persisted here at server!
     Mount__DirPath *dirpath = mount__dir_path__unpack(NULL, parameters->value.len, parameters->value.data);
     if(dirpath == NULL) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: Failed to unpack DirPath\n");
@@ -160,6 +164,36 @@ Rpc__AcceptedReply *serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any 
         return wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
     }
 
+    // check permissions
+    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat = check_mount_proc_permissions(directory_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
+        if(stat < 0) {
+            fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: failed checking MNT permissions for directory at absolute path '%s' with error code %d\n", directory_absolute_path, stat);
+
+            mount__dir_path__free_unpacked(dirpath, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+
+        // client does not have correct permission to mount this directory
+        if(stat == 1) {
+            Mount__FhStatus *fh_status = create_default_case_fh_status(MOUNT__STAT__MNTERR_ACCES);
+
+            // serialize the procedure results
+            size_t fh_status_size = mount__fh_status__get_packed_size(fh_status);
+            uint8_t *fh_status_buffer = malloc(fh_status_size);
+            mount__fh_status__pack(fh_status, fh_status_buffer);
+
+            mount__dir_path__free_unpacked(dirpath, NULL);
+            free(fh_status->mnt_status);
+            free(fh_status->default_case);
+            free(fh_status);
+
+            return wrap_procedure_results_in_successful_accepted_reply(fh_status_size, fh_status_buffer, "mount/FhStatus");
+        }
+    }
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
+
     // create a NFS file handle for this directory
     NfsFh__NfsFileHandle directory_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
     error_code = create_nfs_filehandle(directory_absolute_path, &directory_nfs_filehandle, &inode_cache);
@@ -173,7 +207,7 @@ Rpc__AcceptedReply *serve_mnt_procedure_1_add_mount_entry(Google__Protobuf__Any 
     }
 
     // create a new mount entry - pass *dirpath instead of dirpath so that we are able to free it later from the mount list
-    add_mount_list_entry("client-hostname", directory_absolute_path, &mount_list); // TODO (QNFS-20): replace 'client-hostname' with actual client hostname when available
+    add_mount_list_entry(credential->auth_sys->machinename, directory_absolute_path, &mount_list);
 
     // build the procedure results
     Mount__FhStatus fh_status = MOUNT__FH_STATUS__INIT;

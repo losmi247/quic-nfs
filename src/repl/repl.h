@@ -2,7 +2,7 @@
 #define repl__header__INCLUDED
 
 #include <stdint.h>
-#include <src/serialization/nfs/nfs.pb-c.h>
+#include "src/serialization/nfs/nfs.pb-c.h"
 
 #include "filesystem_dag/filesystem_dag.h"
 

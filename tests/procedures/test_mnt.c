@@ -20,19 +20,19 @@ Test(mount_test_suite, null, .description = "MOUNTPROC_NULL") {
 
 // MOUNTPROC_MNT (1)
 Test(mount_test_suite, mnt_ok, .description = "MOUNTPROC_MNT ok") {
-    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
     mount__fh_status__free_unpacked(fhstatus, NULL);
 }
 
 Test(mount_test_suite, mnt_no_such_directory, .description = "MOUNTPROC_MNT no such directory") {
-    mount_directory_fail("/non_existent_directory", MOUNT__STAT__MNTERR_NOENT);
+    mount_directory_fail(NULL, "/non_existent_directory", MOUNT__STAT__MNTERR_NOENT);
 }
 
 Test(mount_test_suite, mnt_not_a_directory, .description = "MOUNTPROC_MNT not a directory") {
     // try to mount a file /nfs_share/test_file.txt
-    mount_directory_fail("/nfs_share/test_file.txt", MOUNT__STAT__MNTERR_NOTDIR);
+    mount_directory_fail(NULL, "/nfs_share/test_file.txt", MOUNT__STAT__MNTERR_NOTDIR);
 }
 
 Test(mount_test_suite, mnt_directory_not_exported, .description = "MOUNTPROC_MNT directory not exported") {
-    mount_directory_fail("/existent_but_non_exported_directory", MOUNT__STAT__MNTERR_NOTEXP);
+    mount_directory_fail(NULL, "/existent_but_non_exported_directory", MOUNT__STAT__MNTERR_NOTEXP);
 }

@@ -1,0 +1,37 @@
+#!/bin/bash
+
+touch /nfs_share/test_file.txt && \
+    echo -n "test_content" >> /nfs_share/test_file.txt
+touch /nfs_share/a.txt && \
+    echo -n "a" >> /nfs_share/a.txt
+touch /nfs_share/large_file.txt && \
+    dd if=/dev/zero of=/nfs_share/large_file.txt bs=10000 count=1
+
+mkdir /nfs_share/write_test && \
+    touch /nfs_share/write_test/write_test_file.txt && \
+    echo -n "write_test_content" >> /nfs_share/write_test/write_test_file.txt
+
+mkdir /nfs_share/create_test && \
+    touch /nfs_share/create_test/existing_file.txt
+
+mkdir /nfs_share/remove_test && \
+    touch /nfs_share/remove_test/remove_test_file.txt
+
+mkdir /nfs_share/rename_test && \
+    mkdir /nfs_share/rename_test/dir1 && \
+    mkdir /nfs_share/rename_test/dir2 && \
+    mkdir /nfs_share/rename_test/dir3 && \
+    mkdir /nfs_share/rename_test/dir4 && \
+    touch /nfs_share/rename_test/dir4/rename_test_file.txt && \
+    touch /nfs_share/rename_test/dir1/rename_test_file.txt
+
+mkdir /nfs_share/symlink_test && \
+    touch /nfs_share/symlink_test/existing_file
+
+mkdir /nfs_share/mkdir_test && \
+    touch /nfs_share/mkdir_test/existing_directory
+
+mkdir /nfs_share/rmdir_test && \
+    mkdir /nfs_share/rmdir_test/rmdir_test_dir
+
+mkdir -p /existent_but_non_exported_directory

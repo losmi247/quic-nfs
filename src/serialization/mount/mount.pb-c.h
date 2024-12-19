@@ -44,6 +44,10 @@ typedef enum _Mount__Stat {
    */
   MOUNT__STAT__MNTERR_IO = 5,
   /*
+   * the caller does not have the correct permission to perform the requested operation
+   */
+  MOUNT__STAT__MNTERR_ACCES = 13,
+  /*
    * not a directory - caller specified a non-directory in a directory operation
    */
   MOUNT__STAT__MNTERR_NOTDIR = 20

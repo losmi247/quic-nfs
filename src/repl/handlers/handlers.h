@@ -5,6 +5,7 @@
 
 #include "src/nfs/clients/mount_client.h"
 #include "src/nfs/clients/nfs_client.h"
+#include "src/common_permissions/common_permissions.h"
 
 #include "src/parsing/parsing.h"
 #include "src/repl/filehandle_management.h"

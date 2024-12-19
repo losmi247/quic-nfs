@@ -18,15 +18,19 @@ InodeCache inode_cache;
 /*
 * Forwards the RPC call to the specific RPC program, and returns the AcceptedReply.
 *
+* Also forwards a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
+* flavor) before being passed here.
+*
 * The user of this function takes the responsibility to deallocate the returned AcceptedReply
 * and any heap-allocated fields in it (this is done by the 'clean_up_accepted_reply' function after the RPC is sent).
 */
-Rpc__AcceptedReply *forward_rpc_call_to_program(uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *forward_rpc_call_to_program(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters) {
     if(program_number == MOUNT_RPC_PROGRAM_NUMBER) {
-        return call_mount(program_version, procedure_number, parameters);
+        return call_mount(credential, verifier, program_version, procedure_number, parameters);
     }
     if(program_number == NFS_RPC_PROGRAM_NUMBER) {
-        return call_nfs(program_version, procedure_number, parameters);
+        return call_nfs(credential, verifier, program_version, procedure_number, parameters);
     }
 
     fprintf(stderr, "Unknown program number");

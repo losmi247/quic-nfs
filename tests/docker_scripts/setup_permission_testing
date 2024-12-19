@@ -1,0 +1,57 @@
+#!/bin/bash
+
+DOCKER_IMAGE_TESTUSER_UID=1500
+DOCKER_IMAGE_TESTUSER_GID=2000
+
+# create a group and a user for testing of permission checking
+groupadd -g $DOCKER_IMAGE_TESTUSER_GID testusers
+useradd -u $DOCKER_IMAGE_TESTUSER_UID -g testusers testuser
+passwd testuser
+
+# files and directories for testing of permission checking
+mkdir /nfs_share/permission_test && \
+    chmod 0777 /nfs_share/permission_test
+
+# SETATTR procedure tests
+touch /nfs_share/permission_test/setattr_only_owner_write.txt && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/setattr_only_owner_write.txt && \
+    chmod 0200 /nfs_share/permission_test/setattr_only_owner_write.txt
+
+# WRITE procedure tests
+touch /nfs_share/permission_test/only_owner_write.txt && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_write.txt && \
+    chmod 0600 /nfs_share/permission_test/only_owner_write.txt # need both read and write permissions here to be able to read the file to confirm the write was done successfully in tests
+
+# LOOKUP procedure tests
+mkdir /nfs_share/permission_test/only_owner_execute && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_execute && \
+    chmod 0100 /nfs_share/permission_test/only_owner_execute && \
+    touch /nfs_share/permission_test/only_owner_execute/file.txt
+
+# READ procedure tests
+touch /nfs_share/permission_test/only_owner_read.txt && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_read.txt && \
+    chmod 0400 /nfs_share/permission_test/only_owner_read.txt && \
+    echo "testdata" > /nfs_share/permission_test/only_owner_read.txt
+
+# CREATE, MKDIR, SYMLINK tests
+mkdir /nfs_share/permission_test/only_owner_write && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_write && \
+    chmod 0200 /nfs_share/permission_test/only_owner_write && \
+# REMOVE procedure tests
+    touch /nfs_share/permission_test/only_owner_write/remove_file1.txt && \
+    touch /nfs_share/permission_test/only_owner_write/remove_file2.txt && \
+# RENAME procedure tests
+    touch /nfs_share/permission_test/only_owner_write/rename_file1.txt && \
+    touch /nfs_share/permission_test/only_owner_write/rename_file2.txt && \
+    touch /nfs_share/permission_test/only_owner_write/rename_file3.txt && \
+# RMDIR procedure tests
+    mkdir /nfs_share/permission_test/only_owner_write/remove_dir1 && \
+    mkdir /nfs_share/permission_test/only_owner_write/remove_dir2
+
+# READDIR procedure tests
+mkdir /nfs_share/permission_test/only_owner_read && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_read && \
+    chmod 0400 /nfs_share/permission_test/only_owner_read && \
+    touch /nfs_share/permission_test/only_owner_read/file.txt && \
+    mkdir /nfs_share/permission_test/only_owner_read/dir

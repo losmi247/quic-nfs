@@ -7,7 +7,7 @@
 TestSuite(nfs_statfs_test_suite);
 
 Test(nfs_statfs_test_suite, statfs_ok, .description = "NFSPROC_STATFS ok") {
-    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // get filesystem attributes
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -15,13 +15,13 @@ Test(nfs_statfs_test_suite, statfs_ok, .description = "NFSPROC_STATFS ok") {
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__StatFsRes *statfsres = get_filesystem_attributes_success(fhandle);
+    Nfs__StatFsRes *statfsres = get_filesystem_attributes_success(NULL, fhandle);
 
     nfs__stat_fs_res__free_unpacked(statfsres, NULL);
 }
 
 Test(nfs_statfs_test_suite, statfs_no_such_file_or_directory, .description = "NFSPROC_STATFS no such file or directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success("/nfs_share");
+    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // pick a nonexistent inode number in this mounted directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -31,7 +31,7 @@ Test(nfs_statfs_test_suite, statfs_no_such_file_or_directory, .description = "NF
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = &nfs_filehandle;
 
-    get_filesystem_attributes_fail(fhandle, NFS__STAT__NFSERR_NOENT);
+    get_filesystem_attributes_fail(NULL, fhandle, NFS__STAT__NFSERR_NOENT);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
 }

@@ -3,10 +3,15 @@
 /*
 * Runs the NFSPROC_READ procedure (6).
 *
+* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
+* flavor) before being passed here.
+* This procedure must not be given AUTH_NONE credential+verifier pair.
+*
 * The user of this function takes the responsibility to deallocate the received AcceptedReply
 * using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply *serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_6_read_from_file(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/ReadArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_6_read_from_file: expected nfs/ReadArgs but received %s\n", parameters->type_url);
@@ -94,6 +99,36 @@ Rpc__AcceptedReply *serve_nfs_procedure_6_read_from_file(Google__Protobuf__Any *
         return wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
     }
     clean_up_fattr(&fattr);
+
+    // check permissions
+    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat = check_read_proc_permissions(file_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
+        if(stat < 0) {
+            fprintf(stderr, "serve_nfs_procedure_6_read_from_file: failed checking READ permissions for file at absolute path '%s' with error code %d\n", file_absolute_path, stat);
+
+            nfs__read_args__free_unpacked(readargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+
+        // client does not have correct permission to read this file
+        if(stat == 1) {
+            // build the procedure results
+            Nfs__ReadRes *readres = create_default_case_read_res(NFS__STAT__NFSERR_ACCES);
+
+            // serialize the procedure results
+            size_t readres_size = nfs__read_res__get_packed_size(readres);
+            uint8_t *readres_buffer = malloc(readres_size);
+            nfs__read_res__pack(readres, readres_buffer);
+
+            nfs__read_args__free_unpacked(readargs, NULL);
+            free(readres->default_case);
+            free(readres);
+
+            return wrap_procedure_results_in_successful_accepted_reply(readres_size, readres_buffer, "nfs/ReadRes");
+        }
+    }
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
     // if client requested to read too much data in a single RPC, truncate the read down to NFS_MAXDATA bytes
     if(readargs->count > NFS_MAXDATA) {

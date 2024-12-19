@@ -26,6 +26,51 @@ uint16_t parse_port_number(char *port_number_string) {
 }
 
 /*
+* Returns a string describing the given Rpc__AuthStat.
+*
+* The user of this function takes the responsibility to free the returned string.
+*/
+char *auth_stat_to_string(Rpc__AuthStat auth_stat) {
+    switch(auth_stat) {
+        case RPC__AUTH_STAT__AUTH_OK:
+            return strdup("AUTH_OK");
+        case RPC__AUTH_STAT__AUTH_BADCRED:
+            return strdup("AUTH_BADCRED");
+        case RPC__AUTH_STAT__AUTH_REJECTEDCRED:
+            return strdup("AUTH_REJECTEDCRED");
+        case RPC__AUTH_STAT__AUTH_BADVERF:
+            return strdup("AUTH_BADVERF");
+        case RPC__AUTH_STAT__AUTH_REJECTEDVERF:
+            return strdup("AUTH_REJECTEDVERF");
+        case RPC__AUTH_STAT__AUTH_TOOWEAK:
+            return strdup("AUTH_TOOWEAK");
+
+        case RPC__AUTH_STAT__AUTH_INVALIDRESP:
+            return strdup("AUTH_INVALIDRESP");
+        case RPC__AUTH_STAT__AUTH_FAILED:
+            return strdup("AUTH_FAILED");
+
+        case RPC__AUTH_STAT__AUTH_KERB_GENERIC:
+            return strdup("AUTH_KERB_GENERIC");
+        case RPC__AUTH_STAT__AUTH_TIMEEXPIRE:
+            return strdup("AUTH_TIMEEXPIRE");
+        case RPC__AUTH_STAT__AUTH_TKT_FILE:
+            return strdup("AUTH_TKT_FILE");
+        case RPC__AUTH_STAT__AUTH_DECODE:
+            return strdup("AUTH_DECODE");
+        case RPC__AUTH_STAT__AUTH_NET_ADDR:
+            return strdup("AUTH_NET_ADDR");
+
+        case RPC__AUTH_STAT__RPCSEC_GSS_CREDPROBLEM:
+            return strdup("RPCSEC_GSS_CREDPROBLEM");
+        case RPC__AUTH_STAT__RPCSEC_GSS_CTXPROBLEM:
+            return strdup("RPCSEC_GSS_CTXPROBLEM");
+        default:
+            return strdup("Unknown");
+    }
+}
+
+/*
 * Returns a string describing the given Mount__Stat.
 *
 * The user of this function takes the responsibility to free the returned string.
@@ -40,6 +85,8 @@ char *mount_stat_to_string(Mount__Stat stat) {
             return strdup("MNTERR_NOTEXP");
         case MOUNT__STAT__MNTERR_IO:
             return strdup("MNTERR_IO");
+        case MOUNT__STAT__MNTERR_ACCES:
+            return strdup("MNTERR_ACCES");
         case MOUNT__STAT__MNTERR_NOTDIR:
             return strdup("MNTERR_NOTDIR");
         default:

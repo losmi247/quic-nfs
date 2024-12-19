@@ -45,6 +45,6 @@ int handle_client(int rpc_client_socket_fd);
 * E.g. the Nfs+Mount server implementation will implement the below functions.
 */
 
-Rpc__AcceptedReply *forward_rpc_call_to_program(uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
+Rpc__AcceptedReply *forward_rpc_call_to_program(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any *parameters);
 
 #endif /* server_common_rpc__header__INCLUDED */

@@ -9,6 +9,7 @@ ERROR_HANDLING_SRCS = ./src/error_handling/error_handling.c
 PARSING_SRCS = ./src/parsing/parsing.c
 PATH_BUILDING_SRCS = ./src/path_building/path_building.c
 AUTHENTICATION_SRCS = ./src/authentication/authentication.c
+COMMON_PERMISSIONS_SRCS = ./src/common_permissions/common_permissions.c
 
 FILEHANDLE_MANAGEMENT_SRCS = ./src/repl/filehandle_management.c
 
@@ -39,7 +40,8 @@ MOUNT_AND_NFS_SERVER_SRCS = ./src/nfs/server/mount.c ./src/nfs/server/procedures
 	./src/nfs/server/file_management.c \
 	./src/nfs/server/mount_messages.c \
 	./src/nfs/server/nfs_messages.c \
-	${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${AUTHENTICATION_SRCS} ${RPC_PROGRAM_COMMON_SERVER_SRCS}
+	./src/nfs/server/nfs_permissions.c \
+	${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${AUTHENTICATION_SRCS} ${COMMON_PERMISSIONS_SRCS} ${RPC_PROGRAM_COMMON_SERVER_SRCS}
 
 # files used by the Tests
 TESTS_SRCS = ./tests/procedures/test_*.c \
@@ -48,7 +50,7 @@ TESTS_SRCS = ./tests/procedures/test_*.c \
 
 # files used by the Repl
 REPL_SRCS = ./src/repl/handlers/*.c ./src/repl/validation/validation.c \
-	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${AUTHENTICATION_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
+	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${AUTHENTICATION_SRCS} ${COMMON_PERMISSIONS_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
 
 all: create-build-dir mount-and-nfs-server repl
 all-debug: create-build-dir mount-and-nfs-server-debug repl-debug

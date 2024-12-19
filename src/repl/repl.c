@@ -10,6 +10,7 @@
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"    // red color for displaying the CWD
 #define KGRN  "\x1B[32m"
+#define KBLU  "\x1B[34m"
 
 /*
 * Define Nfs Client state.
@@ -20,6 +21,7 @@ RpcConnectionContext *rpc_connection_context;
 DAGNode *filesystem_dag_root;
 DAGNode *cwd_node;
 
+
 int is_filesystem_mounted(void) {
     return rpc_connection_context != NULL && filesystem_dag_root != NULL && cwd_node != NULL;
 }
@@ -27,6 +29,24 @@ int is_filesystem_mounted(void) {
 /*
 * Functions used by the REPL body.
 */
+
+void display_introduction(void) {
+    printf("NFS Client REPL\n");
+    printf("Supported commands:\n\n");
+    
+    printf(KBLU "mount <server_ip> <port> <remote_path>          ");
+    printf(KNRM "- mount a remote NFS share\n");
+
+    printf(KBLU "ls                                              ");
+    printf(KNRM "- list all entries in the current working directory\n");
+
+    printf(KBLU "cd <directory name>                             ");
+    printf(KNRM "- change cwd to the given directory name which is in the current working directory\n");
+
+    printf("\nType ");
+    printf(KBLU "exit");
+    printf(KNRM " to quit the REPL.\n\n");
+}
 
 /*
 * Displays the CWD and '>' at the start of the line in the REPL.
@@ -55,14 +75,7 @@ void clean_up(void) {
 }
 
 int main(void) {
-    printf("NFS Client REPL\n");
-    printf("Supported commands:\n\n");
-    
-    printf("mount <server_ip> <port> <remote_path>          - mount a remote NFS share\n");
-    printf("ls                                              - list all entries in the current working directory\n");
-    printf("cd <directory name>                             - change cwd to the given directory name which is in the current working directory\n");
-
-    printf("\nType 'exit' to quit the REPL.\n\n");
+    display_introduction();
 
     // initialize NFS client state
     rpc_connection_context = NULL;

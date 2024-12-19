@@ -3,51 +3,25 @@ FROM gcc:latest
 COPY . /quic-nfs
 WORKDIR /quic-nfs
 
-RUN ./install_dependencies
+RUN chmod +x ./install_dependencies && \
+    ./install_dependencies
 
 WORKDIR /quic-nfs
 # create a directory for export
-RUN mkdir -p /nfs_share
+RUN mkdir -p /nfs_share && \
+    chmod +rx /nfs_share
 # mark /nfs_share as exported
 RUN touch exports && \
     echo "/nfs_share *(rw)" > ./exports
 
-# create some files and directories for testing purposes
-RUN touch /nfs_share/test_file.txt && \
-    echo -n "test_content" >> /nfs_share/test_file.txt
-RUN touch /nfs_share/a.txt && \
-    echo -n "a" >> /nfs_share/a.txt
-RUN touch /nfs_share/large_file.txt && \
-    dd if=/dev/zero of=/nfs_share/large_file.txt bs=10000 count=1
+# create files and directories for procedure testing
+RUN chmod +x ./tests/docker_scripts/setup_procedure_testing && \
+    ./tests/docker_scripts/setup_procedure_testing
 
-RUN mkdir /nfs_share/write_test && \
-    touch /nfs_share/write_test/write_test_file.txt && \
-    echo -n "write_test_content" >> /nfs_share/write_test/write_test_file.txt
+# create files and directories for testing of permission checking
+RUN chmod +x ./tests/docker_scripts/setup_permission_testing && \
+    ./tests/docker_scripts/setup_permission_testing
 
-RUN mkdir /nfs_share/create_test && \
-    touch /nfs_share/create_test/existing_file.txt
-
-RUN mkdir /nfs_share/remove_test && \
-    touch /nfs_share/remove_test/remove_test_file.txt
-
-RUN mkdir /nfs_share/rename_test && \
-    mkdir /nfs_share/rename_test/dir1 && \
-    mkdir /nfs_share/rename_test/dir2 && \
-    mkdir /nfs_share/rename_test/dir3 && \
-    mkdir /nfs_share/rename_test/dir4 && \
-    touch /nfs_share/rename_test/dir4/rename_test_file.txt && \
-    touch /nfs_share/rename_test/dir1/rename_test_file.txt
-
-RUN mkdir /nfs_share/symlink_test && \
-    touch /nfs_share/symlink_test/existing_file
-
-RUN mkdir /nfs_share/mkdir_test && \
-    touch /nfs_share/mkdir_test/existing_directory
-
-RUN mkdir /nfs_share/rmdir_test && \
-    mkdir /nfs_share/rmdir_test/rmdir_test_dir
-
-RUN mkdir -p /existent_but_non_exported_directory
 
 RUN chmod +x ./build/mount_and_nfs_server
 CMD ["./build/mount_and_nfs_server", "--test"]

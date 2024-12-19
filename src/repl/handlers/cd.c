@@ -38,7 +38,14 @@ void handle_cd(char *directory_name) {
         return;
     }
 
-    if(diropres->nfs_status->stat != NFS__STAT__NFS_OK) {
+    if(diropres->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
+        printf("cd: Permission denied: %s\n", directory_name);
+        
+        nfs__dir_op_res__free_unpacked(diropres, NULL);
+
+        return;
+    }
+    else if(diropres->nfs_status->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(diropres->nfs_status->stat);
         printf("Error: Failed to enter the specified directory with status %s\n", string_status);
         free(string_status);
@@ -76,6 +83,25 @@ void handle_cd(char *directory_name) {
     }
 
     char *child_absolute_path = get_file_absolute_path(cwd_node->absolute_path, directory_name);
+    
+    // check that client has execute access to this child directory
+    status = check_execute_permission(child_absolute_path, rpc_connection_context->credential->auth_sys->uid, rpc_connection_context->credential->auth_sys->gid);
+    if(status < 0) {
+        printf("Error: Failed to check if client has execute permission on directory %s with status %d\n", child_absolute_path, status);
+
+        nfs__dir_op_res__free_unpacked(diropres, NULL);
+        free(child_absolute_path);
+
+        return;
+    }
+    if(status == 1) {
+        printf("cd: Permission denied: %s\n", directory_name);
+
+        nfs__dir_op_res__free_unpacked(diropres, NULL);
+        free(child_absolute_path);
+
+        return;
+    }
 
     NfsFh__NfsFileHandle *child_nfs_filehandle_copy = malloc(sizeof(NfsFh__NfsFileHandle));
     *child_nfs_filehandle_copy = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
@@ -84,7 +110,7 @@ void handle_cd(char *directory_name) {
     nfs__fhandle__init(child_fhandle);
     child_fhandle->nfs_filehandle = child_nfs_filehandle_copy;
 
-    DAGNode *child_node = create_dag_node(strdup(child_absolute_path), diropres->diropok->attributes->nfs_ftype->ftype, child_fhandle, 0);
+    DAGNode *child_node = create_dag_node(child_absolute_path, diropres->diropok->attributes->nfs_ftype->ftype, child_fhandle, 0);
     nfs__dir_op_res__free_unpacked(diropres, NULL);
     free(child_absolute_path);
     if(filesystem_dag_root == NULL) {

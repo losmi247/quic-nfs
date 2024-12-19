@@ -3,10 +3,15 @@
 /*
 * Runs the NFSPROC_WRITE procedure (8).
 *
+* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
+* flavor) before being passed here.
+* This procedure must not be given AUTH_NONE credential+verifier pair.
+*
 * The user of this function takes the responsibility to deallocate the received AcceptedReply
 * using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply *serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_8_write_to_file(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/WriteArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_8_write_to_file: expected nfs/WriteArgs but received %s\n", parameters->type_url);
@@ -121,6 +126,37 @@ Rpc__AcceptedReply *serve_nfs_procedure_8_write_to_file(Google__Protobuf__Any *p
 
         return wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
     }
+
+    // check permissions
+    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat = check_write_proc_permissions(file_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
+        if(stat < 0) {
+            fprintf(stderr, "serve_nfs_procedure_8_write_to_file: failed checking WRITE permissions for file at absolute path '%s' with error code %d\n", file_absolute_path, stat);
+
+            nfs__write_args__free_unpacked(writeargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+
+        // client does not have correct permission to write to this file
+        if(stat == 1) {
+            // build the procedure results
+            Nfs__AttrStat *attr_stat = create_default_case_attr_stat(NFS__STAT__NFSERR_ACCES);
+
+            // serialize the procedure results
+            size_t attr_stat_size = nfs__attr_stat__get_packed_size(attr_stat);
+            uint8_t *attr_stat_buffer = malloc(attr_stat_size);
+            nfs__attr_stat__pack(attr_stat, attr_stat_buffer);
+
+            nfs__write_args__free_unpacked(writeargs, NULL);
+            free(attr_stat->nfs_status);
+            free(attr_stat->default_case);
+            free(attr_stat);
+
+            return wrap_procedure_results_in_successful_accepted_reply(attr_stat_size, attr_stat_buffer, "nfs/AttrStat");
+        }
+    }
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
     // write to the file
     error_code = write_to_file(file_absolute_path, writeargs->offset, writeargs->nfsdata.len, writeargs->nfsdata.data);

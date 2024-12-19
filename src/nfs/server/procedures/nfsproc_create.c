@@ -3,10 +3,15 @@
 /*
 * Runs the NFSPROC_CREATE procedure (9).
 *
+* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
+* flavor) before being passed here.
+* This procedure must not be given AUTH_NONE credential+verifier pair.
+*
 * The user of this function takes the responsibility to deallocate the received AcceptedReply
 * using the 'free_accepted_reply()' function.
 */
-Rpc__AcceptedReply *serve_nfs_procedure_9_create_file(Google__Protobuf__Any *parameters) {
+Rpc__AcceptedReply *serve_nfs_procedure_9_create_file(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
     if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/CreateArgs") != 0) {
         fprintf(stderr, "serve_nfs_procedure_9_create_file: expected nfs/CreateArgs but received %s\n", parameters->type_url);
@@ -211,6 +216,39 @@ Rpc__AcceptedReply *serve_nfs_procedure_9_create_file(Google__Protobuf__Any *par
         return create_system_error_accepted_reply();
     }
     // now we know we got a ENOENT from access() i.e. the file client wants to create does not exist
+
+    // check permissions
+    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat = check_create_proc_permissions(directory_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
+        if(stat < 0) {
+            fprintf(stderr, "serve_nfs_procedure_9_create_file: failed checking CREATE permissions for creating a file at absolute path '%s' with error code %d\n", file_absolute_path, stat);
+
+            free(file_absolute_path);
+            nfs__create_args__free_unpacked(createargs, NULL);
+
+            return create_system_error_accepted_reply();
+        }
+
+        // client does not have correct permission to create a file
+        if(stat == 1) {
+            // build the procedure results
+            Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_ACCES);
+
+            // serialize the procedure results
+            size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
+            uint8_t *diropres_buffer = malloc(diropres_size);
+            nfs__dir_op_res__pack(diropres, diropres_buffer);
+
+            free(file_absolute_path);
+            nfs__create_args__free_unpacked(createargs, NULL);
+            free(diropres->nfs_status);
+            free(diropres->default_case);
+            free(diropres);
+
+            return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
+        }
+    }
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
     // create the file
     int fd; 

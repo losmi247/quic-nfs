@@ -60,6 +60,16 @@ The client REPL currently supports the following set of Unix-like commands:
 | `ls`        | Lists all entries in the current working directory on the currently mounted remote file system.            |
 | `cd <directory name>`  | change cwd to the given directory name which is in the current working directory                |
 
+# Authentication
+
+Currently supported authentication flavors are:
+
+| **Command** | **Description**                                                                 |
+|-------------|---------------------------------------------------------------------------------|
+| `AUTH_NONE`     | no authentication                           |
+| `AUTH_SYS`        | Unix-style authentication            |
+| `AUTH_SHORT`  | not supported yet                |
+
 # Tests
 
 Tests are written using [**Criterion**](https://github.com/Snaipe/Criterion) testing framework.
