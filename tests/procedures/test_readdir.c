@@ -198,7 +198,7 @@ Test(nfs_readdir_test_suite, readdir_ok_read_directory_entries_in_batches, .desc
 * Permission tests
 */
 
-Test(nfs_readdir_test_suite, readdir_no_execute_permission, .description = "NFSPROC_READDIR no execute permission") {
+Test(nfs_readdir_test_suite, readdir_no_read_permission, .description = "NFSPROC_READDIR no read permission") {
     Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // lookup the permission_test directory inside the mounted directory
@@ -209,19 +209,19 @@ Test(nfs_readdir_test_suite, readdir_no_execute_permission, .description = "NFSP
 
     Nfs__DirOpRes *permission_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "permission_test", NFS__FTYPE__NFDIR);
 
-    // lookup the only_owner_execute directory inside the permission_test directory
+    // lookup the only_owner_read directory inside the permission_test directory
     Nfs__FHandle permission_test_fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle permission_test_nfs_filehandle_copy = deep_copy_nfs_filehandle(permission_test_dir_diropres->diropok->file->nfs_filehandle);
     nfs__dir_op_res__free_unpacked(permission_test_dir_diropres, NULL);
     permission_test_fhandle.nfs_filehandle = &permission_test_nfs_filehandle_copy;
 
-    Nfs__DirOpRes *only_owner_execute_dir_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_execute", NFS__FTYPE__NFDIR);
+    Nfs__DirOpRes *only_owner_read_dir_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_read", NFS__FTYPE__NFDIR);
 
-    // now try to read entries in this directory /nfs_share/permission_test/only_owner_execute, without having execute permission on it
-    Nfs__FHandle only_owner_execute_fhandle = NFS__FHANDLE__INIT;
-    NfsFh__NfsFileHandle only_owner_execute_nfs_filehandle_copy = deep_copy_nfs_filehandle(only_owner_execute_dir_diropres->diropok->file->nfs_filehandle);
-    nfs__dir_op_res__free_unpacked(only_owner_execute_dir_diropres, NULL);
-    only_owner_execute_fhandle.nfs_filehandle = &only_owner_execute_nfs_filehandle_copy;
+    // now try to read entries in this directory /nfs_share/permission_test/only_owner_read, without having execute permission on it
+    Nfs__FHandle only_owner_read_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle only_owner_read_nfs_filehandle_copy = deep_copy_nfs_filehandle(only_owner_read_dir_diropres->diropok->file->nfs_filehandle);
+    nfs__dir_op_res__free_unpacked(only_owner_read_dir_diropres, NULL);
+    only_owner_read_fhandle.nfs_filehandle = &only_owner_read_nfs_filehandle_copy;
 
     uint32_t gids[1] = {NON_DOCKER_IMAGE_TESTUSER_UID};
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
@@ -229,12 +229,12 @@ Test(nfs_readdir_test_suite, readdir_no_execute_permission, .description = "NFSP
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
 
     // fail since you don't have execute permission
-    read_from_directory_fail(rpc_connection_context, &only_owner_execute_fhandle, 0, 1000, NFS__STAT__NFSERR_ACCES);
+    read_from_directory_fail(rpc_connection_context, &only_owner_read_fhandle, 0, 1000, NFS__STAT__NFSERR_ACCES);
 
     free_rpc_connection_context(rpc_connection_context);
 }
 
-Test(nfs_readdir_test_suite, rmdir_has_write_permission_on_containing_directory, .description = "NFSPROC_RMDIR has write permission on containing directory") {
+Test(nfs_readdir_test_suite, readdir_has_read_permission_on_containing_directory, .description = "NFSPROC_READDIR has read permission on containing directory") {
     Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
     // lookup the permission_test directory inside the mounted directory
@@ -245,19 +245,19 @@ Test(nfs_readdir_test_suite, rmdir_has_write_permission_on_containing_directory,
 
     Nfs__DirOpRes *permission_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "permission_test", NFS__FTYPE__NFDIR);
 
-    // lookup the only_owner_execute directory inside the permission_test directory
+    // lookup the only_owner_read directory inside the permission_test directory
     Nfs__FHandle permission_test_fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle permission_test_nfs_filehandle_copy = deep_copy_nfs_filehandle(permission_test_dir_diropres->diropok->file->nfs_filehandle);
     nfs__dir_op_res__free_unpacked(permission_test_dir_diropres, NULL);
     permission_test_fhandle.nfs_filehandle = &permission_test_nfs_filehandle_copy;
 
-    Nfs__DirOpRes *only_owner_execute_dir_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_execute", NFS__FTYPE__NFDIR);
+    Nfs__DirOpRes *only_owner_read_dir_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_read", NFS__FTYPE__NFDIR);
 
-    // read entries in this directory /nfs_share/permission_test/only_owner_execute
-    Nfs__FHandle only_owner_execute_fhandle = NFS__FHANDLE__INIT;
-    NfsFh__NfsFileHandle only_owner_execute_nfs_filehandle_copy = deep_copy_nfs_filehandle(only_owner_execute_dir_diropres->diropok->file->nfs_filehandle);
-    nfs__dir_op_res__free_unpacked(only_owner_execute_dir_diropres, NULL);
-    only_owner_execute_fhandle.nfs_filehandle = &only_owner_execute_nfs_filehandle_copy;
+    // now try to read entries in this directory /nfs_share/permission_test/only_owner_read, without having execute permission on it
+    Nfs__FHandle only_owner_read_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle only_owner_read_nfs_filehandle_copy = deep_copy_nfs_filehandle(only_owner_read_dir_diropres->diropok->file->nfs_filehandle);
+    nfs__dir_op_res__free_unpacked(only_owner_read_dir_diropres, NULL);
+    only_owner_read_fhandle.nfs_filehandle = &only_owner_read_nfs_filehandle_copy;
 
     uint32_t gids[1] = {DOCKER_IMAGE_TESTUSER_UID};
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
@@ -268,7 +268,7 @@ Test(nfs_readdir_test_suite, rmdir_has_write_permission_on_containing_directory,
     char *expected_entries[] = {".", "..", "dir", "file.txt"};
 
     // succeed since you have write permission on containing directory
-    Nfs__ReadDirRes *readdires = read_from_directory_success(rpc_connection_context, &only_owner_execute_fhandle, 0, 1000, expected_number_of_entries, expected_entries);
+    Nfs__ReadDirRes *readdires = read_from_directory_success(rpc_connection_context, &only_owner_read_fhandle, 0, 1000, expected_number_of_entries, expected_entries);
     nfs__read_dir_res__free_unpacked(readdires, NULL);
 
     free_rpc_connection_context(rpc_connection_context);

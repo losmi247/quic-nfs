@@ -23,10 +23,10 @@ touch /nfs_share/permission_test/only_owner_write.txt && \
     chmod 0600 /nfs_share/permission_test/only_owner_write.txt # need both read and write permissions here to be able to read the file to confirm the write was done successfully in tests
 
 # LOOKUP procedure tests
-mkdir /nfs_share/permission_test/only_owner_read && \
-    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_read && \
-    chmod 0400 /nfs_share/permission_test/only_owner_read && \
-    touch /nfs_share/permission_test/only_owner_read/file.txt
+mkdir /nfs_share/permission_test/only_owner_execute && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_execute && \
+    chmod 0100 /nfs_share/permission_test/only_owner_execute && \
+    touch /nfs_share/permission_test/only_owner_execute/file.txt
 
 # READ procedure tests
 touch /nfs_share/permission_test/only_owner_read.txt && \
@@ -50,8 +50,8 @@ mkdir /nfs_share/permission_test/only_owner_write && \
     mkdir /nfs_share/permission_test/only_owner_write/remove_dir2
 
 # READDIR procedure tests
-mkdir /nfs_share/permission_test/only_owner_execute && \
-    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_execute && \
-    chmod 0100 /nfs_share/permission_test/only_owner_execute && \
-    touch /nfs_share/permission_test/only_owner_execute/file.txt && \
-    mkdir /nfs_share/permission_test/only_owner_execute/dir
+mkdir /nfs_share/permission_test/only_owner_read && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_read && \
+    chmod 0400 /nfs_share/permission_test/only_owner_read && \
+    touch /nfs_share/permission_test/only_owner_read/file.txt && \
+    mkdir /nfs_share/permission_test/only_owner_read/dir

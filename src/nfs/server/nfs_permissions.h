@@ -1,5 +1,7 @@
-#ifndef permissions__header__INCLUDED
-#define permissions__header__INCLUDED
+#ifndef nfs_permissions__header__INCLUDED
+#define nfs_permissions__header__INCLUDED
+
+#include "src/common_permissions/common_permissions.h"
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -46,4 +48,4 @@ int check_readdir_proc_permissions(char *directory_absolute_path, uid_t caller_u
 
 int check_statfs_proc_permissions(char *file_absolute_path, uid_t caller_uid, gid_t caller_gid);
 
-#endif /* permissions__header__INCLUDED */
+#endif /* nfs_permissions__header__INCLUDED */

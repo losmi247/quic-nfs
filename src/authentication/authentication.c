@@ -89,9 +89,7 @@ void free_opaque_auth(Rpc__OpaqueAuth *opaque_auth) {
         Rpc__AuthSysParams *authsysparams = opaque_auth->auth_sys;
         free(authsysparams->machinename);
 
-        for(int offset = 0; offset < authsysparams->n_gids; offset++) {
-            free(authsysparams->gids + offset);
-        }
+        free(authsysparams->gids);
 
         free(authsysparams);
 
