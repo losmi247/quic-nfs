@@ -81,6 +81,22 @@ int check_lookup_proc_permissions(char *directory_absolute_path, uid_t caller_ui
 }
 
 /*
+* Checks if the caller given by 'caller_uid', 'caller_gid' has correct permissions to read from
+* the symbolic link at 'symlink_absolute_path'.
+*
+* Returns < 0 on failure.
+* On success, returns 0 if the caller has the permissions and 1 if it does not have permissions.
+*/
+int check_readlink_proc_permissions(char *symlink_absolute_path, uid_t caller_uid, gid_t caller_gid) {
+    // the root can do anything
+    if(check_root_user(caller_uid, caller_uid) == 0) {
+        return 0;
+    }
+
+    return check_read_permission(symlink_absolute_path, caller_uid, caller_gid);
+}
+
+/*
 * Checks if the caller given by 'caller_uid', 'caller_gid' has correct permissions to read
 * the file at 'file_absolute_path'.
 *

@@ -28,6 +28,8 @@ int check_setattr_proc_permissions(char *absolute_path, Nfs__SAttr *sattr, uid_t
 
 int check_lookup_proc_permissions(char *directory_absolute_path, uid_t caller_uid, gid_t caller_gid);
 
+int check_readlink_proc_permissions(char *symlink_absolute_path, uid_t caller_uid, gid_t caller_gid);
+
 int check_read_proc_permissions(char *file_absolute_path, uid_t caller_uid, gid_t caller_gid);
 
 int check_write_proc_permissions(char *file_absolute_path, uid_t caller_uid, gid_t caller_gid);

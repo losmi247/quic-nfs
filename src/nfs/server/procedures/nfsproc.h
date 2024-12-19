@@ -15,6 +15,8 @@ Rpc__AcceptedReply *serve_nfs_procedure_2_set_file_attributes(Rpc__OpaqueAuth *c
 
 Rpc__AcceptedReply *serve_nfs_procedure_4_look_up_file_name(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters);
 
+Rpc__AcceptedReply *serve_nfs_procedure_5_read_from_symbolic_link(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters);
+
 Rpc__AcceptedReply *serve_nfs_procedure_6_read_from_file(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters);
 
 Rpc__AcceptedReply *serve_nfs_procedure_8_write_to_file(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters);
