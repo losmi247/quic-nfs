@@ -26,6 +26,8 @@ int nfs_procedure_2_set_file_attributes(RpcConnectionContext *rpc_connection_con
 
 int nfs_procedure_4_look_up_file_name(RpcConnectionContext *rpc_connection_context, Nfs__DirOpArgs diropargs, Nfs__DirOpRes *result);
 
+int nfs_procedure_5_read_from_symbolic_link(RpcConnectionContext *rpc_connection_context, Nfs__FHandle fhandle, Nfs__ReadLinkRes *result);
+
 int nfs_procedure_6_read_from_file(RpcConnectionContext *rpc_connection_context, Nfs__ReadArgs readargs, Nfs__ReadRes *result);
 
 int nfs_procedure_8_write_to_file(RpcConnectionContext *rpc_connection_context, Nfs__WriteArgs writeargs, Nfs__AttrStat *result);
