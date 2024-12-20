@@ -7,6 +7,11 @@ touch /nfs_share/a.txt && \
 touch /nfs_share/large_file.txt && \
     dd if=/dev/zero of=/nfs_share/large_file.txt bs=10000 count=1
 
+mkdir /nfs_share/readlink_test && \
+    touch /nfs_share/readlink_test/target_file.txt && \
+    echo -n "target_file_content" >> /nfs_share/readlink_test/target_file.txt && \
+    ln -s /nfs_share/readlink_test/target_file.txt /nfs_share/readlink_test/symlink
+
 mkdir /nfs_share/write_test && \
     touch /nfs_share/write_test/write_test_file.txt && \
     echo -n "write_test_content" >> /nfs_share/write_test/write_test_file.txt

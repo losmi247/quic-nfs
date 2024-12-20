@@ -30,6 +30,7 @@ Rpc__AcceptedReply *call_nfs(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verif
         case 4:
             return serve_nfs_procedure_4_look_up_file_name(credential, verifier, parameters);
         case 5:
+            return serve_nfs_procedure_5_read_from_symbolic_link(credential, verifier, parameters);
         case 6:
             return serve_nfs_procedure_6_read_from_file(credential, verifier, parameters);
         case 7:

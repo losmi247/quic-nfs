@@ -42,7 +42,7 @@ Nfs__AttrStat *create_default_case_attr_stat(Nfs__Stat non_nfs_ok_status) {
 }
 
 /*
-* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates an DirOpRes message
+* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates a DiOpRes message
 * with default case and that status.
 *
 * If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
@@ -69,7 +69,34 @@ Nfs__DirOpRes *create_default_case_dir_op_res(Nfs__Stat non_nfs_ok_status) {
 }
 
 /*
-* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates an ReadRes message
+* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates a ReadLinkRes message
+* with default case and that status.
+*
+* If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
+*
+* The user of this fuction takes the responsibility to free the ReadLinkRes, NfsStat,
+* and Empty allocated in this function.
+*/
+Nfs__ReadLinkRes *create_default_case_read_link_res(Nfs__Stat non_nfs_ok_status) {
+    if(non_nfs_ok_status == NFS__STAT__NFS_OK) {
+        return NULL;
+    }
+
+    Nfs__ReadLinkRes *readlinkres = malloc(sizeof(Nfs__ReadLinkRes));
+    nfs__read_link_res__init(readlinkres);
+
+    readlinkres->nfs_status = create_nfs_stat(non_nfs_ok_status);
+    readlinkres->body_case = NFS__READ_LINK_RES__BODY_DEFAULT_CASE;
+
+    Google__Protobuf__Empty *empty = malloc(sizeof(Google__Protobuf__Empty));
+    google__protobuf__empty__init(empty);
+    readlinkres->default_case = empty;
+
+    return readlinkres;
+}
+
+/*
+* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates a ReadRes message
 * with default case and that status.
 *
 * If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.

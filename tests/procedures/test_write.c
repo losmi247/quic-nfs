@@ -119,15 +119,15 @@ Test(nfs_write_test_suite, write_no_write_permission, .description = "NFSPROC_WR
 
     Nfs__DirOpRes *permission_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "permission_test", NFS__FTYPE__NFDIR);
 
-    // lookup a file 'only_owner_write.txt' inside this /nfs_share/permission_test directory
+    // lookup a file 'only_owner_write1.txt' inside this /nfs_share/permission_test directory
     Nfs__FHandle permission_test_fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle permission_test_nfs_filehandle_copy = deep_copy_nfs_filehandle(permission_test_dir_diropres->diropok->file->nfs_filehandle);
     nfs__dir_op_res__free_unpacked(permission_test_dir_diropres, NULL);
     permission_test_fhandle.nfs_filehandle = &permission_test_nfs_filehandle_copy;
 
-    Nfs__DirOpRes *only_owner_write_file_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_write.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *only_owner_write_file_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_write1.txt", NFS__FTYPE__NFREG);
 
-    // now try to write to this 'only_owner_write.txt' file, without having write permissions on it
+    // now try to write to this 'only_owner_write1.txt' file, without having write permissions on it
     Nfs__FHandle only_owner_write_fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle only_owner_write_nfs_filehandle_copy = deep_copy_nfs_filehandle(only_owner_write_file_diropres->diropok->file->nfs_filehandle);
     nfs__dir_op_res__free_unpacked(only_owner_write_file_diropres, NULL);
@@ -139,7 +139,7 @@ Test(nfs_write_test_suite, write_no_write_permission, .description = "NFSPROC_WR
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
 
     // fail since you don't have read permission on the file
-    write_to_file_fail(rpc_connection_context, &only_owner_write_fhandle, 0, 10, "writedata",NFS__STAT__NFSERR_ACCES);
+    write_to_file_fail(rpc_connection_context, &only_owner_write_fhandle, 0, 10, "writedata", NFS__STAT__NFSERR_ACCES);
 
     free_rpc_connection_context(rpc_connection_context);
 }
@@ -155,15 +155,15 @@ Test(nfs_write_test_suite, write_has_write_permission, .description = "NFSPROC_W
 
     Nfs__DirOpRes *permission_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "permission_test", NFS__FTYPE__NFDIR);
 
-    // lookup a file 'only_owner_write.txt' inside this /nfs_share/permission_test directory
+    // lookup a file 'only_owner_write2.txt' inside this /nfs_share/permission_test directory
     Nfs__FHandle permission_test_fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle permission_test_nfs_filehandle_copy = deep_copy_nfs_filehandle(permission_test_dir_diropres->diropok->file->nfs_filehandle);
     nfs__dir_op_res__free_unpacked(permission_test_dir_diropres, NULL);
     permission_test_fhandle.nfs_filehandle = &permission_test_nfs_filehandle_copy;
 
-    Nfs__DirOpRes *only_owner_write_file_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_write.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *only_owner_write_file_diropres = lookup_file_or_directory_success(NULL, &permission_test_fhandle, "only_owner_write2.txt", NFS__FTYPE__NFREG);
 
-    // write to this 'only_owner_write.txt' file
+    // write to this 'only_owner_write2.txt' file
     Nfs__FHandle only_owner_write_fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle only_owner_write_nfs_filehandle_copy = deep_copy_nfs_filehandle(only_owner_write_file_diropres->diropok->file->nfs_filehandle);
     nfs__dir_op_res__free_unpacked(only_owner_write_file_diropres, NULL);
@@ -177,7 +177,7 @@ Test(nfs_write_test_suite, write_has_write_permission, .description = "NFSPROC_W
     // succeed since you have read permission on containing directory
     Nfs__AttrStat *attrstat = write_to_file_success(rpc_connection_context, &only_owner_write_fhandle, 0, 9, "writedata", NFS__FTYPE__NFREG);
 
-    // read from write_test_file.txt to confirm the write was successful
+    // read from write_test_file2.txt to confirm the write was successful
     uint8_t *expected_new_file_content = "writedata";
     uint8_t expected_read_size = strlen(expected_new_file_content);
     Nfs__ReadRes *readres = read_from_file_success(NULL, &only_owner_write_fhandle, 0, expected_read_size, attrstat->attributes, expected_read_size, expected_new_file_content);

@@ -1387,7 +1387,7 @@ static const ProtobufCFieldDescriptor nfs__time_val__field_descriptors[2] =
     "seconds",
     1,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__TimeVal, seconds),
     NULL,
@@ -1399,7 +1399,7 @@ static const ProtobufCFieldDescriptor nfs__time_val__field_descriptors[2] =
     "useconds",
     2,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__TimeVal, useconds),
     NULL,
@@ -1462,7 +1462,7 @@ static const ProtobufCFieldDescriptor nfs__fattr__field_descriptors[14] =
     "nlink",
     3,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__FAttr, nlink),
     NULL,
@@ -1498,7 +1498,7 @@ static const ProtobufCFieldDescriptor nfs__fattr__field_descriptors[14] =
     "size",
     6,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__FAttr, size),
     NULL,
@@ -1510,7 +1510,7 @@ static const ProtobufCFieldDescriptor nfs__fattr__field_descriptors[14] =
     "blocksize",
     7,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__FAttr, blocksize),
     NULL,
@@ -1522,7 +1522,7 @@ static const ProtobufCFieldDescriptor nfs__fattr__field_descriptors[14] =
     "rdev",
     8,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__FAttr, rdev),
     NULL,
@@ -1534,7 +1534,7 @@ static const ProtobufCFieldDescriptor nfs__fattr__field_descriptors[14] =
     "blocks",
     9,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__FAttr, blocks),
     NULL,
@@ -1546,7 +1546,7 @@ static const ProtobufCFieldDescriptor nfs__fattr__field_descriptors[14] =
     "fsid",
     10,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__FAttr, fsid),
     NULL,
@@ -1558,7 +1558,7 @@ static const ProtobufCFieldDescriptor nfs__fattr__field_descriptors[14] =
     "fileid",
     11,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__FAttr, fileid),
     NULL,
@@ -1681,7 +1681,7 @@ static const ProtobufCFieldDescriptor nfs__sattr__field_descriptors[6] =
     "size",
     4,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(Nfs__SAttr, size),
     NULL,

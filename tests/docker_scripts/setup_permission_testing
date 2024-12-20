@@ -18,9 +18,12 @@ touch /nfs_share/permission_test/setattr_only_owner_write.txt && \
     chmod 0200 /nfs_share/permission_test/setattr_only_owner_write.txt
 
 # WRITE procedure tests
-touch /nfs_share/permission_test/only_owner_write.txt && \
-    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_write.txt && \
-    chmod 0600 /nfs_share/permission_test/only_owner_write.txt # need both read and write permissions here to be able to read the file to confirm the write was done successfully in tests
+touch /nfs_share/permission_test/only_owner_write1.txt && \
+touch /nfs_share/permission_test/only_owner_write2.txt && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_write1.txt && \
+    chown $DOCKER_IMAGE_TESTUSER_UID /nfs_share/permission_test/only_owner_write2.txt && \
+    chmod 0600 /nfs_share/permission_test/only_owner_write1.txt # need both read and write permissions here to be able to read the file to confirm the write was done successfully in tests
+    chmod 0600 /nfs_share/permission_test/only_owner_write2.txt
 
 # LOOKUP procedure tests
 mkdir /nfs_share/permission_test/only_owner_execute && \

@@ -34,14 +34,14 @@ The NFSv2 server currently supports the following NFSv2 procedures:
 |  2  | **SETATTR**        | set attributes                               |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  3  | **ROOT**           | get root NFS fhandle                         |     obsolete        |     obsolete          |     obsolete       |
 |  4  | **LOOKUP**         | get NFS fhandle and attributes of a file     |   done &#10004;     |   done &#10004;       |   done &#10004;    |
-|  5  | **READLINK**       | read from symbolic link                      |                     |                       |                    |
+|  5  | **READLINK**       | read from symbolic link                      |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  6  | **READ**           | read from file                               |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  7  | **WRITECACHE**     | write to cache                               |      NFSv3          |     NFSv3             |        NFSv3       |
 |  8  | **WRITE**          | write to file                                |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 |  9  | **CREATE**         | create file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 10  | **REMOVE**         | remove file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 11  | **RENAME**         | rename file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
-| 12  | **LINK**           | create link to file                          |                     |                       |                    |
+| 12  | **LINK**           | create hard link to file                     |                     |                       |                    |
 | 13  | **SYMLINK**        | create symbolic link to file                 |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 14  | **MKDIR**          | create directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 15  | **RMDIR**          | remove directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |

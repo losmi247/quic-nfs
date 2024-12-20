@@ -34,6 +34,11 @@ Nfs__DirOpRes *lookup_file_or_directory_success(RpcConnectionContext *rpc_connec
 
 void lookup_file_or_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status);
 
+// NFSPROC_READLINK validation
+Nfs__ReadLinkRes *read_from_symbolic_link_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, char *expected_target_path);
+
+void read_from_symbolic_link_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, Nfs__Stat non_nfs_ok_status);
+
 // NFSPROC_READ validation
 Nfs__ReadRes *read_from_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read, uint32_t expected_read_size, uint8_t *expected_read_content);
 

@@ -190,8 +190,14 @@ struct  Nfs__FHandle
 struct  Nfs__TimeVal
 {
   ProtobufCMessage base;
-  uint32_t seconds;
-  uint32_t useconds;
+  /*
+   * seconds
+   */
+  uint64_t seconds;
+  /*
+   * nanoseconds
+   */
+  uint64_t useconds;
 };
 #define NFS__TIME_VAL__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nfs__time_val__descriptor) \
@@ -212,33 +218,39 @@ struct  Nfs__FAttr
   /*
    * number of hard links to the file
    */
-  uint32_t nlink;
+  uint64_t nlink;
+  /*
+   * user ID of the owner of this file
+   */
   uint32_t uid;
+  /*
+   * group ID of the group this file belongs to
+   */
   uint32_t gid;
   /*
    * size in bytes of the file
    */
-  uint32_t size;
+  uint64_t size;
   /*
    * size in bytes of a block of the file
    */
-  uint32_t blocksize;
+  uint64_t blocksize;
   /*
    * device number of the file if it is type NFCHR or NFBLK
    */
-  uint32_t rdev;
+  uint64_t rdev;
   /*
    * number of blocks the file takes up on disk
    */
-  uint32_t blocks;
+  uint64_t blocks;
   /*
    * file system identifier
    */
-  uint32_t fsid;
+  uint64_t fsid;
   /*
    * uniquely identifies the file in its file system
    */
-  uint32_t fileid;
+  uint64_t fileid;
   /*
    * time of last access
    */
@@ -269,7 +281,7 @@ struct  Nfs__SAttr
   /*
    * size = 0 means truncate the file
    */
-  uint32_t size;
+  uint64_t size;
   Nfs__TimeVal *atime;
   Nfs__TimeVal *mtime;
 };

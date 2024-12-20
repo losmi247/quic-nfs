@@ -55,7 +55,7 @@ Test(nfs_setattr_test_suite, setattr_no_such_file_or_directory, .description = "
 Test(nfs_setattr_test_suite, setattr_change_ownership_without_root_privileges, .description = "NFSPROC_SETATTR change ownership without root privileges") {
     Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
 
-    // now update attributes of /nfs_share directory
+    // now try to update attributes of /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle nfs_filehandle_copy = deep_copy_nfs_filehandle(fhstatus->directory->nfs_filehandle);
     mount__fh_status__free_unpacked(fhstatus, NULL);
