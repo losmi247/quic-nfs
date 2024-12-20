@@ -54,8 +54,8 @@ message FHandle {
 
 // Structure for Unix timestamp
 message TimeVal {
-    uint32 seconds = 1;
-    uint32 useconds = 2;
+    uint64 seconds = 1;     // seconds
+    uint64 useconds = 2;    // nanoseconds
 }
 
 // File attributes
@@ -64,15 +64,16 @@ message FAttr {
 
     uint32 mode = 2;         // contains file type + lowest 12 bits are setuid,setgid,sticky,owner,group,other permissions
 
-    uint32 nlink = 3;        // number of hard links to the file
-    uint32 uid = 4;
-    uint32 gid = 5;
-    uint32 size = 6;         // size in bytes of the file
-    uint32 blocksize = 7;    // size in bytes of a block of the file
-    uint32 rdev = 8;         // device number of the file if it is type NFCHR or NFBLK
-    uint32 blocks = 9;       // number of blocks the file takes up on disk
-    uint32 fsid = 10;        // file system identifier
-    uint32 fileid = 11;      // uniquely identifies the file in its file system
+    uint64 nlink = 3;        // number of hard links to the file
+    uint32 uid = 4;          // user ID of the owner of this file
+    uint32 gid = 5;          // group ID of the group this file belongs to
+
+    uint64 size = 6;         // size in bytes of the file
+    uint64 blocksize = 7;    // size in bytes of a block of the file
+    uint64 rdev = 8;         // device number of the file if it is type NFCHR or NFBLK
+    uint64 blocks = 9;       // number of blocks the file takes up on disk
+    uint64 fsid = 10;        // file system identifier
+    uint64 fileid = 11;      // uniquely identifies the file in its file system
 
     TimeVal atime = 12;      // time of last access
     TimeVal mtime = 13;      // time of last modification (write)
@@ -85,7 +86,7 @@ message SAttr {
 
     uint32 uid = 2;
     uint32 gid = 3;
-    uint32 size = 4;         // size = 0 means truncate the file
+    uint64 size = 4;         // size = 0 means truncate the file
 
     TimeVal atime = 5;
     TimeVal mtime = 6;

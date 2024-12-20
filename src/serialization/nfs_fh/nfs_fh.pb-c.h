@@ -33,7 +33,7 @@ struct  NfsFh__NfsFileHandle
   /*
    * 8 bytes
    */
-  int64_t timestamp;
+  uint64_t timestamp;
 };
 #define NFS_FH__NFS_FILE_HANDLE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&nfs_fh__nfs_file_handle__descriptor) \

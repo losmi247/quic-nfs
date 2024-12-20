@@ -1,9 +1,23 @@
 #include "procedure_validation.h"
 
-uint64_t get_time(Nfs__TimeVal *timeval) {
-    uint64_t sec = timeval->seconds;
-    uint64_t milisec = timeval->useconds;
-    return sec * 1000 + milisec;
+/*
+* Returns -1, 0, 1 depending on whether the first time is less than, equal to, or
+* greater than the second time.
+*/
+int compare_time(Nfs__TimeVal *timeval1, Nfs__TimeVal *timeval2) {
+    if(timeval1->seconds < timeval2->seconds) {
+        return -1;
+    }
+
+    if(timeval2->seconds < timeval1->seconds) {
+        return 1;
+    }
+
+    if(timeval1->useconds == timeval2->useconds) {
+        return 0;
+    }
+
+    return timeval1->useconds < timeval2->useconds ? -1 : 1;
 }
 
 /*
@@ -438,6 +452,110 @@ void lookup_file_or_directory_fail(RpcConnectionContext *rpc_connection_context,
 }
 
 /*
+* Given the Nfs__FHandle of a symbolic link, calls NFSPROC_READLINK to read the pathname contained inside that
+* symbolic link.
+* 
+* Returns the Nfs__ReadLinkRes returned by READLINK procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__read_link_res__free_unpacked()'
+* with the obtained ReadLinkRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadLinkRes
+* and always call 'nfs__read_link_res__free_unpacked()' on it at some point.
+*/
+Nfs__ReadLinkRes *read_from_symbolic_link(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *symlink_fhandle) {
+    Nfs__ReadLinkRes *readlinkres = malloc(sizeof(Nfs__ReadLinkRes));
+    int status = nfs_procedure_5_read_from_symbolic_link(rpc_connection_context, *symlink_fhandle, readlinkres);
+    if(status != 0) {
+        free(readlinkres);
+        cr_fatal("NFSPROC_READLINK failed - status %d\n", status);
+    }
+
+    cr_assert_not_null(readlinkres);
+
+    return readlinkres;
+}
+
+/*
+* Given the Nfs__FHandle of a symbolic link, calls NFSPROC_READLINK to read the pathname contained inside that
+* symbolic link. Checks that the pathname read from this symbolic link is equal to the given null-terminated string
+* 'expected_target_path'.
+*
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* 
+* Returns the Nfs__ReadLinkRes returned by READLINK procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__read_link_res__free_unpacked()'
+* with the obtained ReadLinkRes.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__ReadLinkRes
+* and always call 'nfs__read_link_res__free_unpacked()' on it at some point.
+*/
+Nfs__ReadLinkRes *read_from_symbolic_link_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, char *expected_target_path) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link(rpc_connection_context, file_fhandle);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
+
+    // validate ReadLinkRes
+    cr_assert_not_null(readlinkres->nfs_status);
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(readlinkres->nfs_status->stat);
+    cr_assert_eq(readlinkres->nfs_status->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
+    cr_assert_eq(readlinkres->body_case, NFS__READ_LINK_RES__BODY_DATA);
+    cr_assert_not_null(readlinkres->data);
+
+    // validate read content
+    cr_assert_not_null(readlinkres->data->path);
+    char *read_content = readlinkres->data->path;
+    
+    cr_assert(strcmp(read_content, expected_target_path) == 0); // compare the target path we read from the symlink and the expected target path
+
+    return readlinkres;
+}
+
+/*
+* Given the Nfs__FHandle of a symbolic link, calls NFSPROC_READLINK to read the pathname contained inside that
+* symbolic link.
+*
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void read_from_symbolic_link_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context();
+        created_rpc_connection_context = 1;
+    }
+    Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link(rpc_connection_context, file_fhandle);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
+
+    // validate ReadLinkRes
+    cr_assert_not_null(readlinkres->nfs_status);
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(readlinkres->nfs_status->stat);
+    cr_assert_eq(readlinkres->nfs_status->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
+    cr_assert_eq(readlinkres->body_case, NFS__READ_LINK_RES__BODY_DEFAULT_CASE);
+    cr_assert_not_null(readlinkres->default_case);
+
+    nfs__read_link_res__free_unpacked(readlinkres, NULL);
+}
+
+/*
 * Given the Nfs__FHandle of a file, calls NFSPROC_READ to read up to 'byte_count' from 'offset' in the
 * specified file.
 * 
@@ -514,10 +632,10 @@ Nfs__ReadRes *read_from_file_success(RpcConnectionContext *rpc_connection_contex
     Nfs__FAttr *read_fattr = readres->readresbody->attributes;
     validate_fattr(read_fattr, attributes_before_read->nfs_ftype->ftype);
     check_equal_fattr(attributes_before_read, read_fattr);
-    // this is a famous problem - atime is going to be flushed to disk by the kernel only after 24hrs, we can't synchronously update it
-    cr_assert(get_time(attributes_before_read->atime) <= get_time(read_fattr->atime));   // file was accessed
-    cr_assert(get_time(attributes_before_read->mtime) == get_time(read_fattr->mtime));   // file was not modified
-    cr_assert(get_time(attributes_before_read->ctime) == get_time(read_fattr->ctime));
+    // this is a famous problem - atime is going to be flushed to disk by the kernel only after 24hrs, we can't synchronously update it - so we only check that atime_before <= atime_after
+    cr_assert(compare_time(attributes_before_read->atime, read_fattr->atime) <= 0, "Access time before read is %ld sec %ld nanosec and is larger than access time after read %ld sec %ld nanosec\n", attributes_before_read->atime->seconds, attributes_before_read->atime->useconds, read_fattr->atime->seconds, read_fattr->atime->useconds);   // file was accessed
+    cr_assert(compare_time(attributes_before_read->mtime, read_fattr->mtime) <= 0);   // file was not modified
+    cr_assert(compare_time(attributes_before_read->ctime, read_fattr->ctime) <= 0);
 
     // validate read content
     cr_assert_not_null(readres->readresbody->nfsdata.data);

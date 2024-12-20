@@ -70,7 +70,7 @@ static const ProtobufCFieldDescriptor nfs_fh__nfs_file_handle__field_descriptors
     "timestamp",
     2,
     PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_INT64,
+    PROTOBUF_C_TYPE_UINT64,
     0,   /* quantifier_offset */
     offsetof(NfsFh__NfsFileHandle, timestamp),
     NULL,
