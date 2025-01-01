@@ -7,6 +7,10 @@
 
 #include "src/common_rpc/common_rpc.h"
 #include "src/common_rpc/client_common_rpc.h"
+#include "src/common_rpc/rpc_connection_context.h"
+
+#include "src/transport/tcp/tcp_rpc_client.h"
+#include "src/transport/quic/quic_rpc_client.h"
 
 #include "../nfs_common.h"
 

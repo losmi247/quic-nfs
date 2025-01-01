@@ -23,7 +23,7 @@ void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_p
     printf("Remote Path: %s\n\n", remote_absolute_path);
 
     // create a new RPC connection context
-    RpcConnectionContext *new_rpc_connection_context = create_auth_sys_rpc_connection_context(server_ip, server_port);
+    RpcConnectionContext *new_rpc_connection_context = create_auth_sys_rpc_connection_context(server_ip, server_port, chosen_transport_protocol);
     if(new_rpc_connection_context == NULL) {
         printf("Error: Failed to create AUTH_SYS Rpc connection context\n");
         return;

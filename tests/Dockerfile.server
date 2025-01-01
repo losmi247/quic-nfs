@@ -1,8 +1,15 @@
 FROM gcc:latest
 
-COPY . /quic-nfs
-WORKDIR /quic-nfs
+ARG TRANSPORT_PROTOCOL
+RUN echo "Building image with protocol: ${TRANSPORT_PROTOCOL}"
+# only env vars can be used in CMD commands
+ENV TRANSPORT_PROTOCOL=${TRANSPORT_PROTOCOL}
 
+# copy the project directory
+COPY . /quic-nfs
+
+# install dependencies
+WORKDIR /quic-nfs
 RUN chmod +x ./install_dependencies && \
     ./install_dependencies
 
@@ -22,6 +29,6 @@ RUN chmod +x ./tests/docker_scripts/setup_procedure_testing && \
 RUN chmod +x ./tests/docker_scripts/setup_permission_testing && \
     ./tests/docker_scripts/setup_permission_testing
 
-
-RUN chmod +x ./build/mount_and_nfs_server
-CMD ["./build/mount_and_nfs_server", "--test"]
+# run the default command with 'exec' so it replaces the shell and gets signals (e.g. SIGTERM)
+RUN chmod +x ./tests/docker_scripts/start_server
+CMD ["/bin/bash", "-c", "exec ./tests/docker_scripts/start_server --proto=${TRANSPORT_PROTOCOL}"]

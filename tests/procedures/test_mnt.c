@@ -10,7 +10,7 @@ TestSuite(mount_test_suite);
 
 // MOUNTPROC_NULL (0)
 Test(mount_test_suite, null, .description = "MOUNTPROC_NULL") {
-    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
     int status = mount_procedure_0_do_nothing(rpc_connection_context);
     free_rpc_connection_context(rpc_connection_context);
     if (status != 0) {

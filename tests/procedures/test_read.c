@@ -117,7 +117,7 @@ Test(nfs_read_test_suite, read_no_read_permission, .description = "NFSPROC_READ 
     uint32_t gids[1] = {NON_DOCKER_IMAGE_TESTUSER_UID};
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     // fail since you don't have read permission on the file
     read_from_file_fail(rpc_connection_context, &only_owner_read_fhandle, 0, 10, NFS__STAT__NFSERR_ACCES);
@@ -152,7 +152,7 @@ Test(nfs_read_test_suite, read_has_read_permission, .description = "NFSPROC_READ
     uint32_t gids[1] = {DOCKER_IMAGE_TESTUSER_GID};
     Rpc__OpaqueAuth *owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     // succeed since you have read permission on containing directory
     Nfs__ReadRes *readres = read_from_file_success(rpc_connection_context, &only_owner_read_fhandle, 0, 8, only_owner_read_file_diropres->diropok->attributes, 8, "testdata");

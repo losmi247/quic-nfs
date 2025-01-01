@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# check if an argument is provided
+if [ -z "$1" ]; then
+    echo "Error: No argument provided. Please use --proto=tcp or --proto=quic."
+    exit 1
+fi
+
+# build
+make clean-all
+make serialization-library
+make all
+
+# run the server, replacing this shell with the server program using 'exec'
+chmod +x ./build/mount_and_nfs_server
+if [ "$1" = "--proto=tcp" ]; then
+    echo "Using TCP protocol."
+    exec ./build/mount_and_nfs_server --test --proto=tcp
+elif [ "$1" = "--proto=quic" ]; then
+    echo "Using QUIC protocol."
+    # generate RSA private key and certificate
+    chmod +x ./generate_certificate
+    ./generate_certificate
+    # run the QUIC server
+    exec ./build/mount_and_nfs_server --test --proto=quic
+else
+    echo "Error: Invalid argument '$1'. Please use --proto=tcp or --proto=quic."
+    exit 1
+fi

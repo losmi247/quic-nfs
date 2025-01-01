@@ -4,7 +4,7 @@ This is a user-space implementation of a **NFSv2 client-server pair** ([RFC 1094
 
 After cloning the directory:
 
-1. Install [**protobuf**](https://github.com/protocolbuffers/protobuf), [**protobuf-c**](https://github.com/protobuf-c/protobuf-c), [**criterion**](https://github.com/Snaipe/Criterion), and other project dependencies by running:
+1. Install [**Protobuf**](https://github.com/protocolbuffers/protobuf), [**Protobuf-C**](https://github.com/protobuf-c/protobuf-c), [**Criterion**](https://github.com/Snaipe/Criterion), [**TQUIC**](https://github.com/Tencent/tquic), and other project dependencies by running:
     ```
     ./install_dependencies
     ```
@@ -15,11 +15,18 @@ After cloning the directory:
     /nfs_share *(rw)
     ```
    and place it in the same cw-directory from where you are going to run the NFS server in the next step
-5. Run ```./build/mount_and_nfs_server 3000``` to start the NFS+MOUNT server on the server machine at port ```3000``` (e.g. IPv4 ```192.168.100.1```)
-6. On the client machine, run ```./build/repl``` to start the NFS client Read-Eval-Print Loop, and use it to mount the exported NFS share as:
+5. On the server machine, run: 
    ```
-    mount 192.168.100.1 3000 /nfs_share
+   ./build/mount_and_nfs_server <port> --proto=<transport_protocol>
+   ``` 
+    to start the NFS+MOUNT server at port ```port``` (e.g. ```3000```), where ```transport_protocol``` is either ```tcp``` or ```quic```.
+6. On the client machine, run 
    ```
+   ./build/repl
+   ```
+   to start the NFS client Read-Eval-Print Loop. This will prompt you to **select a transport protocol** - make sure to select the same transport protocol as the one chosen for the NFS server.
+   
+   Use the REPL to mount the exported NFS share as ```mount 192.168.100.1 3000 /nfs_share``` (assuming the server machine is at IPv4 192.168.100.1).
 
 Note that the Nfs and Mount server are implemented as a single process, to allow efficient sharing of the cache containing mappings of inode numbers to files/directories.
 
@@ -60,9 +67,19 @@ The client REPL currently supports the following set of Unix-like commands:
 | `ls`        | Lists all entries in the current working directory on the currently mounted remote file system.            |
 | `cd <directory name>`  | change cwd to the given directory name which is in the current working directory                |
 
+When the REPL is started, the user is able to select between **TCP** and **QUIC** for transport.
+
+# Transport
+
+This NFS implementation can operate over TCP or QUIC. 
+
+The **TCP interface** was built using the standard Linux sockets API.
+
+The **QUIC interface** was built using Tencent's implementation of QUIC - [**TQUIC**](https://github.com/Tencent/tquic), combined with Linux sockets API for UDP transport.
+
 # Authentication
 
-Currently supported authentication flavors are:
+Currently supported RPC ([**RFC 5531**](https://datatracker.ietf.org/doc/html/rfc5531)) authentication flavors are:
 
 | **Command** | **Description**                                                                 |
 |-------------|---------------------------------------------------------------------------------|
@@ -75,7 +92,5 @@ Currently supported authentication flavors are:
 Tests are written using [**Criterion**](https://github.com/Snaipe/Criterion) testing framework.
 
 To run the tests:
-- build the MOUNT+NFS server using ```make all```
-- build the tests using ```make test```
-- build Docker images for the server and the client using ```./tests/build_images```
-- finally, run the tests using ```./tests/run_tests```
+- build Docker images for the server and the tests (client) over TCP/QUIC using ```./tests/build_images_tcp``` and ```./tests/build_images_quic``` respectively
+- run the tests for NFS over TCP/QUIC using ```./tests/run_tests_tcp``` or ```./tests/run_tests_quic``` respectively

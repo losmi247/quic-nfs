@@ -4,6 +4,7 @@
 #include "src/nfs/server/server.h"
 
 #include "src/nfs/server/mount_messages.h"
+#include "src/nfs/server/file_management.h"
 
 #include "src/nfs/server/nfs_permissions.h"
 

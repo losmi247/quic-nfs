@@ -16,21 +16,20 @@
 #include <signal.h> // for registering the SIGTERM handler
 
 #include "src/common_rpc/server_common_rpc.h"
+#include "src/transport/tcp/tcp_rpc_server.h"
+#include "src/transport/quic/quic_rpc_server.h"
+#include "src/transport/transport_common.h"
 
-#include <protobuf-c/protobuf-c.h>
 #include "src/serialization/rpc/rpc.pb-c.h"
-#include "src/serialization/nfs/nfs.pb-c.h"
 #include "src/serialization/mount/mount.pb-c.h"
-
-#include "src/error_handling/error_handling.h"
-
-#include "src/path_building/path_building.h"
 
 #include "src/nfs/nfs_common.h"
 
 #include "mount_list.h"
 #include "inode_cache.h"
-#include "file_management.h"
+
+#include "tests/test_common.h"         // for NFS_AND_MOUNT_TEST_RPC_SERVER_PORT
+#include "src/parsing/parsing.h"       // for parsing the port number from command line args
 
 /*
 * Functions implemented by RPC programs (Mount and Nfs).
@@ -44,7 +43,7 @@ extern Rpc__AcceptedReply *call_nfs(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth
 * Mount+Nfs server state.
 */
 
-extern int rpc_server_socket_fd;
+extern TransportProtocol transport_protocol;
 
 extern Mount__MountList *mount_list;
 extern InodeCache inode_cache;

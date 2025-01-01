@@ -1,6 +1,10 @@
 #ifndef test_common__header__INCLUDED
 #define test_common__header__INCLUDED
 
+#ifndef TEST_TRANSPORT_PROTOCOL
+#define TEST_TRANSPORT_PROTOCOL TRANSPORT_PROTOCOL_TCP      // by default we use TCP in tests
+#endif
+
 // Mount and Nfs server are the same process
 #define NFS_AND_MOUNT_TEST_RPC_SERVER_IPV4_ADDR "192.168.100.1"
 #define NFS_AND_MOUNT_TEST_RPC_SERVER_PORT 3000
@@ -32,12 +36,14 @@
 
 #include "src/common_rpc/rpc_connection_context.h"
 
+#include "src/transport/transport_common.h"
+
 /*
 * Common test functions
 */
 
-RpcConnectionContext *create_test_rpc_connection_context(void);
+RpcConnectionContext *create_test_rpc_connection_context(TransportProtocol transport_protocol);
 
-RpcConnectionContext *create_rpc_connection_context_with_test_ipaddr_and_port(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier);
+RpcConnectionContext *create_rpc_connection_context_with_test_ipaddr_and_port(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, TransportProtocol transport_protocol);
 
 #endif /* test_common__header__INCLUDED */

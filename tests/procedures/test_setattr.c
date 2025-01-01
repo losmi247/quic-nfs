@@ -71,7 +71,7 @@ Test(nfs_setattr_test_suite, setattr_change_ownership_without_root_privileges, .
     uint32_t gids[1] = {1000};
     Rpc__OpaqueAuth *non_root_credential = create_auth_sys_opaque_auth("test", 1000, 1000, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_root_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_root_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     set_attributes_fail(rpc_connection_context, &fhandle, 0, 1000, 1000, -1, &atime, &mtime, NFS__STAT__NFSERR_ACCES);
 
@@ -112,7 +112,7 @@ Test(nfs_setattr_test_suite, setattr_no_write_permission, .description = "NFSPRO
     uint32_t gids[1] = {NON_DOCKER_IMAGE_TESTUSER_UID};
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     // fail since you don't have write permission
     set_attributes_fail(rpc_connection_context, &setattr_only_owner_write_fhandle, -1, -1, -1, -1, &atime, &mtime, NFS__STAT__NFSERR_ACCES);
@@ -154,7 +154,7 @@ Test(nfs_setattr_test_suite, setattr_has_write_permission, .description = "NFSPR
     uint32_t gids[1] = {DOCKER_IMAGE_TESTUSER_GID};
     Rpc__OpaqueAuth *owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     // succeed because you are the owner and have write permission
     Nfs__AttrStat *attrstat = set_attributes_success(rpc_connection_context, &setattr_only_owner_write_fhandle, -1, -1, -1, -1, &atime, &mtime, NFS__FTYPE__NFREG);

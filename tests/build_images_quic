@@ -1,0 +1,10 @@
+#!/bin/bash
+
+docker image rm "mount-and-nfs-server-quic:latest"
+docker image rm "mount-and-nfs-test-quic:latest"
+
+# build the QUIC server image
+docker build --build-arg TRANSPORT_PROTOCOL=quic --tag mount-and-nfs-server-quic --file ./tests/Dockerfile.server .
+
+# build the QUIC tests image
+docker build --build-arg TRANSPORT_PROTOCOL=quic --tag mount-and-nfs-test-quic --file ./tests/Dockerfile.test_nfs .

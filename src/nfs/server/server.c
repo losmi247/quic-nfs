@@ -1,12 +1,10 @@
 #include "server.h"
 
-#include "tests/test_common.h"  // for NFS_AND_MOUNT_TEST_RPC_SERVER_PORT
-#include "src/parsing/parsing.h"       // for parsing the port number from command line args
-
 /*
 * Define Mount+Nfs server state
 */
-int rpc_server_socket_fd;
+
+TransportProtocol transport_protocol;
 
 Mount__MountList *mount_list;
 InodeCache inode_cache;
@@ -45,10 +43,18 @@ Rpc__AcceptedReply *forward_rpc_call_to_program(Rpc__OpaqueAuth *credential, Rpc
 * Signal handler for graceful shutdown.
 */
 void handle_signal(int signal) {
-    if (signal == SIGTERM) {
+    if(signal == SIGTERM) {
         fprintf(stdout, "Received SIGTERM, shutting down gracefully...\n");
-        
-        close(rpc_server_socket_fd);
+
+        switch(transport_protocol) {
+            case TRANSPORT_PROTOCOL_TCP:
+                clean_up_tcp_server_state();
+                break;
+            case TRANSPORT_PROTOCOL_QUIC:
+                clean_up_quic_server_state();
+                break;
+            default:
+        }
 
         clean_up_inode_cache(inode_cache);
         clean_up_mount_list(mount_list);
@@ -60,20 +66,17 @@ void handle_signal(int signal) {
     }
 }
 
-/*
-* The main body of the Nfs+Mount server, which awaits RPCs.
-*/
 int main(int argc, char *argv[]) {
     // parse command line arguments
-    if(argc != 2) {
-        fprintf(stderr, "Error: Incorrect usage. Correct usage: %s (<port number> or --test)\n", argv[0]);
+    if(argc != 3) {
+        fprintf(stderr, "Error: Incorrect usage. Correct usage: %s (<port number> or --test) (--proto=tcp or quic)\n", argv[0]);
         return 1;
     }
 
     uint16_t port_number = 0;
     if(strncmp(argv[1], "--", 2) == 0) {    // the first argument is a flag
         if(strcmp(argv[1], "--test") == 0) {
-            port_number = NFS_AND_MOUNT_TEST_RPC_SERVER_PORT;   // when testing, run at this port
+            port_number = NFS_AND_MOUNT_TEST_RPC_SERVER_PORT;   // when running tests, run at this port
         }
         else {
             fprintf(stderr, "Error: Invalid flag. Did you mean '--test'?\n");
@@ -87,13 +90,29 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // register the signal handler
-    signal(SIGTERM, handle_signal);  
+    const char *proto_flag = "--proto=";
+    if(strncmp(argv[2], proto_flag, strlen(proto_flag)) == 0) {
+        char *protocol = argv[2] + strlen(proto_flag);
+        if(strcmp(protocol, "tcp") == 0) {
+            transport_protocol = TRANSPORT_PROTOCOL_TCP;
+        }
+        else if(strcmp(protocol, "quic") == 0) {
+            transport_protocol = TRANSPORT_PROTOCOL_QUIC;
+        } 
+        else {
+            fprintf(stderr, "Error: Invalid transport protocol protocol: %s\n", protocol);
+            return 1;
+        }
+    }
 
-    // create the server socket
-    rpc_server_socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
-    if(rpc_server_socket_fd < 0) { 
-        fprintf(stderr, "Socket creation failed\n");
+    // register SIGTERM handler
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = handle_signal;
+    // ensure that system calls are restarted if interrupted by this signal
+    sa.sa_flags = SA_RESTART;
+    if(sigaction(SIGTERM, &sa, NULL) < 0) {
+        perror("Failed to register SIGTERM handler");
         return 1;
     }
 
@@ -101,41 +120,13 @@ int main(int argc, char *argv[]) {
     mount_list = NULL;
     inode_cache = NULL;
 
-    struct sockaddr_in rpc_server_addr;
-    rpc_server_addr.sin_family = AF_INET; 
-    rpc_server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    rpc_server_addr.sin_port = htons(port_number);
-  
-    // bind socket to the rpc server address
-    if(bind(rpc_server_socket_fd, (struct sockaddr *) &rpc_server_addr, sizeof(rpc_server_addr)) < 0) { 
-        fprintf(stderr, "Socket bind failed\n");
-        close(rpc_server_socket_fd);
-        return 1;
+    // run the Nfs+Mount server
+    switch(transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            return run_server_tcp(port_number);
+        case TRANSPORT_PROTOCOL_QUIC:
+            return run_server_quic(port_number);
+        default:
+            return run_server_tcp(port_number);
     }
-  
-    // listen for connections on the port
-    if(listen(rpc_server_socket_fd, 10) < 0) {
-        fprintf(stderr, "Listen failed\n");
-        close(rpc_server_socket_fd);
-        return 1;
-    }
-
-    fprintf(stdout, "Server listening on port %d...\n", port_number);
-  
-    while(1) {
-        struct sockaddr_in rpc_client_addr;
-        socklen_t rpc_client_addr_len = sizeof(rpc_client_addr);
-
-        int rpc_client_socket_fd = accept(rpc_server_socket_fd, (struct sockaddr *) &rpc_client_addr, &rpc_client_addr_len);
-        if(rpc_client_socket_fd < 0) { 
-            fprintf(stderr, "Server failed to accept connection\n"); 
-            continue;
-        }
-    
-        handle_client(rpc_client_socket_fd);
-
-        close(rpc_client_socket_fd);
-    }
-     
-    close(rpc_server_socket_fd);
 }

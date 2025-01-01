@@ -7,7 +7,7 @@
 * The user of this function takes the responsiblity to free the allocated server_ipv4_addr string
 * and the RpcConnectionContext itself.
 */
-RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier) {
+RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, TransportProtocol transport_protocol) {
     RpcConnectionContext *rpc_connection_context = malloc(sizeof(RpcConnectionContext));
 
     rpc_connection_context->server_ipv4_addr = strdup(server_ipv4_addres);
@@ -16,22 +16,24 @@ RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_addres, ui
     rpc_connection_context->credential = credential;
     rpc_connection_context->verifier = verifier;
 
+    rpc_connection_context->transport_protocol = transport_protocol;
+
     return rpc_connection_context;
 }
 
 /*
 * Creates a RpcConnectionContext with the given server IP address and server port,
-* the credential and verifier both having flavor AUTH_NONE.
+* the credential and verifier both having flavor AUTH_NONE, and the given transport protocol identifier.
 *
 * The user of this function takes the responsiblity to deallocate the received RpcConnectionContext using
 * free_rpc_connection_context() function.
 */
-RpcConnectionContext *create_auth_none_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port) {
+RpcConnectionContext *create_auth_none_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, TransportProtocol transport_protocol) {
     Rpc__OpaqueAuth *credential = create_auth_none_opaque_auth();
 
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
 
-    return create_rpc_connection_context(server_ipv4_addres, server_port, credential, verifier);
+    return create_rpc_connection_context(server_ipv4_addres, server_port, credential, verifier, transport_protocol);
 }
 
 /*
@@ -39,14 +41,14 @@ RpcConnectionContext *create_auth_none_rpc_connection_context(char *server_ipv4_
 * the credential having flavor AUTH_SYS with machine name being the name of the machine on which the process
 * that calls this function runs, uid/gid being the effective uid/gid of the calling process, and the list of
 * groups gids being the list of groups that the calling process belongs too, and the verifier having flavour
-* AUTH_NONE.
+* AUTH_NONE, and the given transport protocol identifier.
 *
 * Returns the constructed RpcConnectionContext on success, and NULL on failure.
 *
 * The user of this function takes the responsiblity to deallocete the received RpcConnectionContext using
 * free_rpc_connection_context() function.
 */
-RpcConnectionContext *create_auth_sys_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port) {
+RpcConnectionContext *create_auth_sys_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, TransportProtocol transport_protocol) {
     // get the machine name
     char hostname[MAX_MACHINENAME_LEN+1];
     int error_code = gethostname(hostname, MAX_MACHINENAME_LEN);
@@ -79,7 +81,7 @@ RpcConnectionContext *create_auth_sys_rpc_connection_context(char *server_ipv4_a
 
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
 
-    return create_rpc_connection_context(server_ipv4_addres, server_port, credential, verifier);
+    return create_rpc_connection_context(server_ipv4_addres, server_port, credential, verifier, transport_protocol);
 }
 
 /*

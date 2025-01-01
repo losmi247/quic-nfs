@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Clear dependencies
+rm -rf ./deps/*
+rmdir deps
+
 # Basic packages
 apt-get update && \
     apt-get install -y \
@@ -13,12 +17,13 @@ apt-get update && \
         automake \
         libtool \
         pkg-config \
-        cmake
+        cmake \
+        openssl \
+        libncurses-dev
 
 # Install Criterion library for tests
-apt-get update && \
-    apt-get install -y \
-        libcriterion-dev
+apt-get install -y \
+    libcriterion-dev
 
 # Install Protobuf and Protobuf-C
 apt-get install -y \
@@ -27,6 +32,24 @@ apt-get install -y \
     libprotobuf-c-dev \
     protobuf-c-compiler
 
+echo "protoc version:"
+protoc --version
+
+# Install libev for event loops
+apt-get install -y \
+    libev-dev
+
+# Install Rust (needed for TQUIC)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+# Install TQUIC from source
+git clone https://github.com/tencent/tquic --recursive
+. "$HOME/.cargo/env"            # source cargo
+mkdir deps
+mv tquic ./deps                 # move TQUIC to 'dependencies' directory
+cd ./deps/tquic
+cargo build --release -F ffi
+
 echo "Verifying installation..."
 
 # Check if protoc is available
@@ -34,8 +57,5 @@ if ! command -v protoc &>/dev/null; then
     echo "Error: protoc is not installed."
     exit 1
 fi
-
-echo "protoc version:"
-protoc --version
 
 echo "Dependencies installed successfully."

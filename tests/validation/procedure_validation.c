@@ -66,7 +66,7 @@ Mount__FhStatus *mount_directory(RpcConnectionContext *rpc_connection_context, c
 Mount__FhStatus *mount_directory_success(RpcConnectionContext *rpc_connection_context, char *directory_absolute_path) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Mount__FhStatus *fhstatus = mount_directory(rpc_connection_context, directory_absolute_path);
@@ -99,7 +99,7 @@ Mount__FhStatus *mount_directory_success(RpcConnectionContext *rpc_connection_co
 void mount_directory_fail(RpcConnectionContext *rpc_connection_context, char *directory_absolute_path, Mount__Stat non_mnt_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Mount__FhStatus *fhstatus = mount_directory(rpc_connection_context, directory_absolute_path);
@@ -162,7 +162,7 @@ Nfs__AttrStat *get_attributes(RpcConnectionContext *rpc_connection_context, Nfs_
 Nfs__AttrStat *get_attributes_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle file_fhandle, Nfs__FType expected_ftype) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = get_attributes(rpc_connection_context, file_fhandle);
@@ -196,7 +196,7 @@ Nfs__AttrStat *get_attributes_success(RpcConnectionContext *rpc_connection_conte
 void get_attributes_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle file_fhandle, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = get_attributes(rpc_connection_context, file_fhandle);
@@ -273,7 +273,7 @@ Nfs__AttrStat *set_attributes_success(RpcConnectionContext *rpc_connection_conte
 
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = set_attributes(rpc_connection_context, file_fhandle, &sattr);
@@ -318,7 +318,7 @@ void set_attributes_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHan
 
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = set_attributes(rpc_connection_context, file_fhandle, &sattr);
@@ -390,7 +390,7 @@ Nfs__DirOpRes *lookup_file_or_directory(RpcConnectionContext *rpc_connection_con
 Nfs__DirOpRes *lookup_file_or_directory_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__FType expected_ftype) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = lookup_file_or_directory(rpc_connection_context, directory_fhandle, filename);
@@ -431,7 +431,7 @@ Nfs__DirOpRes *lookup_file_or_directory_success(RpcConnectionContext *rpc_connec
 void lookup_file_or_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = lookup_file_or_directory(rpc_connection_context, directory_fhandle, filename);
@@ -497,7 +497,7 @@ Nfs__ReadLinkRes *read_from_symbolic_link(RpcConnectionContext *rpc_connection_c
 Nfs__ReadLinkRes *read_from_symbolic_link_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, char *expected_target_path) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link(rpc_connection_context, file_fhandle);
@@ -535,7 +535,7 @@ Nfs__ReadLinkRes *read_from_symbolic_link_success(RpcConnectionContext *rpc_conn
 void read_from_symbolic_link_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link(rpc_connection_context, file_fhandle);
@@ -610,7 +610,7 @@ Nfs__ReadRes *read_from_file(RpcConnectionContext *rpc_connection_context, Nfs__
 Nfs__ReadRes *read_from_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__FAttr *attributes_before_read, uint32_t expected_read_size, uint8_t *expected_read_content) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__ReadRes *readres = read_from_file(rpc_connection_context, file_fhandle, offset, byte_count);
@@ -660,7 +660,7 @@ Nfs__ReadRes *read_from_file_success(RpcConnectionContext *rpc_connection_contex
 void read_from_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__ReadRes *readres = read_from_file(rpc_connection_context, file_fhandle, offset, byte_count);
@@ -735,7 +735,7 @@ Nfs__AttrStat *write_to_file(RpcConnectionContext *rpc_connection_context, Nfs__
 Nfs__AttrStat *write_to_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__FType ftype) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = write_to_file(rpc_connection_context, file_fhandle, offset, byte_count, source_buffer);
@@ -771,7 +771,7 @@ Nfs__AttrStat *write_to_file_success(RpcConnectionContext *rpc_connection_contex
 void write_to_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *file_fhandle, uint32_t offset, uint32_t byte_count, uint8_t *source_buffer, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = write_to_file(rpc_connection_context, file_fhandle, offset, byte_count, source_buffer);
@@ -856,7 +856,7 @@ Nfs__DirOpRes *create_file_success(RpcConnectionContext *rpc_connection_context,
     
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = create_file(rpc_connection_context, directory_fhandle, filename, &sattr);
@@ -906,7 +906,7 @@ void create_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle
 
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = create_file(rpc_connection_context, directory_fhandle, filename, &sattr);
@@ -977,7 +977,7 @@ Nfs__NfsStat *remove_file(RpcConnectionContext *rpc_connection_context, Nfs__FHa
 Nfs__NfsStat *remove_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = remove_file(rpc_connection_context, directory_fhandle, filename);
@@ -1005,7 +1005,7 @@ Nfs__NfsStat *remove_file_success(RpcConnectionContext *rpc_connection_context, 
 void remove_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = remove_file(rpc_connection_context, directory_fhandle, filename);
@@ -1086,7 +1086,7 @@ Nfs__NfsStat *rename_file(RpcConnectionContext *rpc_connection_context, Nfs__FHa
 Nfs__NfsStat *rename_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = rename_file(rpc_connection_context, from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
@@ -1115,7 +1115,7 @@ Nfs__NfsStat *rename_file_success(RpcConnectionContext *rpc_connection_context, 
 void rename_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = rename_file(rpc_connection_context, from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
@@ -1197,7 +1197,7 @@ Nfs__NfsStat *create_symbolic_link(RpcConnectionContext *rpc_connection_context,
 Nfs__NfsStat *create_symbolic_link_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = create_symbolic_link(rpc_connection_context, directory_fhandle, filename, target);
@@ -1225,7 +1225,7 @@ Nfs__NfsStat *create_symbolic_link_success(RpcConnectionContext *rpc_connection_
 void create_symbolic_link_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = create_symbolic_link(rpc_connection_context, directory_fhandle, filename, target);
@@ -1307,7 +1307,7 @@ Nfs__DirOpRes *create_directory_success(RpcConnectionContext *rpc_connection_con
     
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = create_directory(rpc_connection_context, directory_fhandle, filename, &sattr);
@@ -1357,7 +1357,7 @@ void create_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FH
 
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = create_directory(rpc_connection_context, directory_fhandle, filename, &sattr);
@@ -1428,7 +1428,7 @@ Nfs__NfsStat *remove_directory(RpcConnectionContext *rpc_connection_context, Nfs
 Nfs__NfsStat *remove_directory_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = remove_directory(rpc_connection_context, directory_fhandle, filename);
@@ -1456,7 +1456,7 @@ Nfs__NfsStat *remove_directory_success(RpcConnectionContext *rpc_connection_cont
 void remove_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = remove_directory(rpc_connection_context, directory_fhandle, filename);
@@ -1527,7 +1527,7 @@ Nfs__ReadDirRes *read_from_directory(RpcConnectionContext *rpc_connection_contex
 Nfs__ReadDirRes *read_from_directory_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, int expected_number_of_entries, char *expected_filenames[]) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__ReadDirRes *readdirres = read_from_directory(rpc_connection_context, directory_fhandle, cookie, byte_count);
@@ -1601,7 +1601,7 @@ Nfs__ReadDirRes *read_from_directory_success(RpcConnectionContext *rpc_connectio
 void read_from_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, uint64_t cookie, uint32_t byte_count, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__ReadDirRes *readdirres = read_from_directory(rpc_connection_context, directory_fhandle, cookie, byte_count);
@@ -1664,7 +1664,7 @@ Nfs__StatFsRes *get_filesystem_attributes(RpcConnectionContext *rpc_connection_c
 Nfs__StatFsRes *get_filesystem_attributes_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle fhandle) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__StatFsRes *statfsres = get_filesystem_attributes(rpc_connection_context, fhandle);
@@ -1697,7 +1697,7 @@ Nfs__StatFsRes *get_filesystem_attributes_success(RpcConnectionContext *rpc_conn
 void get_filesystem_attributes_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle fhandle, Nfs__Stat non_nfs_ok_status) {
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
-        rpc_connection_context = create_test_rpc_connection_context();
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         created_rpc_connection_context = 1;
     }
     Nfs__StatFsRes *statfsres = get_filesystem_attributes(rpc_connection_context, fhandle);

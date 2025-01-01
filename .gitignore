@@ -1,7 +1,20 @@
-build/
-
+# IDE
 .vscode/
 
+# Artifacts
+build/
+
+# Dependencies
+deps/
+
+# NFS files
 exports
 
 nfs_share/
+
+logs/
+
+# QUIC files
+certificate.cert
+certificate.key
+certificate.csr
