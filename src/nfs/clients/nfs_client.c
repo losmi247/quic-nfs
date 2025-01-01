@@ -10,7 +10,19 @@
 int nfs_procedure_0_do_nothing(RpcConnectionContext *rpc_connection_context) {
     // no parameters, so an empty Any
     Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+    
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+    }
 
     int error_code = validate_successful_accepted_reply(rpc_reply);
     Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
@@ -58,8 +70,18 @@ int nfs_procedure_1_get_file_attributes(RpcConnectionContext *rpc_connection_con
     parameters.value.data = fhandle_buffer;
     parameters.value.len = fhandle_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+    }
     free(fhandle_buffer);
 
     // validate RPC reply
@@ -127,8 +149,18 @@ int nfs_procedure_2_set_file_attributes(RpcConnectionContext *rpc_connection_con
     parameters.value.data = sattrargs_buffer;
     parameters.value.len = sattrargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 2, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 2, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 2, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 2, parameters);
+    }
     free(sattrargs_buffer);
 
     // validate RPC reply
@@ -196,8 +228,18 @@ int nfs_procedure_4_look_up_file_name(RpcConnectionContext *rpc_connection_conte
     parameters.value.data = diropargs_buffer;
     parameters.value.len = diropargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 4, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 4, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 4, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 4, parameters);
+    }
     free(diropargs_buffer);
 
     // validate RPC reply
@@ -265,8 +307,18 @@ int nfs_procedure_5_read_from_symbolic_link(RpcConnectionContext *rpc_connection
     parameters.value.data = fhandle_buffer;
     parameters.value.len = fhandle_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 5, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 5, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 5, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 5, parameters);
+    }
     free(fhandle_buffer);
 
     // validate RPC reply
@@ -334,8 +386,18 @@ int nfs_procedure_6_read_from_file(RpcConnectionContext *rpc_connection_context,
     parameters.value.data = readargs_buffer;
     parameters.value.len = readargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 6, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 6, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 6, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 6, parameters);
+    }
     free(readargs_buffer);
 
     // validate RPC reply
@@ -403,8 +465,18 @@ int nfs_procedure_8_write_to_file(RpcConnectionContext *rpc_connection_context, 
     parameters.value.data = writeargs_buffer;
     parameters.value.len = writeargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 8, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 8, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 8, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 8, parameters);
+    }
     free(writeargs_buffer);
 
     // validate RPC reply
@@ -472,8 +544,18 @@ int nfs_procedure_9_create_file(RpcConnectionContext *rpc_connection_context, Nf
     parameters.value.data = createargs_buffer;
     parameters.value.len = createargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 9, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 9, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 9, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 9, parameters);
+    }
     free(createargs_buffer);
 
     // validate RPC reply
@@ -541,8 +623,18 @@ int nfs_procedure_10_remove_file(RpcConnectionContext *rpc_connection_context, N
     parameters.value.data = diropargs_buffer;
     parameters.value.len = diropargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 10, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 10, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 10, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 10, parameters);
+    }
     free(diropargs_buffer);
 
     // validate RPC reply
@@ -610,8 +702,18 @@ int nfs_procedure_11_rename_file(RpcConnectionContext *rpc_connection_context, N
     parameters.value.data = renameargs_buffer;
     parameters.value.len = renameargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 11, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 11, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 11, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 11, parameters);
+    }
     free(renameargs_buffer);
 
     // validate RPC reply
@@ -679,8 +781,18 @@ int nfs_procedure_13_create_symbolic_link(RpcConnectionContext *rpc_connection_c
     parameters.value.data = symlinkargs_buffer;
     parameters.value.len = symlinkargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 13, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 13, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 13, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 13, parameters);
+    }
     free(symlinkargs_buffer);
 
     // validate RPC reply
@@ -748,8 +860,18 @@ int nfs_procedure_14_create_directory(RpcConnectionContext *rpc_connection_conte
     parameters.value.data = createargs_buffer;
     parameters.value.len = createargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 14, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 14, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 14, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 14, parameters);
+    }
     free(createargs_buffer);
 
     // validate RPC reply
@@ -817,8 +939,18 @@ int nfs_procedure_15_remove_directory(RpcConnectionContext *rpc_connection_conte
     parameters.value.data = diropargs_buffer;
     parameters.value.len = diropargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 15, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 15, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 15, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 15, parameters);
+    }
     free(diropargs_buffer);
 
     // validate RPC reply
@@ -886,8 +1018,18 @@ int nfs_procedure_16_read_from_directory(RpcConnectionContext *rpc_connection_co
     parameters.value.data = readdirargs_buffer;
     parameters.value.len = readdirargs_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 16, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 16, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 16, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 16, parameters);
+    }
     free(readdirargs_buffer);
 
     // validate RPC reply
@@ -955,8 +1097,18 @@ int nfs_procedure_17_get_filesystem_attributes(RpcConnectionContext *rpc_connect
     parameters.value.data = fhandle_buffer;
     parameters.value.len = fhandle_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 17, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 17, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 17, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, NFS_RPC_PROGRAM_NUMBER, 2, 17, parameters);
+    }
     free(fhandle_buffer);
 
     // validate RPC reply

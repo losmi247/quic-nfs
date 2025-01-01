@@ -1,10 +1,9 @@
 #ifndef server_common_rpc__header__INCLUDED
 #define server_common_rpc__header__INCLUDED
 
-#include <protobuf-c/protobuf-c.h>
 #include "src/serialization/rpc/rpc.pb-c.h"
 
-#include "record_marking.h"
+#include "src/transport/tcp/tcp_record_marking.h"
 
 #include "src/authentication/authentication.h"
 
@@ -26,6 +25,8 @@ Rpc__AcceptedReply *create_garbage_args_accepted_reply(void);
 
 Rpc__AcceptedReply *create_system_error_accepted_reply(void);
 
+void free_accepted_reply(Rpc__AcceptedReply *accepted_reply);
+
 /*
 * RejectedReply
 */
@@ -34,11 +35,7 @@ Rpc__RejectedReply *create_rpc_mismatch_rejected_reply(uint32_t low, uint32_t hi
 
 Rpc__RejectedReply *create_auth_error_rejected_reply(Rpc__AuthStat stat);
 
-/*
-* Handling a RPC client
-*/
-
-int handle_client(int rpc_client_socket_fd);
+void free_rejected_reply(Rpc__RejectedReply *rejected_reply);
 
 /*
 * Functions that must be implemented in any specific RPC program written.

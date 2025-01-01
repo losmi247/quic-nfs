@@ -13,6 +13,8 @@
 
 uint16_t parse_port_number(char *port_number_string);
 
+char *rpc_accept_stat_to_string(Rpc__AcceptStat accept_stat);
+
 char *auth_stat_to_string(Rpc__AuthStat auth_stat);
 
 char *mount_stat_to_string(Mount__Stat stat);

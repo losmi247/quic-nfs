@@ -126,7 +126,7 @@ Test(nfs_readdir_test_suite, readdir_ok_read_directory_entries_in_batches, .desc
         readdirargs.count = 30; // aim to read only one directory entry
 
         Nfs__ReadDirRes *readdirres = malloc(sizeof(Nfs__ReadDirRes));
-        RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context();
+        RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         int status = nfs_procedure_16_read_from_directory(rpc_connection_context, readdirargs, readdirres);
         free_rpc_connection_context(rpc_connection_context);
         if(status != 0) {
@@ -226,7 +226,7 @@ Test(nfs_readdir_test_suite, readdir_no_read_permission, .description = "NFSPROC
     uint32_t gids[1] = {NON_DOCKER_IMAGE_TESTUSER_UID};
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     // fail since you don't have execute permission
     read_from_directory_fail(rpc_connection_context, &only_owner_read_fhandle, 0, 1000, NFS__STAT__NFSERR_ACCES);
@@ -260,9 +260,9 @@ Test(nfs_readdir_test_suite, readdir_has_read_permission_on_containing_directory
     only_owner_read_fhandle.nfs_filehandle = &only_owner_read_nfs_filehandle_copy;
 
     uint32_t gids[1] = {DOCKER_IMAGE_TESTUSER_UID};
-    Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
+    Rpc__OpaqueAuth *owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     int expected_number_of_entries = 4;
     char *expected_entries[] = {".", "..", "dir", "file.txt"};

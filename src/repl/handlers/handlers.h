@@ -11,6 +11,8 @@
 #include "src/repl/filehandle_management.h"
 #include "src/common_rpc/rpc_connection_context.h"
 
+#include "src/transport/transport_common.h"
+
 void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_path);
 
 void handle_ls();

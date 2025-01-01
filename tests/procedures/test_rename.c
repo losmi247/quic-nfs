@@ -236,7 +236,7 @@ Test(nfs_rename_test_suite, rename_no_write_permission_on_from_directory, .descr
     uint32_t gids[1] = {NON_DOCKER_IMAGE_TESTUSER_UID};
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     // fail since you don't have write permission on the from directory
     rename_file_fail(rpc_connection_context, &only_owner_write_fhandle, "rename_file1.txt", &permission_test_fhandle, "new_name", NFS__STAT__NFSERR_ACCES);
@@ -280,7 +280,7 @@ Test(nfs_rename_test_suite, rename_no_write_permission_on_to_directory, .descrip
     uint32_t gids[1] = {NON_DOCKER_IMAGE_TESTUSER_UID};
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     // fail since you don't have write permission on the to directory
     rename_file_fail(rpc_connection_context, &only_owner_write_fhandle, "rename_file2.txt", &only_owner_read_fhandle, "new_name", NFS__STAT__NFSERR_ACCES);
@@ -314,9 +314,9 @@ Test(nfs_rename_test_suite, rename_has_write_permission_on_from_and_to_containin
     only_owner_write_fhandle.nfs_filehandle = &only_owner_write_nfs_filehandle_copy;
 
     uint32_t gids[1] = {DOCKER_IMAGE_TESTUSER_UID};
-    Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
+    Rpc__OpaqueAuth *owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
-    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier);
+    RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
 
     // succeed since you have write permission on containing directories
     Nfs__NfsStat *nfsstat = rename_file_success(rpc_connection_context, &only_owner_write_fhandle, "rename_file3.txt", &permission_test_fhandle, "new_name.txt");

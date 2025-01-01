@@ -1,10 +1,18 @@
 FROM gcc:latest
 
+ARG TRANSPORT_PROTOCOL
+RUN echo "Building image with protocol: ${TRANSPORT_PROTOCOL}"
+# only env vars can be used in CMD commands
+ENV TRANSPORT_PROTOCOL=${TRANSPORT_PROTOCOL}
+
+# copy the project directory
 COPY . /quic-nfs
-WORKDIR /quic-nfs
 
-RUN ./install_dependencies
-
+# install dependencies
 WORKDIR /quic-nfs
-RUN chmod +x ./build/test
-CMD ["./build/test"]
+RUN chmod +x ./install_dependencies && \
+    ./install_dependencies
+
+# run the default command with 'exec' so it replaces the shell and gets signals (e.g. SIGTERM)
+RUN chmod +x ./tests/docker_scripts/start_tests
+CMD ["/bin/bash", "-c", "exec ./tests/docker_scripts/start_tests --proto=${TRANSPORT_PROTOCOL}"]

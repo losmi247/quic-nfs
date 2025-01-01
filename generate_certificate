@@ -1,0 +1,36 @@
+#!/bin/bash
+
+PRIVATE_KEY="certificate.key"
+CERTIFICATE="certificate.cert"
+DAYS_VALID=365
+COMMON_NAME="quic.nfs"
+
+# generate a private key if it doesn't exist
+if [ -f "$PRIVATE_KEY" ]; then
+    echo "Private key ($PRIVATE_KEY) already exists. Skipping generation."
+else
+    echo "Generating a 2048-bit RSA private key..."
+    openssl genrsa -out $PRIVATE_KEY 2048
+fi
+
+# generate a certificate if it doesn't exist
+if [ -f "$CERTIFICATE" ]; then
+  echo "Certificate ($CERTIFICATE) already exists. Skipping generation."
+else
+    echo "Creating a Certificate Signing Request (CSR)..."
+    openssl req -new -key $PRIVATE_KEY -out certificate.csr -subj "/CN=$COMMON_NAME"
+
+    echo "Generating a self-signed certificate..."
+    openssl x509 -req -days $DAYS_VALID -in certificate.csr -signkey $PRIVATE_KEY -out $CERTIFICATE
+
+    # clean up the CSR as it's no longer needed
+    rm certificate.csr
+fi
+
+echo "Done."
+if [ -f "$PRIVATE_KEY" ]; then
+  echo " - Private Key: $PRIVATE_KEY"
+fi
+if [ -f "$CERTIFICATE" ]; then
+  echo " - Certificate: $CERTIFICATE"
+fi

@@ -1,7 +1,10 @@
 #ifndef common_rpc__header__INCLUDED
 #define common_rpc__header__INCLUDED
 
-#include <protobuf-c/protobuf-c.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include "src/serialization/rpc/rpc.pb-c.h"
 
 #define NFS_RPC_MSG_BUFFER_SIZE 20000  // size of the buffer allocated for receiving a NFS RPC message

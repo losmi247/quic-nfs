@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# check if an argument is provided
+if [ -z "$1" ]; then
+    echo "Error: No argument provided. Please use --proto=tcp or --proto=quic."
+    exit 1
+fi
+
+# build
+make clean-all
+make serialization-library
+
+# run the tests, replacing this shell with the tests program using 'exec'
+if [ "$1" = "--proto=tcp" ]; then
+    echo "Using TCP protocol."
+    make test-tcp
+    chmod +x ./build/test_tcp
+    ./build/test_tcp
+elif [ "$1" = "--proto=quic" ]; then
+    echo "Using QUIC protocol."
+    make test-quic
+    chmod +x ./build/test_quic
+    ./build/test_quic
+else
+    echo "Error: Invalid argument '$1'. Please use --proto=tcp or --proto=quic."
+    exit 1
+fi

@@ -21,26 +21,38 @@ jobs:
       - name: Build Tests
         run: make test
 
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Build
-          path: ./build
-        
-  test:
+  test-tcp:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 4
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: Build
-          path: build
 
-      - name: Build Docker Images
-        run: tests/build_images
+      - name: Build TCP Server and Test Docker Images
+        run: tests/build_images_tcp
 
-      - name: Run Tests
-        run: tests/run_tests
+      - name: Run Tests for NFS over TCP
+        run: tests/run_tests_tcp
+
+      - name: Print TCP NFS Server Logs
+        if: always()
+        run: cat logs/mount_and_nfs_server_tcp_logs.txt
+
+  test-quic:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build QUIC Server and Test Docker Images
+        run: tests/build_images_quic
+
+      - name: Run Tests for NFS over QUIC
+        run: tests/run_tests_quic
+
+      - name: Print QUIC NFS Server Logs
+        if: always()
+        run: cat logs/mount_and_nfs_server_quic_logs.txt

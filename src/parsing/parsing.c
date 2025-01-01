@@ -26,6 +26,30 @@ uint16_t parse_port_number(char *port_number_string) {
 }
 
 /*
+* Returns a string describing the given Rpc_AcceptStat.
+*
+* The user of this function takes the responsibility to free the returned string.
+*/
+char *rpc_accept_stat_to_string(Rpc__AcceptStat accept_stat) {
+    switch(accept_stat) {
+        case RPC__ACCEPT_STAT__SUCCESS:
+            return strdup("SUCCESS");
+        case RPC__ACCEPT_STAT__PROG_UNAVAIL:
+            return strdup("PROG_UNAVAIAL");
+        case RPC__ACCEPT_STAT__PROG_MISMATCH:
+            return strdup("PROG_MISMATCH");
+        case RPC__ACCEPT_STAT__PROC_UNAVAIL:
+            return strdup("PROC_UNAVAIL");
+        case RPC__ACCEPT_STAT__GARBAGE_ARGS:
+            return strdup("GARBAGE_ARGS");
+        case RPC__ACCEPT_STAT__SYSTEM_ERR:
+            return strdup("SYSTEM_ERR");
+        default:
+            return strdup("Unknown");
+    }
+}
+
+/*
 * Returns a string describing the given Rpc__AuthStat.
 *
 * The user of this function takes the responsibility to free the returned string.

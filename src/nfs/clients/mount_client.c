@@ -10,7 +10,19 @@
 int mount_procedure_0_do_nothing(RpcConnectionContext *rpc_connection_context) {
     // no parameters, so an empty Any
     Google__Protobuf__Any parameters = GOOGLE__PROTOBUF__ANY__INIT;
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, MOUNT_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, MOUNT_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, MOUNT_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, MOUNT_RPC_PROGRAM_NUMBER, 2, 0, parameters);
+    }
 
     int error_code = validate_successful_accepted_reply(rpc_reply);
     Rpc__AcceptedReply *accepted_reply = (rpc_reply->rbody)->areply;
@@ -58,8 +70,18 @@ int mount_procedure_1_add_mount_entry(RpcConnectionContext *rpc_connection_conte
     parameters.value.data = dirpath_buffer;
     parameters.value.len = dirpath_size;
 
-    // send RPC call
-    Rpc__RpcMsg *rpc_reply = invoke_rpc_remote(rpc_connection_context, MOUNT_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+    // send RPC call over the desired transport protocol
+    Rpc__RpcMsg *rpc_reply;
+    switch(rpc_connection_context->transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, MOUNT_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            rpc_reply = invoke_rpc_remote_quic(rpc_connection_context, MOUNT_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+            break;
+        default:
+            rpc_reply = invoke_rpc_remote_tcp(rpc_connection_context, MOUNT_RPC_PROGRAM_NUMBER, 2, 1, parameters);
+    }
     free(dirpath_buffer);
 
     // validate RPC reply

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+docker image rm "mount-and-nfs-server-tcp:latest"
+docker image rm "mount-and-nfs-test-tcp:latest"
+
+# build the TCP server image
+docker build --build-arg TRANSPORT_PROTOCOL=tcp --tag mount-and-nfs-server-tcp --file ./tests/Dockerfile.server .
+
+# build the TCP tests image
+docker build --build-arg TRANSPORT_PROTOCOL=tcp --tag mount-and-nfs-test-tcp --file ./tests/Dockerfile.test_nfs .
