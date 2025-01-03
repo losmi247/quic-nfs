@@ -907,6 +907,51 @@ void   nfs__rename_args__free_unpacked
   assert(message->base.descriptor == &nfs__rename_args__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   nfs__link_args__init
+                     (Nfs__LinkArgs         *message)
+{
+  static const Nfs__LinkArgs init_value = NFS__LINK_ARGS__INIT;
+  *message = init_value;
+}
+size_t nfs__link_args__get_packed_size
+                     (const Nfs__LinkArgs *message)
+{
+  assert(message->base.descriptor == &nfs__link_args__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t nfs__link_args__pack
+                     (const Nfs__LinkArgs *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &nfs__link_args__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t nfs__link_args__pack_to_buffer
+                     (const Nfs__LinkArgs *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &nfs__link_args__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Nfs__LinkArgs *
+       nfs__link_args__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Nfs__LinkArgs *)
+     protobuf_c_message_unpack (&nfs__link_args__descriptor,
+                                allocator, len, data);
+}
+void   nfs__link_args__free_unpacked
+                     (Nfs__LinkArgs *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &nfs__link_args__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   nfs__sym_link_args__init
                      (Nfs__SymLinkArgs         *message)
 {
@@ -2545,6 +2590,57 @@ const ProtobufCMessageDescriptor nfs__rename_args__descriptor =
   nfs__rename_args__field_indices_by_name,
   1,  nfs__rename_args__number_ranges,
   (ProtobufCMessageInit) nfs__rename_args__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor nfs__link_args__field_descriptors[2] =
+{
+  {
+    "from",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__LinkArgs, from),
+    &nfs__fhandle__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "to",
+    2,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(Nfs__LinkArgs, to),
+    &nfs__dir_op_args__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned nfs__link_args__field_indices_by_name[] = {
+  0,   /* field[0] = from */
+  1,   /* field[1] = to */
+};
+static const ProtobufCIntRange nfs__link_args__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor nfs__link_args__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "nfs.LinkArgs",
+  "LinkArgs",
+  "Nfs__LinkArgs",
+  "nfs",
+  sizeof(Nfs__LinkArgs),
+  2,
+  nfs__link_args__field_descriptors,
+  nfs__link_args__field_indices_by_name,
+  1,  nfs__link_args__number_ranges,
+  (ProtobufCMessageInit) nfs__link_args__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor nfs__sym_link_args__field_descriptors[3] =
