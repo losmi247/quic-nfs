@@ -40,6 +40,8 @@ int check_remove_proc_permissions(char *directory_absolute_path, uid_t caller_ui
 
 int check_rename_proc_permissions(char *from_directory_absolute_path, char *to_directory_absolute_path, uid_t caller_uid, gid_t caller_gid);
 
+int check_link_proc_permissions(char *directory_absolute_path, uid_t caller_uid, gid_t caller_gid);
+
 int check_symlink_proc_permissions(char *directory_absolute_path, uid_t caller_uid, gid_t caller_gid);
 
 int check_mkdir_proc_permissions(char *directory_absolute_path, uid_t caller_uid, gid_t caller_gid);
