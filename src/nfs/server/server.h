@@ -3,6 +3,7 @@
 
 #define _POSIX_C_SOURCE 200809L // to be able to use truncate() in unistd.h
 
+#include <pthread.h>
 #include <stdio.h> 
 #include <netdb.h> 
 #include <netinet/in.h> 
@@ -27,10 +28,12 @@
 
 #include "mount_list.h"
 #include "inode_cache.h"
-#include "readdir_sessions.h"
+#include "directory_reading.h"
 
 #include "tests/test_common.h"         // for NFS_AND_MOUNT_TEST_RPC_SERVER_PORT
 #include "src/parsing/parsing.h"       // for parsing the port number from command line args
+
+#define PERIODIC_CLEANUP_SLEEP_TIME 10
 
 /*
 * Functions implemented by RPC programs (Mount and Nfs).
@@ -50,5 +53,6 @@ extern Mount__MountList *mount_list;
 extern InodeCache inode_cache;
 
 extern ReadDirSessionsList *readdir_sessions_list;
+extern pthread_t periodic_cleanup_thread;
 
 #endif /* server__header__INCLUDED */
