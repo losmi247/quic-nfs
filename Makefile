@@ -112,7 +112,8 @@ repl-debug: ./src/repl/repl.c create-build-dir ${REPL_SRCS} $(TQUIC_LIB_DIR)/lib
 	gcc $< ${REPL_SRCS} ${CFLAGS} -o ./build/repl ${DEBUG_FLAGS} ${LIBS}
 
 $(TQUIC_LIB_DIR)/libtquic.a:
-	git submodule update --init --recursive && cd $(TQUIC_DIR) && cargo build --release -F ffi
+	git submodule update --init --recursive && \
+	cd $(TQUIC_DIR) && cargo build --release -F ffi
 
 create-build-dir:
 	mkdir -p ./build

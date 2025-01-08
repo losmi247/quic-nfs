@@ -48,7 +48,7 @@ The NFSv2 server currently supports the following NFSv2 procedures:
 |  9  | **CREATE**         | create file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 10  | **REMOVE**         | remove file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 11  | **RENAME**         | rename file                                  |   done &#10004;     |   done &#10004;       |   done &#10004;    |
-| 12  | **LINK**           | create hard link to file                     |                     |                       |                    |
+| 12  | **LINK**           | create hard link to file                     |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 13  | **SYMLINK**        | create symbolic link to file                 |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 14  | **MKDIR**          | create directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 15  | **RMDIR**          | remove directory                             |   done &#10004;     |   done &#10004;       |   done &#10004;    |

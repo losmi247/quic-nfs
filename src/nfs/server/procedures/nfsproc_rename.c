@@ -159,15 +159,12 @@ Rpc__AcceptedReply *serve_nfs_procedure_11_rename_file(Rpc__OpaqueAuth *credenti
 
     // check that the file/directory client wants to rename exists
     char *old_file_absolute_path = get_file_absolute_path(from_directory_absolute_path, from_file_name->filename);
-    error_code = access(old_file_absolute_path, F_OK);
+    struct stat file_stat;
+    error_code = lstat(old_file_absolute_path, &file_stat);
     if(error_code < 0) {
-        if(errno == EIO || errno == ENOENT) {
+        if(errno == ENOENT) {
             Nfs__Stat nfs_stat;
             switch(errno) {
-                case EIO:
-                    nfs_stat = NFS__STAT__NFSERR_IO;
-                    fprintf(stderr, "serve_nfs_procedure_11_rename_file: physical IO error occurred while checking if file at absolute path '%s' exists\n", old_file_absolute_path);
-                    break;
                 case ENOENT:
                     nfs_stat = NFS__STAT__NFSERR_NOENT;
                     fprintf(stderr, "serve_nfs_procedure_11_rename_file: attempted to rename a file '%s' that does not exist\n", old_file_absolute_path);

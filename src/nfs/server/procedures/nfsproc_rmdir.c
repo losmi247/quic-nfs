@@ -113,15 +113,12 @@ Rpc__AcceptedReply *serve_nfs_procedure_15_remove_directory(Rpc__OpaqueAuth *cre
 
     // check that the directory client wants to delete exists
     char *child_directory_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
-    error_code = access(child_directory_absolute_path, F_OK);
+    struct stat directory_stat;
+    error_code = lstat(child_directory_absolute_path, &directory_stat);
     if(error_code < 0) {
-        if(errno == EIO || errno == ENOENT) {
+        if(errno == ENOENT) {
             Nfs__Stat nfs_stat;
             switch(errno) {
-                case EIO:
-                    nfs_stat = NFS__STAT__NFSERR_IO;
-                    fprintf(stderr, "serve_nfs_procedure_15_remove_directory: physical IO error occurred while checking if file/directory at absolute path '%s' exists\n", child_directory_absolute_path);
-                    break;
                 case ENOENT:
                     nfs_stat = NFS__STAT__NFSERR_NOENT;
                     fprintf(stderr, "serve_nfs_procedure_15_remove_directory: attempted to delete a directory '%s' that does not exist\n", child_directory_absolute_path);

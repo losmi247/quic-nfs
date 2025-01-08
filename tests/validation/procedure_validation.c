@@ -1132,6 +1132,106 @@ void rename_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle
 }
 
 /*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_LINK to create a hard link with the given filename
+* inside this given directory, pointing to file given by 'target_file' NFS fhandle.
+* 
+* Returns the Nfs__NfsStat returned by LINK procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *create_link_to_file(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *target_file, Nfs__FHandle *directory_fhandle, char *filename) {
+    Nfs__FileName file_name = NFS__FILE_NAME__INIT;
+    file_name.filename = filename;
+
+    Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
+    diropargs.dir = directory_fhandle;
+    diropargs.name = &file_name;
+
+    Nfs__LinkArgs linkargs = NFS__LINK_ARGS__INIT;
+    linkargs.from = target_file;
+    linkargs.to = &diropargs;
+
+    Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
+    int status = nfs_procedure_12_create_link_to_file(rpc_connection_context, linkargs, nfsstat);
+    if(status != 0) {
+        free(nfsstat);
+        cr_fatal("NFSPROC_LINK failed - status %d\n", status);
+    }
+
+    cr_assert_not_null(nfsstat);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_LINK to create a hard link with the given filename
+* inside this given directory, pointing to file given by 'target_file' NFS fhandle.
+*
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
+* The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
+* 
+* Returns the Nfs__NfsStat returned by LINK procedure.
+*
+* The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
+* with the obtained NfsStat.
+* This function either terminates the program (in case an assertion fails) or successfuly executes -
+* so the user of this function should always assume this function returns a valid non-NULL Nfs__NfsStat
+* and always call 'nfs__nfs_stat__free_unpacked()' on it at some point.
+*/
+Nfs__NfsStat *create_link_to_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *target_file, Nfs__FHandle *directory_fhandle, char *filename) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = create_link_to_file(rpc_connection_context, target_file, directory_fhandle, filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
+
+    char *expected_nfs_stat = nfs_stat_to_string(NFS__STAT__NFS_OK), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, NFS__STAT__NFS_OK, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
+
+    return nfsstat;
+}
+
+/*
+* Given the Nfs__FHandle of a directory, calls NFSPROC_LINK to create a hard link with the given filename
+* inside this given directory, pointing to file given by 'target_file' NFS fhandle.
+*
+* Uses the given RpcConnectionContext if it's not NULL, and if the given RpcConnectionContext is NULL
+* it creates its own RpcConnectionContext with AUTH_SYS flavor and root uid.
+*
+* The procedure results are validated assuming a non-NFS__STAT__NFS_OK NFS status, given in argument 'non_nfs_ok_status'.
+*/
+void create_link_to_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *target_file, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status) {
+    int created_rpc_connection_context = 0;
+    if(rpc_connection_context == NULL) {
+        rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        created_rpc_connection_context = 1;
+    }
+    Nfs__NfsStat *nfsstat = create_link_to_file(rpc_connection_context, target_file, directory_fhandle, filename);
+    if(created_rpc_connection_context) {
+        free_rpc_connection_context(rpc_connection_context);
+    }
+
+    char *expected_nfs_stat = nfs_stat_to_string(non_nfs_ok_status), *found_nfs_stat = nfs_stat_to_string(nfsstat->stat);
+    cr_assert_eq(nfsstat->stat, non_nfs_ok_status, "Expected NfsStat %s but got %s", expected_nfs_stat, found_nfs_stat);
+    free(expected_nfs_stat);
+    free(found_nfs_stat);
+
+    nfs__nfs_stat__free_unpacked(nfsstat, NULL);
+}
+
+/*
 * Given the Nfs__FHandle of a directory, calls NFSPROC_SYMLINK to create a symbolic link with the given filename
 * inside this given directory, pointing to file given by 'target' absolute path.
 * 
@@ -1186,7 +1286,7 @@ Nfs__NfsStat *create_symbolic_link(RpcConnectionContext *rpc_connection_context,
 *
 * The procedure results are validated assuming NFS__STAT__NFS_OK NFS status.
 * 
-* Returns the Nfs__DirOpRes returned by SYMLINK procedure.
+* Returns the Nfs__NfsStat returned by SYMLINK procedure.
 *
 * The user of this function takes on the responsibility to call 'nfs__nfs_stat__free_unpacked()'
 * with the obtained NfsStat.
