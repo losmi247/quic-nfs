@@ -35,27 +35,31 @@ apt-get install -y \
 echo "protoc version:"
 protoc --version
 
+# Verify Protobuf installation
+if ! command -v protoc &>/dev/null; then
+    echo "Error: protoc is not installed."
+    exit 1
+fi
+
 # Install libev for event loops
 apt-get install -y \
     libev-dev
 
 # Install Rust (needed for TQUIC)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+. "$HOME/.cargo/env"            # source cargo
+
+# Verify Rust and Cargo installation
+if ! command -v rustc &>/dev/null || ! command -v cargo &>/dev/null; then
+    echo "Error: Rust or Cargo installation failed."
+    exit 1
+fi
 
 # Install TQUIC from source
 git clone https://github.com/tencent/tquic --recursive
-. "$HOME/.cargo/env"            # source cargo
 mkdir deps
 mv tquic ./deps                 # move TQUIC to 'dependencies' directory
 cd ./deps/tquic
 cargo build --release -F ffi
 
 echo "Verifying installation..."
-
-# Check if protoc is available
-if ! command -v protoc &>/dev/null; then
-    echo "Error: protoc is not installed."
-    exit 1
-fi
-
-echo "Dependencies installed successfully."

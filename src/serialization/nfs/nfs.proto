@@ -223,6 +223,15 @@ message RenameArgs {
 }
 
 /*
+* LINK (12)
+*/
+
+message LinkArgs {
+    FHandle from = 1;
+    DirOpArgs to = 2;
+}
+
+/*
 * SYMLINK (13)
 */
 

@@ -64,6 +64,11 @@ Nfs__NfsStat *rename_file_success(RpcConnectionContext *rpc_connection_context, 
 
 void rename_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *from_directory_fhandle, char *from_filename, Nfs__FHandle *to_directory_fhandle, char *to_filename, Nfs__Stat non_nfs_ok_status);
 
+// NFSPROC_LINK validation
+Nfs__NfsStat *create_link_to_file_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *target_file, Nfs__FHandle *directory_fhandle, char *filename);
+
+void create_link_to_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *target_file, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Stat non_nfs_ok_status);
+
 // NFSPROC_SYMLINK validation
 Nfs__NfsStat *create_symbolic_link_success(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *directory_fhandle, char *filename, Nfs__Path *target);
 

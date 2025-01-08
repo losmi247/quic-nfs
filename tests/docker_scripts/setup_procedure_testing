@@ -30,6 +30,11 @@ mkdir /nfs_share/rename_test && \
     touch /nfs_share/rename_test/dir4/rename_test_file.txt && \
     touch /nfs_share/rename_test/dir1/rename_test_file.txt
 
+mkdir /nfs_share/link_test && \
+    touch /nfs_share/link_test/existing_file && \
+    echo -n "existing_file_content" >> /nfs_share/link_test/existing_file && \
+    mkdir /nfs_share/link_test/existing_directory
+
 mkdir /nfs_share/symlink_test && \
     touch /nfs_share/symlink_test/existing_file
 

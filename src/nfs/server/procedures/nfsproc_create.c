@@ -167,31 +167,13 @@ Rpc__AcceptedReply *serve_nfs_procedure_9_create_file(Rpc__OpaqueAuth *credentia
 
     // check if the file client wants to create already exists
     char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
-    error_code = access(file_absolute_path, F_OK);
+    struct stat file_stat;
+    error_code = lstat(file_absolute_path, &file_stat);
     if(error_code == 0) {
         fprintf(stderr, "serve_nfs_procedure_9_create_file: attempted to create a file '%s' that already exists\n", file_absolute_path);
 
         // build the procedure results
         Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_EXIST);
-
-        // serialize the procedure results
-        size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
-        uint8_t *diropres_buffer = malloc(diropres_size);
-        nfs__dir_op_res__pack(diropres, diropres_buffer);
-
-        free(file_absolute_path);
-        nfs__create_args__free_unpacked(createargs, NULL);
-        free(diropres->nfs_status);
-        free(diropres->default_case);
-        free(diropres);
-
-        return wrap_procedure_results_in_successful_accepted_reply(diropres_size, diropres_buffer, "nfs/DirOpRes");
-    }
-    else if(errno == EIO) {
-        fprintf(stderr, "serve_nfs_procedure_9_create_file: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
-
-        // build the procedure results
-        Nfs__DirOpRes *diropres = create_default_case_dir_op_res(NFS__STAT__NFSERR_IO);
 
         // serialize the procedure results
         size_t diropres_size = nfs__dir_op_res__get_packed_size(diropres);
@@ -215,7 +197,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_9_create_file(Rpc__OpaqueAuth *credentia
 
         return create_system_error_accepted_reply();
     }
-    // now we know we got a ENOENT from access() i.e. the file client wants to create does not exist
+    // now we know we got a ENOENT from lstat() i.e. the file client wants to create does not exist
 
     // check permissions
     if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {

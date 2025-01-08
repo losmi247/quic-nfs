@@ -30,6 +30,8 @@ Rpc__AcceptedReply *serve_nfs_procedure_10_remove_file(Rpc__OpaqueAuth *credenti
 
 Rpc__AcceptedReply *serve_nfs_procedure_11_rename_file(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters);
 
+Rpc__AcceptedReply *serve_nfs_procedure_12_create_link_to_file(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters);
+
 Rpc__AcceptedReply *serve_nfs_procedure_13_create_symbolic_link(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters);
 
 Rpc__AcceptedReply *serve_nfs_procedure_14_create_directory(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters);

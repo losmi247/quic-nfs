@@ -33,7 +33,15 @@ Test(nfs_symlink_test_suite, symlink_ok, .description = "NFSPROC_SYMLINK ok") {
 
     // lookup the created 'symlink' file to verify its file type is NFLNK
     Nfs__DirOpRes *symlink_diropres = lookup_file_or_directory_success(NULL, &symlink_test_dir_fhandle, "symlink", NFS__FTYPE__NFLNK);
+
+    // read from the created symbolic link to verify the correct path was written into it
+    Nfs__FHandle symlink_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle symlink_nfs_filehandle_copy = deep_copy_nfs_filehandle(symlink_diropres->diropok->file->nfs_filehandle);
     nfs__dir_op_res__free_unpacked(symlink_diropres, NULL);
+    symlink_fhandle.nfs_filehandle = &symlink_nfs_filehandle_copy;
+
+    Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link_success(NULL, &symlink_fhandle, target.path);
+    nfs__read_link_res__free_unpacked(readlinkres, NULL);
 }
 
 Test(nfs_symlink_test_suite, symlink_no_such_directory, .description = "NFSPROC_SYMLINK no such directory") {
@@ -204,9 +212,21 @@ Test(nfs_symlink_test_suite, symlink_has_write_permission_on_containing_director
     Nfs__Path path = NFS__PATH__INIT;
     path.path = "path";
 
-    // succeed since you have write permission on containing directories
-    Nfs__NfsStat *nfsstat = create_symbolic_link_success(rpc_connection_context, &only_owner_write_fhandle, "create_symboliclink", &path);
+    // succeed since you have write permission on the containing directory
+    Nfs__NfsStat *nfsstat = create_symbolic_link_success(rpc_connection_context, &only_owner_write_fhandle, "permissions_symlink", &path);
     nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 
     free_rpc_connection_context(rpc_connection_context);
+
+    // lookup the created 'permissions_symlink' file to verify its file type is NFLNK
+    Nfs__DirOpRes *symlink_diropres = lookup_file_or_directory_success(NULL, &only_owner_write_fhandle, "permissions_symlink", NFS__FTYPE__NFLNK);
+
+    // read from the created symbolic link to verify the correct path was written into it
+    Nfs__FHandle symlink_fhandle = NFS__FHANDLE__INIT;
+    NfsFh__NfsFileHandle symlink_nfs_filehandle_copy = deep_copy_nfs_filehandle(symlink_diropres->diropok->file->nfs_filehandle);
+    nfs__dir_op_res__free_unpacked(symlink_diropres, NULL);
+    symlink_fhandle.nfs_filehandle = &symlink_nfs_filehandle_copy;
+
+    Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link_success(NULL, &symlink_fhandle, path.path);
+    nfs__read_link_res__free_unpacked(readlinkres, NULL);
 }

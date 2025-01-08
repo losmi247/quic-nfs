@@ -176,29 +176,13 @@ Rpc__AcceptedReply *serve_nfs_procedure_13_create_symbolic_link(Rpc__OpaqueAuth 
 
     // check if the file client wants to create already exists
     char *file_absolute_path = get_file_absolute_path(directory_absolute_path, file_name->filename);
-    error_code = access(file_absolute_path, F_OK);
+    struct stat file_stat;
+    error_code = lstat(file_absolute_path, &file_stat);
     if(error_code == 0) {
-        fprintf(stderr, "serve_nfs_procedure_13_create_symbolic_link: attempted to create a symbolic link with at '%s' but file at that absolute path already exists\n", file_absolute_path);
+        fprintf(stderr, "serve_nfs_procedure_13_create_symbolic_link: attempted to create a symbolic link at '%s' but file at that absolute path already exists\n", file_absolute_path);
 
         // build the procedure results
         Nfs__NfsStat *nfs_status = create_nfs_stat(NFS__STAT__NFSERR_EXIST);
-
-        // serialize the procedure results
-        size_t nfsstat_size = nfs__nfs_stat__get_packed_size(nfs_status);
-        uint8_t *nfsstat_buffer = malloc(nfsstat_size);
-        nfs__nfs_stat__pack(nfs_status, nfsstat_buffer);
-
-        free(file_absolute_path);
-        nfs__sym_link_args__free_unpacked(symlinkargs, NULL);
-        free(nfs_status);
-
-        return wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
-    }
-    else if(errno == EIO) {
-        fprintf(stderr, "serve_nfs_procedure_13_create_symbolic_link: physical IO error occurred while checking if file at absolute path '%s' exists\n", file_absolute_path);
-
-        // build the procedure results
-        Nfs__NfsStat *nfs_status = create_nfs_stat(NFS__STAT__NFSERR_IO);
 
         // serialize the procedure results
         size_t nfsstat_size = nfs__nfs_stat__get_packed_size(nfs_status);
@@ -220,7 +204,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_13_create_symbolic_link(Rpc__OpaqueAuth 
 
         return create_system_error_accepted_reply();
     }
-    // now we know we got a ENOENT from access() i.e. the file client wants to create does not exist
+    // now we know we got a ENOENT from lstat() i.e. the file client wants to create does not exist
 
     // check permissions
     if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {

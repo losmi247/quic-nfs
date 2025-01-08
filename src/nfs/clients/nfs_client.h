@@ -42,6 +42,8 @@ int nfs_procedure_10_remove_file(RpcConnectionContext *rpc_connection_context, N
 
 int nfs_procedure_11_rename_file(RpcConnectionContext *rpc_connection_context, Nfs__RenameArgs renameargs, Nfs__NfsStat *result);
 
+int nfs_procedure_12_create_link_to_file(RpcConnectionContext *rpc_connection_context, Nfs__LinkArgs linkargs, Nfs__NfsStat *result);
+
 int nfs_procedure_13_create_symbolic_link(RpcConnectionContext *rpc_connection_context, Nfs__SymLinkArgs symlinkargs, Nfs__NfsStat *result);
 
 int nfs_procedure_14_create_directory(RpcConnectionContext *rpc_connection_context, Nfs__CreateArgs createargs, Nfs__DirOpRes *result);

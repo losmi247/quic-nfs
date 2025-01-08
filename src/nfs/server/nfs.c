@@ -34,6 +34,8 @@ Rpc__AcceptedReply *call_nfs(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verif
         case 6:
             return serve_nfs_procedure_6_read_from_file(credential, verifier, parameters);
         case 7:
+            // procedure 7 (NFSPROC_WRITECACHE) is supported in NFSv3
+            break;
         case 8:
             return serve_nfs_procedure_8_write_to_file(credential, verifier, parameters);
         case 9:
@@ -43,6 +45,7 @@ Rpc__AcceptedReply *call_nfs(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verif
         case 11:
             return serve_nfs_procedure_11_rename_file(credential, verifier, parameters);
         case 12:
+            return serve_nfs_procedure_12_create_link_to_file(credential, verifier, parameters);
         case 13:
             return serve_nfs_procedure_13_create_symbolic_link(credential, verifier, parameters);
         case 14:
