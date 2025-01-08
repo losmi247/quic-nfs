@@ -31,7 +31,7 @@ docker run --name mount-and-nfs-test-tcp \
 TEST_EXIT_CODE=$?
 
 # stop the server using SIGTERM
-# docker stop mount-and-nfs-server-tcp
+docker stop mount-and-nfs-server-tcp
 
 # output all server logs (both stdout and stderr) to a file
 mkdir -p ./logs

@@ -49,6 +49,7 @@ COMMON_MOUNT_AND_NFS_SERVER_SRCS = ./src/nfs/server/mount.c ./src/nfs/server/pro
 	./src/nfs/server/mount_list.c \
 	./src/nfs/server/inode_cache.c \
 	./src/nfs/server/file_management.c \
+	./src/nfs/server/directory_reading.c \
 	./src/nfs/server/mount_messages.c \
 	./src/nfs/server/nfs_messages.c \
 	./src/nfs/server/nfs_permissions.c \

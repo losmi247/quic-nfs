@@ -142,7 +142,7 @@ void free_rm_receiving_context(RecordMarkingReceivingContext *rm_receiving_conte
 
 /*
 * Creates a fresh RM receiving context (with buffer size 0) for the given stream in the 
-* given QUIC connection, and adds it to the head given list of RM receiving contexts.
+* given QUIC connection, and adds it to the head of the given list of RM receiving contexts.
 *
 * Returns 0 on success and > 0 on failure.
 *
@@ -163,6 +163,7 @@ int add_new_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t s
     RecordMarkingReceivingContextsList *new_head = malloc(sizeof(RecordMarkingReceivingContextsList));
     if(new_head == NULL) {
         fprintf(stderr, "add_new_rm_receiving_context: failed to allocate memory\n");
+        free_rm_receiving_context(new_rm_receiving_context);
         return 3;
     }
     new_head->rm_receiving_context = new_rm_receiving_context;
@@ -183,7 +184,7 @@ int find_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t stre
     while(curr != NULL) {
         RecordMarkingReceivingContext *context = curr->rm_receiving_context;
         if(context == NULL) {
-            fprintf(stderr, "rm_receiving_context_exists: encountered a NULL RM receiving context in the list\n");
+            fprintf(stderr, "find_rm_receiving_context: encountered a NULL RM receiving context in the list\n");
 
             curr = curr->next;
 
@@ -256,11 +257,11 @@ int remove_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t st
     RecordMarkingReceivingContextsList *curr = (*rm_receiving_contexts)->next, *prev = *rm_receiving_contexts;
     while(curr != NULL) {
         RecordMarkingReceivingContext *context = curr->rm_receiving_context;
-        if(first_context == NULL) {
+        if(context == NULL) {
             fprintf(stderr, "remove_rm_receiving_context: encountered a NULL RM receiving context in the list\n");
             return 3;
         }
-        if(first_context->quic_connection == quic_connection && first_context->stream_id == stream_id) {
+        if(context->quic_connection == quic_connection && context->stream_id == stream_id) {
             prev->next = curr->next;
 
             free_rm_receiving_context(context);

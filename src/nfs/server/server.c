@@ -9,6 +9,9 @@ TransportProtocol transport_protocol;
 Mount__MountList *mount_list;
 InodeCache inode_cache;
 
+ReadDirSessionsList *readdir_sessions_list;
+pthread_t periodic_cleanup_thread;
+
 /*
 * Functions from server_common_rpc.h that each RPC program's server must implement.
 */
@@ -59,11 +62,30 @@ void handle_signal(int signal) {
         clean_up_inode_cache(inode_cache);
         clean_up_mount_list(mount_list);
 
+        // wait for the periodic cleanup thread to terminate
+        pthread_cancel(periodic_cleanup_thread);
+        pthread_join(periodic_cleanup_thread, NULL);
+
+        clean_up_readdir_sessions_list(readdir_sessions_list);    //  this function is not atomic, but the cleanup thread has been terminated now, so it's fine
+
         fprintf(stdout, "Server shutdown successfull\n");
         fflush(stdout);
 
         exit(0);
     }
+}
+
+/*
+* The thread that periodically iterates through all ReadDir sessions
+* and discards the expired ones.
+*/
+void *readdir_periodic_cleanup_thread(void *arg) {
+    while(1) {
+        sleep(PERIODIC_CLEANUP_SLEEP_TIME);
+        clean_up_expired_readdir_sessions(&readdir_sessions_list);
+    }
+
+    return NULL;
 }
 
 int main(int argc, char *argv[]) {
@@ -119,6 +141,13 @@ int main(int argc, char *argv[]) {
     // initialize Nfs and Mount server state
     mount_list = NULL;
     inode_cache = NULL;
+    readdir_sessions_list = NULL;
+
+    // start the periodic cleanup thread
+    if (pthread_create(&periodic_cleanup_thread, NULL, readdir_periodic_cleanup_thread, NULL) != 0) {
+        perror("Failed to create cleanup thread");
+        return 1;
+    }
 
     // run the Nfs+Mount server
     switch(transport_protocol) {
