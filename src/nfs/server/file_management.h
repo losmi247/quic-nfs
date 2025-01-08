@@ -26,6 +26,8 @@
 
 #include "inode_cache.h"
 
+#include "readdir_sessions.h"
+
 /*
 * General file management functions used by many Nfs procedures
 */
@@ -52,7 +54,7 @@ int write_to_file(char *file_absolute_path, off_t offset, size_t byte_count, uin
 * File management functions used by NFSPROC_READDIR
 */
 
-int read_from_directory(char *directory_absolute_path, long offset_cookie, size_t byte_count, Nfs__DirectoryEntriesList **head, int *end_of_stream);
+int read_from_directory(Rpc__AuthSysParams *client_authsysparams, char *directory_absolute_path, ino_t directory_inode_number, ReadDirSessionsList **readdir_sessions, long offset_cookie, size_t byte_count, Nfs__DirectoryEntriesList **head, int *end_of_stream);
 
 void clean_up_directory_entries_list(Nfs__DirectoryEntriesList *directory_entries_list_head);
 

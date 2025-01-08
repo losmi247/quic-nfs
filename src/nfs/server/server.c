@@ -9,6 +9,8 @@ TransportProtocol transport_protocol;
 Mount__MountList *mount_list;
 InodeCache inode_cache;
 
+ReadDirSessionsList *readdir_sessions_list;
+
 /*
 * Functions from server_common_rpc.h that each RPC program's server must implement.
 */
@@ -58,6 +60,7 @@ void handle_signal(int signal) {
 
         clean_up_inode_cache(inode_cache);
         clean_up_mount_list(mount_list);
+        clean_up_readdir_sessions_list(readdir_sessions_list);
 
         fprintf(stdout, "Server shutdown successfull\n");
         fflush(stdout);

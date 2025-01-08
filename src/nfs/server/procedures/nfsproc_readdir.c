@@ -50,12 +50,12 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *
     }
 
     NfsFh__NfsFileHandle *directory_nfs_filehandle = directory_fhandle->nfs_filehandle;
-    ino_t inode_number = directory_nfs_filehandle->inode_number;
+    ino_t directory_inode_number = directory_nfs_filehandle->inode_number;
 
-    char *directory_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
+    char *directory_absolute_path = get_absolute_path_from_inode_number(directory_inode_number, inode_cache);
     if(directory_absolute_path == NULL) {
         // we couldn't decode inode number back to a file/directory - we assume the client gave us a wrong NFS filehandle, i.e. no such directory
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed to decode inode number %ld back to a directory\n", inode_number);
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed to decode inode number %ld back to a directory\n", directory_inode_number);
 
         // build the procedure results
         Nfs__ReadDirRes *readdirres = create_default_case_read_dir_res(NFS__STAT__NFSERR_NOENT);
@@ -142,7 +142,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *
     // read entries from the directory
     Nfs__DirectoryEntriesList *directory_entries = NULL;
     int end_of_stream = 0;
-    error_code = read_from_directory(directory_absolute_path, readdirargs->cookie->value, readdirargs->count, &directory_entries, &end_of_stream);
+    error_code = read_from_directory(credential->auth_sys, directory_absolute_path, directory_inode_number, &readdir_sessions_list, readdirargs->cookie->value, readdirargs->count, &directory_entries, &end_of_stream);
     if(error_code > 0) {
         // we failed reading directory entries
         fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed reading directory entries for directory at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);

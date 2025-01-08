@@ -27,6 +27,7 @@
 
 #include "mount_list.h"
 #include "inode_cache.h"
+#include "readdir_sessions.h"
 
 #include "tests/test_common.h"         // for NFS_AND_MOUNT_TEST_RPC_SERVER_PORT
 #include "src/parsing/parsing.h"       // for parsing the port number from command line args
@@ -47,5 +48,7 @@ extern TransportProtocol transport_protocol;
 
 extern Mount__MountList *mount_list;
 extern InodeCache inode_cache;
+
+extern ReadDirSessionsList *readdir_sessions_list;
 
 #endif /* server__header__INCLUDED */

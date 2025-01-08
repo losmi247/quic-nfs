@@ -255,9 +255,11 @@ int write_to_file(char *file_absolute_path, off_t offset, size_t byte_count, uin
 }
 
 /*
-* Given a 'directory_stream' opened with opendir(), reads directory entries from it, creates a list of 
-* them, and places the list in the 'head' argument. It will read as many directory entries as possible, 
-* such that their total size does not exceed 'byte_count'.
+* Given a client (by its AUTH_SYS parameters) and a directory by its absolute path and inode number,
+* fetches the ReadDir session for this client and directory (or creates a new one if no such session is
+* currently active) from the given collection of active ReadDir sessions ('active_read_dir_sessions' argument).
+* Then reads directory entries from it, creates a list of them, and places that list in the 'head' argument. 
+* It will read as many directory entries as possible, such that their total size does not exceed 'byte_count'.
 * In case end of directory stream was reached, 'end_of_stream' is set to 1.
 *
 * Returns 0 on success and > 0 on failure. The 'directory_absolute_path' is only used for printing in
@@ -267,25 +269,47 @@ int write_to_file(char *file_absolute_path, off_t offset, size_t byte_count, uin
 * directory entries, Nfs__FileName's, Nfs__FileName.filename's, and Nfs__NfsCookie's inside them
 * using the clean_up_directory_entries_list() function.
 */
-int read_from_directory(char *directory_absolute_path, long offset_cookie, size_t byte_count, Nfs__DirectoryEntriesList **head, int *end_of_stream) {
-    // open the directory
-    DIR *directory_stream = opendir(directory_absolute_path);
-    if(directory_stream == NULL) {
-        perror_msg("Failed to open the directory at absolute path %s", directory_absolute_path);
+int read_from_directory(Rpc__AuthSysParams *client_authsysparams, char *directory_absolute_path, ino_t directory_inode_number, ReadDirSessionsList **active_readdir_sessions, long offset_cookie, size_t byte_count, Nfs__DirectoryEntriesList **head, int *end_of_stream) {
+    if(active_readdir_sessions == NULL) {
+        fprintf(stderr, "read_from_directory: readdir_sessions is NULL\n");
         return 1;
     }
 
-    // 0 is a special cookie value meaning client wants to start from beginning of directory stream, so don't 'seekdir' in this case
-    if(offset_cookie != 0) {
+    if(client_authsysparams == NULL) {
+        fprintf(stderr, "read_from_directory: client AuthSysParams is NULL\n");
+        return 2;
+    }
+    
+    if(find_readdir_session(client_authsysparams, directory_inode_number, *active_readdir_sessions) != 0) {
+        // there is no active ReadDir session for this client and directory, so create one
+        int error_code = add_new_readdir_session(client_authsysparams, directory_absolute_path, directory_inode_number, active_readdir_sessions);
+        if(error_code > 0) {
+            fprintf(stderr, "read_from_directory: failed to create a new ReadDir session\n");
+            return 3;
+        }
+    }
+
+    // get the ReadDir session for this client and directory
+    ReadDirSession *readdir_session = get_readdir_session(client_authsysparams, directory_inode_number, *active_readdir_sessions);
+    if(readdir_session == NULL) {
+        fprintf(stderr, "read_from_directory: ReadDir session for client %s:%d:%d and directory %s not found\n", client_authsysparams->machinename, client_authsysparams->uid, client_authsysparams->gid, directory_absolute_path);
+        return 4;
+    }
+
+    // 0 is a special cookie value meaning client wants to start from beginning of directory stream
+    if(offset_cookie == 0) {
+        rewinddir(readdir_session->directory_stream);
+    }
+    else {
         // set the position within directory stream to the specified cookie
-        seekdir(directory_stream, offset_cookie);
+        seekdir(readdir_session->directory_stream, offset_cookie);
     }
 
     uint32_t total_size = 0;
     Nfs__DirectoryEntriesList *directory_entries_list_head = NULL, *directory_entries_list_tail = NULL;
     do {
         errno = 0;
-        struct dirent *directory_entry = readdir(directory_stream); // man page of 'readdir' says not to free this
+        struct dirent *directory_entry = readdir(readdir_session->directory_stream); // man page of 'readdir' says not to free this
         if(directory_entry == NULL) {
             if(errno == 0) {
                 // end of the directory stream reached
@@ -298,7 +322,7 @@ int read_from_directory(char *directory_absolute_path, long offset_cookie, size_
                 // clean up the directory entries allocated so far
                 clean_up_directory_entries_list(directory_entries_list_head);
 
-                return 2;
+                return 5;
             }
         }
 
@@ -313,14 +337,14 @@ int read_from_directory(char *directory_absolute_path, long offset_cookie, size_
         strcpy(file_name->filename, directory_entry->d_name);
         new_directory_entry->name = file_name;
 
-        long posix_cookie = telldir(directory_stream);
+        long posix_cookie = telldir(readdir_session->directory_stream);
         if(posix_cookie < 0) {
             perror_msg("Failed getting current location in directory stream of directory at absolute path %s", directory_absolute_path);
 
             // clean up the directory entries allocated so far
             clean_up_directory_entries_list(directory_entries_list_head);
 
-            return 3;
+            return 6;
         }
         Nfs__NfsCookie *nfs_cookie = malloc(sizeof(Nfs__NfsCookie));
         nfs__nfs_cookie__init(nfs_cookie);
@@ -348,13 +372,20 @@ int read_from_directory(char *directory_absolute_path, long offset_cookie, size_
         }
     } while(total_size < byte_count);
 
-    if(closedir(directory_stream) < 0) {
-        perror_msg("Failed closing the directory stream of directory at absolute path %s\n", directory_absolute_path);
+    // update the time of the last read from this directory stream
+    readdir_session->last_readdir_rpc_timestamp = time(NULL);
 
-        // clean up the directory entries allocated so far
-        clean_up_directory_entries_list(directory_entries_list_head);
+    // if the stream was read to the end, close it
+    if(*end_of_stream == 1) {
+        int error_code = remove_readdir_session(client_authsysparams, directory_inode_number, active_readdir_sessions);
+        if(error_code > 0) {
+            fprintf(stderr, "read_from_directory: failed removing the ReadDir session client %s:%d:%d and directory %s\n", client_authsysparams->machinename, client_authsysparams->uid, client_authsysparams->gid, directory_absolute_path);
 
-        return 4;
+            // clean up the directory entries allocated so far
+            clean_up_directory_entries_list(directory_entries_list_head);
+
+            return 7;
+        }
     }
 
     return 0;
