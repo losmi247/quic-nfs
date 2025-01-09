@@ -44,12 +44,13 @@ void display_introduction(void) {
 
     printf(KBLU "ls                                              ");
     printf(KNRM "- list all entries in the current working directory\n");
-
     printf(KBLU "cd <directory name>                             ");
     printf(KNRM "- change cwd to the given directory name which is in the current working directory\n");
 
     printf(KBLU "touch <file name>                               ");
     printf(KNRM "- create a file in the current working directory\n");
+    printf(KBLU "mkdir <directory name>                               ");
+    printf(KNRM "- create a directory in the current working directory\n");
 
     printf("\nType ");
     printf(KBLU "exit");
