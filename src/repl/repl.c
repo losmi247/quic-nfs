@@ -48,6 +48,9 @@ void display_introduction(void) {
     printf(KBLU "cd <directory name>                             ");
     printf(KNRM "- change cwd to the given directory name which is in the current working directory\n");
 
+    printf(KBLU "touch <file name>                               ");
+    printf(KNRM "- create a file in the current working directory\n");
+
     printf("\nType ");
     printf(KBLU "exit");
     printf(KNRM " to quit the REPL.\n\n");
@@ -223,6 +226,17 @@ int main(void) {
             }
 
             handle_cd(directory_name);
+        }
+        else if(strncmp(input, "touch", 5) == 0) {
+            char file_name[BUFFER_SIZE];
+            int arguments_passed = sscanf(input + 5, " %s", file_name);
+
+            if(arguments_passed != 1) {
+                printf("Error: Invalid 'touch' command. Correct usage: touch <file name>\n");
+                continue;
+            }
+
+            handle_touch(file_name);
         }
         else {
             printf("Unrecognized command: '%s'\n", input);

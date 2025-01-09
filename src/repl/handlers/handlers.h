@@ -19,4 +19,6 @@ void handle_ls();
 
 void handle_cd(char *directory_name);
 
+void handle_touch(char *file_name);
+
 #endif /* handlers__header__INCLUDED */
