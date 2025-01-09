@@ -4,16 +4,16 @@
 #include "src/path_building/path_building.h"
 
 /*
-* Creates a file with the given name inside the current working directory.
+* Creates a directory with the given name inside the current working directory.
 */
-void handle_touch(char *file_name) {
+void handle_mkdir(char *directory_name) {
     if(!is_filesystem_mounted()) {
         printf("Error: No remote file system is currently mounted\n");
         return;
     }
 
     Nfs__FileName filename = NFS__FILE_NAME__INIT;
-    filename.filename = file_name;
+    filename.filename = directory_name;
 
     Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
     diropargs.dir = cwd_node->fhandle;;
@@ -34,7 +34,7 @@ void handle_touch(char *file_name) {
     createargs.attributes = &sattr;
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_9_create_file(rpc_connection_context, createargs, diropres);
+    int status = nfs_procedure_14_create_directory(rpc_connection_context, createargs, diropres);
     if(status != 0) {
         free(diropres);
 
@@ -52,7 +52,7 @@ void handle_touch(char *file_name) {
     }
 
     if(diropres->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
-        printf("touch: Permission denied\n");
+        printf("mkdir: Permission denied\n");
         
         nfs__dir_op_res__free_unpacked(diropres, NULL);
 
@@ -60,7 +60,7 @@ void handle_touch(char *file_name) {
     }
     else if(diropres->nfs_status->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(diropres->nfs_status->stat);
-        printf("Error: Failed to create a file in the current working directory with status %s\n", string_status);
+        printf("Error: Failed to create a directory in the current working directory with status %s\n", string_status);
         free(string_status);
 
         nfs__dir_op_res__free_unpacked(diropres, NULL);
@@ -68,22 +68,22 @@ void handle_touch(char *file_name) {
         return;
     }
 
-    // create a new filesystem DAG node for the created file
-    char *file_absolute_path = get_file_absolute_path(cwd_node->absolute_path, file_name);
+    // create a new filesystem DAG node for the created directory
+    char *child_directory_absolute_path = get_file_absolute_path(cwd_node->absolute_path, directory_name);
 
-    NfsFh__NfsFileHandle *file_nfs_filehandle_copy = malloc(sizeof(NfsFh__NfsFileHandle));
-    *file_nfs_filehandle_copy = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
+    NfsFh__NfsFileHandle *child_directory_nfs_filehandle_copy = malloc(sizeof(NfsFh__NfsFileHandle));
+    *child_directory_nfs_filehandle_copy = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
 
-    Nfs__FHandle *file_fhandle = malloc(sizeof(Nfs__FHandle));
-    nfs__fhandle__init(file_fhandle);
-    file_fhandle->nfs_filehandle = file_nfs_filehandle_copy;
+    Nfs__FHandle *child_directory_fhandle = malloc(sizeof(Nfs__FHandle));
+    nfs__fhandle__init(child_directory_fhandle);
+    child_directory_fhandle->nfs_filehandle = child_directory_nfs_filehandle_copy;
 
-    DAGNode *child_node = create_dag_node(file_absolute_path, diropres->diropok->attributes->nfs_ftype->ftype, file_fhandle, 0);
+    DAGNode *child_node = create_dag_node(child_directory_absolute_path, diropres->diropok->attributes->nfs_ftype->ftype, child_directory_fhandle, 0);
     nfs__dir_op_res__free_unpacked(diropres, NULL);
-    free(file_absolute_path);
+    free(child_directory_absolute_path);
     if(child_node == NULL) {
-        free(file_nfs_filehandle_copy);
-        free(file_fhandle);
+        free(child_directory_nfs_filehandle_copy);
+        free(child_directory_fhandle);
 
         printf("Error: Failed to create a new filesystem DAG node\n");
 
@@ -92,8 +92,8 @@ void handle_touch(char *file_name) {
 
     int error_code = add_child(cwd_node, child_node);
     if(error_code > 0) {
-        free(file_nfs_filehandle_copy);
-        free(file_fhandle);
+        free(child_directory_nfs_filehandle_copy);
+        free(child_directory_fhandle);
 
         printf("Error: Failed to add the new filesystem DAG node as a child of the parent directory\n");
 

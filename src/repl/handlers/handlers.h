@@ -21,4 +21,6 @@ void handle_cd(char *directory_name);
 
 void handle_touch(char *file_name);
 
+void handle_mkdir(char *directory_name);
+
 #endif /* handlers__header__INCLUDED */

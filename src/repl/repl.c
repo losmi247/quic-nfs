@@ -238,6 +238,17 @@ int main(void) {
 
             handle_touch(file_name);
         }
+        else if(strncmp(input, "mkdir", 5) == 0) {
+            char directory_name[BUFFER_SIZE];
+            int arguments_passed = sscanf(input + 5, " %s", directory_name);
+
+            if(arguments_passed != 1) {
+                printf("Error: Invalid 'mkdir' command. Correct usage: mkdir <directory name>\n");
+                continue;
+            }
+
+            handle_mkdir(directory_name);
+        }
         else {
             printf("Unrecognized command: '%s'\n", input);
         }
