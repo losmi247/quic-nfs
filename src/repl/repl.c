@@ -44,9 +44,13 @@ void display_introduction(void) {
 
     printf(KBLU "ls                                              ");
     printf(KNRM "- list all entries in the current working directory\n");
-
     printf(KBLU "cd <directory name>                             ");
     printf(KNRM "- change cwd to the given directory name which is in the current working directory\n");
+
+    printf(KBLU "touch <file name>                               ");
+    printf(KNRM "- create a file in the current working directory\n");
+    printf(KBLU "mkdir <directory name>                               ");
+    printf(KNRM "- create a directory in the current working directory\n");
 
     printf("\nType ");
     printf(KBLU "exit");
@@ -223,6 +227,28 @@ int main(void) {
             }
 
             handle_cd(directory_name);
+        }
+        else if(strncmp(input, "touch", 5) == 0) {
+            char file_name[BUFFER_SIZE];
+            int arguments_passed = sscanf(input + 5, " %s", file_name);
+
+            if(arguments_passed != 1) {
+                printf("Error: Invalid 'touch' command. Correct usage: touch <file name>\n");
+                continue;
+            }
+
+            handle_touch(file_name);
+        }
+        else if(strncmp(input, "mkdir", 5) == 0) {
+            char directory_name[BUFFER_SIZE];
+            int arguments_passed = sscanf(input + 5, " %s", directory_name);
+
+            if(arguments_passed != 1) {
+                printf("Error: Invalid 'mkdir' command. Correct usage: mkdir <directory name>\n");
+                continue;
+            }
+
+            handle_mkdir(directory_name);
         }
         else {
             printf("Unrecognized command: '%s'\n", input);

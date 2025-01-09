@@ -4,8 +4,7 @@
 #include "src/path_building/path_building.h"
 
 /*
-* If there is a directory that is currently mounted, prints out all directory entries in the current
-* working directory.
+* Enters the given directory inside the current working directory.
 */
 void handle_cd(char *directory_name) {
     if(!is_filesystem_mounted()) {
@@ -113,7 +112,7 @@ void handle_cd(char *directory_name) {
     DAGNode *child_node = create_dag_node(child_absolute_path, diropres->diropok->attributes->nfs_ftype->ftype, child_fhandle, 0);
     nfs__dir_op_res__free_unpacked(diropres, NULL);
     free(child_absolute_path);
-    if(filesystem_dag_root == NULL) {
+    if(child_node == NULL) {
         free(child_nfs_filehandle_copy);
         free(child_fhandle);
 
