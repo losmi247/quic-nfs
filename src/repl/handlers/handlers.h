@@ -13,14 +13,16 @@
 
 #include "src/transport/transport_common.h"
 
-void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_path);
+int handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_path);
 
-void handle_ls();
+int handle_ls();
 
-void handle_cd(char *directory_name);
+int handle_cd(char *directory_name);
 
-void handle_touch(char *file_name);
+int handle_touch(char *file_name);
 
-void handle_mkdir(char *directory_name);
+int handle_mkdir(char *directory_name);
+
+int handle_cat(char *file_name);
 
 #endif /* handlers__header__INCLUDED */
