@@ -63,11 +63,12 @@ The client REPL currently supports the following set of Unix-like commands:
 
 | **Command** | **Description**                                                                 |
 |-------------|---------------------------------------------------------------------------------|
-| `mount <server_ip> <port> <remote_path>`     | Mounts a remote file system to the client REPL.                           |
+| `mount <server ip> <port> <remote path>`     | Mounts a remote file system to the client REPL.                           |
 | `ls`        | Lists all entries in the current working directory on the currently mounted remote file system.            |
 | `cd <directory name>`  | change cwd to the given directory name which is in the current working directory                |
 | `touch <file name>`  | create a file in the current working directory                |
-| `mkdir <file name>`  | create a directory in the current working directory           |
+| `mkdir <directory name>`  | create a directory in the current working directory           |
+| `cat <file name>`  | prints out the contents of a file in the current working directory           |
 
 When the REPL is started, the user is able to select between **TCP** and **QUIC** for transport.
 

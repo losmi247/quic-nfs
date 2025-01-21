@@ -12,11 +12,13 @@ typedef struct FileNamesList {
 /*
 * If there is a directory that is currently mounted, prints out all directory entries in the current
 * working directory.
+*
+* Returns 0 on success and > 0 on failure.
 */
-void handle_ls() {
+int handle_ls() {
     if(!is_filesystem_mounted()) {
         printf("Error: No remote file system is currently mounted\n");
-        return;
+        return 1;
     }
 
     FileNamesList *filenames_list_head = NULL;
@@ -36,19 +38,19 @@ void handle_ls() {
         Nfs__ReadDirRes *readdirres = malloc(sizeof(Nfs__ReadDirRes));
         int status = nfs_procedure_16_read_from_directory(rpc_connection_context, readdirargs, readdirres);
         if(status != 0) {
-            free(readdirres);
-
             printf("Error: Invalid RPC reply received from the server with status %d\n", status);
 
-            return;
+            free(readdirres);
+
+            return 1;
         }
 
         if(validate_nfs_read_dir_res(readdirres) > 0) {
-            nfs__read_dir_res__free_unpacked(readdirres, NULL);
-
             printf("Error: Invalid NFS procedure result received from the server\n");
 
-            return;
+            nfs__read_dir_res__free_unpacked(readdirres, NULL);
+
+            return 1;
         }
 
         if(readdirres->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
@@ -56,7 +58,7 @@ void handle_ls() {
             
             nfs__read_dir_res__free_unpacked(readdirres, NULL);
 
-            return;
+            return 1;
         }
         else if(readdirres->nfs_status->stat != NFS__STAT__NFS_OK) {
             char *string_status = nfs_stat_to_string(readdirres->nfs_status->stat);
@@ -65,7 +67,7 @@ void handle_ls() {
 
             nfs__read_dir_res__free_unpacked(readdirres, NULL);
 
-            return;
+            return 1;
         }
 
         // remember all found directory entries
@@ -74,6 +76,7 @@ void handle_ls() {
             // add the filename to the end of the list
             FileNamesList *new_filenames_list_entry = malloc(sizeof(FileNamesList));
             new_filenames_list_entry->filename = strdup(entries->name->filename);
+            new_filenames_list_entry->next = NULL;
             if(filenames_list_tail == NULL) {
                 filenames_list_head = filenames_list_tail = new_filenames_list_entry;
             }
@@ -117,4 +120,6 @@ void handle_ls() {
 
         filenames_list_head = next;
     }
+
+    return 0;
 }
