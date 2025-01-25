@@ -49,11 +49,14 @@ void display_introduction(void) {
 
     printf(KBLU "touch <file name>                               ");
     printf(KNRM "- create a file in the current working directory\n");
-    printf(KBLU "mkdir <directory name>                               ");
+    printf(KBLU "mkdir <directory name>                          ");
     printf(KNRM "- create a directory in the current working directory\n");
 
     printf(KBLU "cat <file name>                                 ");
     printf(KNRM "- print out contents of a file in the current working directory\n");
+    printf(KBLU "echo '<text>' >> <file name>                      ");
+    printf(KNRM "- appends the given text to the file in the current working directory\n");
+
 
     printf("\nType ");
     printf(KBLU "exit");
@@ -263,6 +266,17 @@ int main(void) {
             }
 
             int error_code = handle_cat(file_name);
+        }
+        else if(strncmp(input, "echo", 4) == 0) {
+            char text[BUFFER_SIZE], file_name[BUFFER_SIZE];
+            int arguments_parsed = sscanf(input + 4, " '%[^']' >> %s", text, file_name);
+
+            if(arguments_parsed != 2) {
+                printf("Error: Invalid 'echo' command. Correct usage: echo '<text>' >> <file name>\n");
+                continue;
+            }
+
+            int error_code = handle_echo(text, file_name);
         }
         else {
             printf("Unrecognized command: '%s'\n", input);

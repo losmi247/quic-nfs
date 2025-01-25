@@ -142,6 +142,40 @@ int validate_nfs_fattr(Nfs__FAttr *fattr) {
 }
 
 /*
+* Validates the structure of the given AttrStat.
+*
+* Returns 0 on success and > 0 on failure.
+*/
+int validate_nfs_attr_stat(Nfs__AttrStat *attrstat) {
+    if(attrstat == NULL) {
+        return 1;
+    }
+
+    if(attrstat->nfs_status == NULL) {
+        return 1;
+    }
+
+    if(attrstat->nfs_status->stat == NFS__STAT__NFS_OK) {
+        if(attrstat->body_case != NFS__ATTR_STAT__BODY_ATTRIBUTES) {
+            return 1;
+        }
+        if(validate_nfs_fattr(attrstat->attributes) > 0) {
+            return 1;
+        }
+    }
+    else {
+        if(attrstat->body_case != NFS__ATTR_STAT__BODY_DEFAULT_CASE) {
+            return 1;
+        }
+        if(attrstat->default_case == NULL) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*
 * Validates the structure of the given DirOpOk.
 *
 * Returns 0 on success and > 0 on failure.
@@ -227,7 +261,10 @@ int validate_nfs_read_res(Nfs__ReadRes *readres) {
         if(validate_nfs_fattr(readresbody->attributes)) {
             return 1;
         }
-        if(readresbody->nfsdata.data == NULL) {
+        if(readresbody->nfsdata.len > 0 && readresbody->nfsdata.data == NULL) {
+            return 1;
+        }
+        if(readresbody->nfsdata.len == 0 && readresbody->nfsdata.data != NULL) {
             return 1;
         }
     }

@@ -25,4 +25,6 @@ int handle_mkdir(char *directory_name);
 
 int handle_cat(char *file_name);
 
+int handle_echo(char *text, char *file_name);
+
 #endif /* handlers__header__INCLUDED */

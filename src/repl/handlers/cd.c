@@ -73,7 +73,7 @@ int handle_cd(char *directory_name) {
     }
     
     if(strcmp(directory_name, "..") == 0) {
-        if(!cwd_node->is_root) {
+        if(cwd_node->is_root) {
             // stay in the same cwd, we have no parent directory
             nfs__dir_op_res__free_unpacked(diropres, NULL);
             return 0;

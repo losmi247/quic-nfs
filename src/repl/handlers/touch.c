@@ -22,7 +22,7 @@ int handle_touch(char *file_name) {
     diropargs.name = &filename;
 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
-    sattr.mode = -1;
+    sattr.mode = 0644;                                              // default mode for a created file is 644 in octal
     sattr.uid = rpc_connection_context->credential->auth_sys->uid;  // the REPL that creates the file is the owner of the file
     sattr.gid = rpc_connection_context->credential->auth_sys->gid;
     sattr.size = -1;
