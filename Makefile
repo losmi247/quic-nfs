@@ -17,6 +17,7 @@ COMMON_PERMISSIONS_SRCS = ./src/common_permissions/common_permissions.c
 
 FILEHANDLE_MANAGEMENT_SRCS = ./src/repl/filehandle_management.c
 FILESYSTEM_DAG_SRCS = ./src/repl/filesystem_dag/filesystem_dag.c
+SOFT_LINKS_SRCS = ./src/repl/soft_links/soft_links.c
 
 SERIALIZATION_SRCS = ./src/serialization/mount/mount.pb-c.c \
 	./src/serialization/nfs/nfs.pb-c.c \
@@ -64,7 +65,7 @@ TESTS_SRCS = ${COMMON_TESTS_SRCS} ${TCP_RPC_PROGRAM_CLIENT_SRCS} ${QUIC_RPC_PROG
 
 # files used by the Repl
 COMMON_REPL_SRCS = ./src/repl/handlers/*.c ./src/repl/validation/validation.c \
-	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${AUTHENTICATION_SRCS} ${COMMON_PERMISSIONS_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
+	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${AUTHENTICATION_SRCS} ${COMMON_PERMISSIONS_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${SOFT_LINKS_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
 REPL_SRCS = ${COMMON_REPL_SRCS} ${TCP_RPC_PROGRAM_CLIENT_SRCS} ${QUIC_RPC_PROGRAM_CLIENT_SRCS}
 
 all: create-build-dir mount-and-nfs-server repl

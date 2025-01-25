@@ -8,8 +8,10 @@
 *
 * Replaces any directories (from same or another NFS server) mounted so far with this new one, and sets the
 * current working directory to the mounted directory.
+*
+* Returns 0 on success and > 0 on failure.
 */
-void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_path) {
+int handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_path) {
     // clean up any previously mounted filesystem
     free_rpc_connection_context(rpc_connection_context);
     rpc_connection_context = NULL;
@@ -26,7 +28,7 @@ void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_p
     RpcConnectionContext *new_rpc_connection_context = create_auth_sys_rpc_connection_context(server_ip, server_port, chosen_transport_protocol);
     if(new_rpc_connection_context == NULL) {
         printf("Error: Failed to create AUTH_SYS Rpc connection context\n");
-        return;
+        return 1;
     }
 
     // mount the new NFS share
@@ -36,21 +38,21 @@ void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_p
     Mount__FhStatus *fhstatus = malloc(sizeof(Mount__FhStatus));
     int status = mount_procedure_1_add_mount_entry(new_rpc_connection_context, dirpath, fhstatus);
     if(status != 0) {
+        printf("Error: Invalid RPC reply received from the server with status %d\n", status);
+
         free_rpc_connection_context(new_rpc_connection_context);
         free(fhstatus);
 
-        printf("Error: Invalid RPC reply received from the server with status %d\n", status);
-
-        return;
+        return 1;
     }
 
     if(validate_mount_fh_status(fhstatus) > 0) {
+        printf("Error: Invalid NFS procedure result received from the server\n");
+
         free_rpc_connection_context(new_rpc_connection_context);
         mount__fh_status__free_unpacked(fhstatus, NULL);
 
-        printf("Error: Invalid NFS procedure result received from the server\n");
-
-        return;
+        return 1;
     }
 
     if(fhstatus->mnt_status->stat == MOUNT__STAT__MNTERR_ACCES) {
@@ -59,7 +61,7 @@ void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_p
         free_rpc_connection_context(new_rpc_connection_context);
         mount__fh_status__free_unpacked(fhstatus, NULL);
 
-        return;
+        return 1;
     }
     else if(fhstatus->mnt_status->stat != MOUNT__STAT__MNT_OK) {
         char *string_status = mount_stat_to_string(fhstatus->mnt_status->stat);
@@ -69,7 +71,7 @@ void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_p
         free_rpc_connection_context(new_rpc_connection_context);
         mount__fh_status__free_unpacked(fhstatus, NULL);
 
-        return;
+        return 1;
     }
 
     // initialize the filesystem DAG
@@ -83,17 +85,19 @@ void handle_mount(char *server_ip, uint16_t server_port, char *remote_absolute_p
 
     filesystem_dag_root = create_dag_node(remote_absolute_path, NFS__FTYPE__NFDIR, fhandle, 1);
     if(filesystem_dag_root == NULL) {
+        printf("Error: Failed to create a new filesystem DAG node\n");
+
         free_rpc_connection_context(new_rpc_connection_context);
         free(nfs_filehandle_copy);
         free(fhandle);
 
-        printf("Error: Failed to create a new filesystem DAG node\n");
-
-        return;
+        return 1;
     }
 
     cwd_node = filesystem_dag_root;
 
     // set the new Rpc connection context
     rpc_connection_context = new_rpc_connection_context;
+
+    return 0;
 }
