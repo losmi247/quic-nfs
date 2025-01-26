@@ -30,7 +30,7 @@
 * General file management functions used by many Nfs procedures
 */
 
-int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehandle, InodeCache *inode_number_cache);
+NfsFh__NfsFileHandle *create_nfs_filehandle(char *absolute_path, InodeCache *inode_number_cache);
 
 int get_attributes(char *absolute_path, Nfs__FAttr *fattr);
 

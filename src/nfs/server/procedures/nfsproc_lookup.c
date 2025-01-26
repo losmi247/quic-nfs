@@ -187,19 +187,21 @@ Rpc__AcceptedReply *serve_nfs_procedure_4_look_up_file_name(Rpc__OpaqueAuth *cre
     }
     // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
-    // create a NFS filehandle for the looked up file
-    NfsFh__NfsFileHandle file_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
-    error_code = create_nfs_filehandle(file_absolute_path, &file_nfs_filehandle, &inode_cache);
-    if(error_code > 0) {
-        fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed creating a NFS filehandle for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
+    NfsFh__NfsFileHandle *file_nfs_filehandle = get_nfs_filehandle_from_inode_number(file_stat.st_ino, inode_cache);
+    if(file_nfs_filehandle == NULL) {
+        // file is visited for the first time, so create a NFS filehandle for the looked up file - do not free it later, it's freed when the entire inode cache is deallocated
+        file_nfs_filehandle = create_nfs_filehandle(file_absolute_path, &inode_cache);
+        if(file_nfs_filehandle == NULL) {
+            fprintf(stderr, "serve_nfs_procedure_4_look_up_file_name: failed creating a NFS filehandle for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
-        free(file_absolute_path);
-        nfs__dir_op_args__free_unpacked(diropargs, NULL);
+            free(file_absolute_path);
+            nfs__dir_op_args__free_unpacked(diropargs, NULL);
 
-        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've checked that the looked up file exists
-        return create_system_error_accepted_reply();
+            // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've checked that the looked up file exists
+            return create_system_error_accepted_reply();
+        }
     }
-
+    
     // get the attributes of the looked up file
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     error_code = get_attributes(file_absolute_path, &fattr);
@@ -210,7 +212,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_4_look_up_file_name(Rpc__OpaqueAuth *cre
         nfs__dir_op_args__free_unpacked(diropargs, NULL);
         free(file_absolute_path);
         // remove the inode cache mapping for this file/directory that we added when creating the NFS filehandle, as LOOKUP was unsuccessful
-        remove_inode_mapping_by_inode_number(file_nfs_filehandle.inode_number, &inode_cache);
+        remove_inode_mapping_by_inode_number(file_nfs_filehandle->inode_number, &inode_cache);
 
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've created a NFS filehandle for this file (we successfully read stat.st_ino)
         return create_system_error_accepted_reply();
@@ -225,7 +227,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_4_look_up_file_name(Rpc__OpaqueAuth *cre
     diropres.body_case = NFS__DIR_OP_RES__BODY_DIROPOK;
 
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
-    file_fhandle.nfs_filehandle = &file_nfs_filehandle;
+    file_fhandle.nfs_filehandle = file_nfs_filehandle;
 
     Nfs__DirOpOk diropok = NFS__DIR_OP_OK__INIT;
     diropok.file = &file_fhandle;

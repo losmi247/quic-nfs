@@ -192,9 +192,8 @@ Rpc__AcceptedReply *serve_mnt_procedure_1_add_mount_entry(Rpc__OpaqueAuth *crede
     // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
     // create a NFS file handle for this directory
-    NfsFh__NfsFileHandle directory_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
-    error_code = create_nfs_filehandle(directory_absolute_path, &directory_nfs_filehandle, &inode_cache);
-    if(error_code > 0) {
+    NfsFh__NfsFileHandle *directory_nfs_filehandle = create_nfs_filehandle(directory_absolute_path, &inode_cache);
+    if(directory_nfs_filehandle == NULL) {
         fprintf(stderr, "serve_mnt_procedure_1_add_mount_entry: failed creating a NFS filehandle for directory at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
 
         mount__dir_path__free_unpacked(dirpath, NULL);
@@ -216,7 +215,7 @@ Rpc__AcceptedReply *serve_mnt_procedure_1_add_mount_entry(Rpc__OpaqueAuth *crede
     fh_status.fhstatus_body_case = MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY;
 
     Mount__FHandle fhandle = MOUNT__FHANDLE__INIT;
-    fhandle.nfs_filehandle = &directory_nfs_filehandle;
+    fhandle.nfs_filehandle = directory_nfs_filehandle;
 
     fh_status.directory = &fhandle;
 

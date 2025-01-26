@@ -19,31 +19,42 @@ int get_inode_number(char *absolute_path, ino_t *inode_number) {
 }
 
 /*
-* Given an initialized NfsFh__NfsFileHandle, fills its fields to make it a new filehandle for the given absolute path 
-* (either a directory or a regular file).
-*
-* On successful exection, it adds a mapping to the inode cache given in 'inode_number_cache' argument, to remember 
+* Creates a NFS filehandle for the file at the given absolute path. On successful exection, 
+* it adds a mapping to the inode cache given in 'inode_number_cache' argument, to remember 
 * what absolute path this file's inode number corresponds to.
 *
 * Returns 0 on success and > 0 on failure.
+*
+* The user of this function is responsible for deallocating the created NFS filehandle. This is
+* done either by having it removed from the InodeCache at some point, or by the InodeCache clean up
+* on server shutdown.
 */
-int create_nfs_filehandle(char *absolute_path, NfsFh__NfsFileHandle *nfs_filehandle, InodeCache *inode_number_cache) {
+NfsFh__NfsFileHandle *create_nfs_filehandle(char *absolute_path, InodeCache *inode_number_cache) {
     ino_t inode_number;
     int error_code = get_inode_number(absolute_path, &inode_number);
     if(error_code > 0) {
         // we couldn't get inode number of file/directory at this absolute path
-        return 1;
+        return NULL;
     }
-
-    // remember what absolute path this inode number corresponds to
-    add_inode_mapping(inode_number, absolute_path, inode_number_cache);
 
     time_t unix_timestamp = time(NULL);
 
+    NfsFh__NfsFileHandle *nfs_filehandle = malloc(sizeof(NfsFh__NfsFileHandle));
+    if(nfs_filehandle == NULL) {
+        return NULL;
+    }
+    nfs_fh__nfs_file_handle__init(nfs_filehandle);
     nfs_filehandle->inode_number = inode_number;
     nfs_filehandle->timestamp = unix_timestamp;
+
+    // remember what absolute path this inode number corresponds to
+    error_code = add_inode_mapping(nfs_filehandle, absolute_path, inode_number_cache);
+    if(error_code > 0) {
+        free(nfs_filehandle);
+        return NULL;
+    }
     
-    return 0;
+    return nfs_filehandle;
 }
 
 /*

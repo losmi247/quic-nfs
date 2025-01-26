@@ -8,7 +8,7 @@
 #include "src/common_permissions/common_permissions.h"
 
 #include "src/parsing/parsing.h"
-#include "src/repl/filehandle_management.h"
+#include "src/filehandle_management/filehandle_management.h"
 #include "src/common_rpc/rpc_connection_context.h"
 
 #include "src/transport/transport_common.h"

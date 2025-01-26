@@ -333,9 +333,8 @@ Rpc__AcceptedReply *serve_nfs_procedure_14_create_directory(Rpc__OpaqueAuth *cre
     }
 
     // create a NFS filehandle for the created directory
-    NfsFh__NfsFileHandle child_directory_nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
-    error_code = create_nfs_filehandle(child_directory_absolute_path, &child_directory_nfs_filehandle, &inode_cache);
-    if(error_code > 0) {
+    NfsFh__NfsFileHandle *child_directory_nfs_filehandle = create_nfs_filehandle(child_directory_absolute_path, &inode_cache);
+    if(child_directory_nfs_filehandle == NULL) {
         fprintf(stderr, "serve_nfs_procedure_14_create_directory: failed creating a NFS filehandle for directory at absolute path '%s' with error code %d\n", child_directory_absolute_path, error_code);
 
         free(child_directory_absolute_path);
@@ -355,7 +354,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_14_create_directory(Rpc__OpaqueAuth *cre
         free(child_directory_absolute_path);
         nfs__create_args__free_unpacked(createargs, NULL);
         // remove the inode cache mapping for the created directory that we created when creating the NFS filehandle, as MKDIR was unsuccessful
-        remove_inode_mapping_by_inode_number(child_directory_nfs_filehandle.inode_number, &inode_cache);
+        remove_inode_mapping_by_inode_number(child_directory_nfs_filehandle->inode_number, &inode_cache);
 
         // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
         return create_system_error_accepted_reply();
@@ -371,7 +370,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_14_create_directory(Rpc__OpaqueAuth *cre
     diropres.body_case = NFS__DIR_OP_RES__BODY_DIROPOK;
 
     Nfs__FHandle child_directory_fhandle = NFS__FHANDLE__INIT;
-    child_directory_fhandle.nfs_filehandle = &child_directory_nfs_filehandle;
+    child_directory_fhandle.nfs_filehandle = child_directory_nfs_filehandle;
 
     Nfs__DirOpOk diropok = NFS__DIR_OP_OK__INIT;
     diropok.file = &child_directory_fhandle;
