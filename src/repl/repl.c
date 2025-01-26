@@ -59,6 +59,8 @@ void display_introduction(void) {
 
     printf(KBLU "rm '<file name>                                 ");
     printf(KNRM "- removes a file in the current working directory\n");
+    printf(KBLU "rmdir '<directory name>                         ");
+    printf(KNRM "- removes a directory in the current working directory\n");
 
     printf("\nType ");
     printf(KBLU "exit");
@@ -279,6 +281,17 @@ int main(void) {
             }
 
             int error_code = handle_echo(text, file_name);
+        }
+        else if(strncmp(input, "rmdir", 5) == 0) {
+            char directory_name[BUFFER_SIZE];
+            int arguments_parsed = sscanf(input + 5, " %s", directory_name);
+
+            if(arguments_parsed != 1) {
+                printf("Error: Invalid 'rmdir' command. Correct usage: rmdir  <directory name>\n");
+                continue;
+            }
+
+            int error_code = handle_rmdir(directory_name);
         }
         else if(strncmp(input, "rm", 2) == 0) {
             char file_name[BUFFER_SIZE];

@@ -18,7 +18,7 @@ int handle_mkdir(char *directory_name) {
     filename.filename = directory_name;
 
     Nfs__DirOpArgs diropargs = NFS__DIR_OP_ARGS__INIT;
-    diropargs.dir = cwd_node->fhandle;;
+    diropargs.dir = cwd_node->fhandle;
     diropargs.name = &filename;
 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
