@@ -5,7 +5,7 @@
 
 #include "src/repl/filesystem_dag/filesystem_dag.h"
 
-#include "src/repl/filehandle_management.h"
+#include "src/filehandle_management/filehandle_management.h"
 
 #include "src/common_rpc/rpc_connection_context.h"
 
