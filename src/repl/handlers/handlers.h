@@ -27,4 +27,8 @@ int handle_cat(char *file_name);
 
 int handle_echo(char *text, char *file_name);
 
+int handle_rm(char *file_name);
+
+int handle_rmdir(char *directory_name);
+
 #endif /* handlers__header__INCLUDED */
