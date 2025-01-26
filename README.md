@@ -17,9 +17,9 @@ After cloning the directory:
    and place it in the same cw-directory from where you are going to run the NFS server in the next step
 5. On the server machine, run: 
    ```
-   ./build/mount_and_nfs_server <port> --proto=<transport_protocol>
+   sudo ./build/mount_and_nfs_server <port> --proto=<transport_protocol>
    ``` 
-    to start the NFS+MOUNT server at port ```port``` (e.g. ```3000```), where ```transport_protocol``` is either ```tcp``` or ```quic```.
+   to start the NFS+MOUNT server at port ```port``` (e.g. ```3000```), where ```transport_protocol``` is either ```tcp``` or ```quic```. The **NFS server always runs as root**.
 6. On the client machine, run 
    ```
    ./build/repl
@@ -69,6 +69,9 @@ The client REPL currently supports the following set of Unix-like commands:
 | `touch <file name>`  | create a file in the current working directory                |
 | `mkdir <directory name>`  | create a directory in the current working directory           |
 | `cat <file name>`  | prints out the contents of a file in the current working directory           |
+| `echo '<text>' >> <file name>`  | appends the given text to the end of a file in the current working directory, in a new line          |
+| `rm <file name>`  | removes a file in the current working directory        |
+| `rmdir <directory name>`  | removes a directory in the current working directory        |
 
 When the REPL is started, the user is able to select between **TCP** and **QUIC** for transport.
 

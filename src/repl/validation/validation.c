@@ -69,6 +69,19 @@ int validate_mount_fh_status(Mount__FhStatus *fh_status) {
 }
 
 /*
+* Validates the structure of the given NfsStat.
+*
+* Returns 0 on success and > 0 on failure.
+*/
+int validate_nfs_nfs_stat(Nfs__NfsStat *nfsstat) {
+    if(nfsstat == NULL) {
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
 * Validates the structure of the given ReadDirOk.
 *
 * Returns 0 on success and > 0 on failure.

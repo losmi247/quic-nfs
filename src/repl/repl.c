@@ -54,9 +54,11 @@ void display_introduction(void) {
 
     printf(KBLU "cat <file name>                                 ");
     printf(KNRM "- print out contents of a file in the current working directory\n");
-    printf(KBLU "echo '<text>' >> <file name>                      ");
+    printf(KBLU "echo '<text>' >> <file name>                    ");
     printf(KNRM "- appends the given text to the file in the current working directory\n");
 
+    printf(KBLU "rm '<file name>                                 ");
+    printf(KNRM "- removes a file in the current working directory\n");
 
     printf("\nType ");
     printf(KBLU "exit");
@@ -277,6 +279,17 @@ int main(void) {
             }
 
             int error_code = handle_echo(text, file_name);
+        }
+        else if(strncmp(input, "rm", 2) == 0) {
+            char file_name[BUFFER_SIZE];
+            int arguments_parsed = sscanf(input + 2, " %s", file_name);
+
+            if(arguments_parsed != 1) {
+                printf("Error: Invalid 'rm' command. Correct usage: rm  <file name>\n");
+                continue;
+            }
+
+            int error_code = handle_rm(file_name);
         }
         else {
             printf("Unrecognized command: '%s'\n", input);
