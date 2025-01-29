@@ -89,7 +89,7 @@ void *blocking_readdir(void *arg) {
         }
         else if(readdirres->nfs_status->stat != NFS__STAT__NFS_OK) {
             char *string_status = nfs_stat_to_string(readdirres->nfs_status->stat);
-            printf("Error: Failed to read entries in cwd with status %s\n", string_status);
+            printf("Error: Failed to read directory entries with status %s\n", string_status);
             free(string_status);
 
             callback_data->error_code = -(readdirres->nfs_status->stat);
