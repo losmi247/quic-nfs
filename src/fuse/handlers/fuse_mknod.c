@@ -87,12 +87,12 @@ void *blocking_mknod(void *arg) {
     }
     else if(diropres->nfs_status->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(diropres->nfs_status->stat);
-        printf("Error: Failed to get attributes of the file with status %s\n", string_status);
+        printf("Error: Failed to create file with status %s\n", string_status);
         free(string_status);
 
         nfs__dir_op_res__free_unpacked(diropres, NULL);
 
-        callback_data->error_code = -(diropres->nfs_status->stat);
+        callback_data->error_code = map_nfs_error(diropres->nfs_status->stat);
         
         goto signal;
     }

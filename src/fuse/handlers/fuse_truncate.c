@@ -77,12 +77,12 @@ void *blocking_truncate(void *arg) {
     }
     else if(attrstat->nfs_status->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(attrstat->nfs_status->stat);
-        printf("Error: Failed to get attributes of the file with status %s\n", string_status);
+        printf("Error: Failed to set attributes of the file with status %s\n", string_status);
         free(string_status);
 
         nfs__attr_stat__free_unpacked(attrstat, NULL);
 
-        callback_data->error_code = -(attrstat->nfs_status->stat);
+        callback_data->error_code = map_nfs_error(attrstat->nfs_status->stat);
         
         goto signal;
     }

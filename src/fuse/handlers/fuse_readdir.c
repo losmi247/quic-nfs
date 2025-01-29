@@ -93,7 +93,7 @@ void *blocking_readdir(void *arg) {
             printf("Error: Failed to read directory entries with status %s\n", string_status);
             free(string_status);
 
-            callback_data->error_code = -(readdirres->nfs_status->stat);
+            callback_data->error_code = map_nfs_error(readdirres->nfs_status->stat);
 
             pthread_mutex_unlock(&nfs_mutex);
 

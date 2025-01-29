@@ -19,6 +19,7 @@ static struct fuse_operations nfs_oper = {
     .utimens = nfs_utimens,
     .truncate = nfs_truncate,
     .open = nfs_open,
+    .rmdir = nfs_rmdir
 };
 
 /*

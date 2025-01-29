@@ -97,7 +97,7 @@ void *blocking_read(void *arg) {
             nfs__read_res__free_unpacked(readres, NULL);
             free(read_data);
 
-			callback_data->error_code = -(readres->nfs_status->stat);
+			callback_data->error_code = map_nfs_error(readres->nfs_status->stat);
 
 			pthread_mutex_unlock(&nfs_mutex);
 

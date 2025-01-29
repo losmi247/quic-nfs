@@ -28,6 +28,8 @@ typedef struct CallbackData {
 
 void wait_for_nfs_reply(CallbackData *callback_data);
 
+int map_nfs_error(int nfs_status);
+
 int nfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi);
 
 int nfs_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags);
@@ -45,6 +47,8 @@ int nfs_truncate(const char *path, off_t size, struct fuse_file_info *fi);
 int nfs_open(const char *path, struct fuse_file_info *fi);
 
 int nfs_mkdir(const char *path, mode_t mode);
+
+int nfs_rmdir(const char *path);
 
 extern pthread_mutex_t nfs_mutex;
 

@@ -93,7 +93,7 @@ void *blocking_write(void *arg) {
 
             nfs__attr_stat__free_unpacked(attrstat, NULL);
 
-            callback_data->error_code = -(attrstat->nfs_status->stat);
+            callback_data->error_code = map_nfs_error(attrstat->nfs_status->stat);
 
             pthread_mutex_unlock(&nfs_mutex);
 
