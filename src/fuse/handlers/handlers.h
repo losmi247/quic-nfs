@@ -50,6 +50,8 @@ int nfs_mkdir(const char *path, mode_t mode);
 
 int nfs_rmdir(const char *path);
 
+int nfs_unlink(const char *path);
+
 extern pthread_mutex_t nfs_mutex;
 
 #endif /* handlers__HEADER__INCLUDED */
