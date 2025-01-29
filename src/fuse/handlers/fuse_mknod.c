@@ -114,7 +114,7 @@ signal:
 /*
 * Handles the FUSE call to create a file.
 *
-* Returns 0 on succes and -1 on failure.
+* Returns 0 on success and -1 on failure.
 */
 int nfs_mknod(const char *path, mode_t mode, dev_t rdev) {
     CallbackData callback_data;

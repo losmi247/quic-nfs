@@ -132,7 +132,7 @@ signal:
 /*
 * Handles the FUSE call to read from a file.
 *
-* Returns 0 on succes and the appropriate negative error code on failure.
+* Returns 0 on success and the appropriate negative error code on failure.
 */
 int nfs_read(const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi) {
 	CallbackData callback_data;

@@ -40,6 +40,10 @@ int nfs_mknod(const char *path, mode_t mode, dev_t rdev);
 
 int nfs_utimens(const char *path, const struct timespec tv[2], struct fuse_file_info *fi);
 
+int nfs_truncate(const char *path, off_t size, struct fuse_file_info *fi);
+
+int nfs_open(const char *path, struct fuse_file_info *fi);
+
 extern pthread_mutex_t nfs_mutex;
 
 #endif /* handlers__HEADER__INCLUDED */

@@ -115,7 +115,7 @@ signal:
 /*
 * Handles the FUSE call to get file attributes.
 *
-* Returns 0 on succes and the appropriate negative error code on failure.
+* Returns 0 on success and the appropriate negative error code on failure.
 */
 int nfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi) {
     /*memset(stbuf, 0, sizeof(struct stat));

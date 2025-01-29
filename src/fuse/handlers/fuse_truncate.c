@@ -1,27 +1,21 @@
 #include "handlers.h"
 
-#include <time.h>
-
-typedef struct UtimensData {
+typedef struct TruncateData {
     char *path;
-    
-    time_t atime_sec;
-    long atime_nsec;
-    time_t mtime_sec;
-    long mtime_nsec;
-} UtimensData;
+    off_t new_file_size;
+} TruncateData;
 
-void *blocking_utimens(void *arg) {
+void *blocking_truncate(void *arg) {
     CallbackData *callback_data = (CallbackData *) arg;
 
-    UtimensData *utimens_data = (UtimensData *) callback_data->return_data;
+    TruncateData *truncate_data = (TruncateData *) callback_data->return_data;
 
     pthread_mutex_lock(&nfs_mutex);
 
     Nfs__FType file_type;
-    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, utimens_data->path, &file_type);
+    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, truncate_data->path, &file_type);
     if(file_fhandle == NULL) {
-        printf("nfs_getattr: failed to resolve the path %s to a file\n", utimens_data->path);
+        printf("nfs_truncate: failed to resolve the path %s to a file\n", truncate_data->path);
 
         callback_data->error_code = -ENOENT;
 
@@ -37,39 +31,9 @@ void *blocking_utimens(void *arg) {
     sattr.mode = -1;
     sattr.uid = -1;
     sattr.gid = -1;
-    sattr.size = -1;
+    sattr.size = truncate_data->new_file_size;
     Nfs__TimeVal atime = NFS__TIME_VAL__INIT, mtime = NFS__TIME_VAL__INIT;
-
-    if(utimens_data->atime_sec == UTIME_OMIT || utimens_data->atime_nsec == UTIME_OMIT) {
-        atime.seconds = atime.useconds = -1;
-    }
-    else if(utimens_data->atime_nsec == UTIME_NOW) {
-        struct timespec current_time;
-        clock_gettime(CLOCK_REALTIME, &current_time);
-
-        atime.seconds = current_time.tv_sec;
-        atime.useconds = current_time.tv_nsec / 1000;
-    }
-    else {
-        atime.seconds = utimens_data->atime_sec;
-        atime.useconds = utimens_data->atime_nsec / 1000;
-    }
-
-    if(utimens_data->mtime_sec == UTIME_OMIT || utimens_data->mtime_nsec == UTIME_OMIT) {
-        mtime.seconds = mtime.useconds = -1;
-    }
-    else if(utimens_data->mtime_nsec == UTIME_NOW) {
-        struct timespec current_time;
-        clock_gettime(CLOCK_REALTIME, &current_time);
-
-        mtime.seconds = current_time.tv_sec;
-        mtime.useconds = current_time.tv_nsec / 1000;
-    }
-    else {
-        mtime.seconds = utimens_data->mtime_sec;
-        mtime.useconds = utimens_data->mtime_nsec / 1000;
-    }
-    
+    atime.seconds = atime.useconds = mtime.seconds = mtime.useconds = -1;
     sattr.atime = &atime;
     sattr.mtime = &mtime;
 
@@ -121,7 +85,7 @@ void *blocking_utimens(void *arg) {
         
         goto signal;
     }
-
+    
     nfs__attr_stat__free_unpacked(attrstat, NULL);
     free(file_fhandle->nfs_filehandle);
     free(file_fhandle);
@@ -138,30 +102,27 @@ signal:
 }
 
 /*
-* Handles the FUSE call to update times of the given file.
+* Handles the FUSE call to truncate a file.
 *
 * Returns 0 on success and the appropriate negative error code on failure.
 */
-int nfs_utimens(const char *path, const struct timespec tv[2], struct fuse_file_info *fi)  {
+int nfs_truncate(const char *path, off_t size, struct fuse_file_info *fi) {
     CallbackData callback_data;
     memset(&callback_data, 0, sizeof(CallbackData));
     callback_data.is_finished = 0;
     callback_data.error_code = 0;
 
-    UtimensData utimens_data;
-    utimens_data.path = discard_const(path);
-	utimens_data.atime_sec = tv[0].tv_sec;
-    utimens_data.atime_nsec = tv[0].tv_nsec;
-    utimens_data.mtime_sec = tv[1].tv_sec;
-    utimens_data.mtime_nsec = tv[1].tv_nsec;
+    TruncateData truncate_data;
+    truncate_data.path = discard_const(path);
+	truncate_data.new_file_size = size;
 
-    callback_data.return_data = &utimens_data;
+    callback_data.return_data = &truncate_data;
 
     pthread_mutex_init(&callback_data.lock, NULL);
     pthread_cond_init(&callback_data.cond, NULL);
 
     pthread_t blocking_thread;
-    if(pthread_create(&blocking_thread, NULL, blocking_utimens, &callback_data) != 0) {
+    if(pthread_create(&blocking_thread, NULL, blocking_truncate, &callback_data) != 0) {
         return -EIO;
     }
 

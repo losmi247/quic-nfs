@@ -166,7 +166,7 @@ signal:
 /*
 * Handles the FUSE call to read from a directory.
 *
-* Returns 0 on succes and the appropriate negative error code on failure.
+* Returns 0 on success and the appropriate negative error code on failure.
 */
 int nfs_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags) {
     CallbackData callback_data;
