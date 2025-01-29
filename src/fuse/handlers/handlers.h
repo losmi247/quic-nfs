@@ -31,6 +31,8 @@ int nfs_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t of
 
 int nfs_read(const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi);
 
+int nfs_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi);
+
 extern pthread_mutex_t nfs_mutex;
 
 #endif /* handlers__HEADER__INCLUDED */

@@ -12,7 +12,8 @@
 static struct fuse_operations nfs_oper = {
     .getattr = nfs_getattr,
     .readdir = nfs_readdir,
-    .read = nfs_read
+    .read = nfs_read,
+    .write = nfs_write
 };
 
 /*
