@@ -1,20 +1,18 @@
 #ifndef handlers__HEADER__INCLUDED
 #define handlers__HEADER__INCLUDED
 
-#include "src/repl/repl.h"
+#include "src/fuse/nfs_fuse.h"
 
-#define FUSE_USE_VERSION 31
-#include <fuse3/fuse.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
 
-#include "src/repl/soft_links/soft_links.h"
-
 #include "src/nfs/clients/nfs_client.h"
 
-#include "src/repl/validation/validation.h"
+#include "src/message_validation/message_validation.h"
+
+#include "src/fuse/path_resolution.h"
 
 typedef struct CallbackData {
 	int is_finished;

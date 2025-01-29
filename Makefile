@@ -14,6 +14,7 @@ PARSING_SRCS = ./src/parsing/parsing.c
 PATH_BUILDING_SRCS = ./src/path_building/path_building.c
 AUTHENTICATION_SRCS = ./src/authentication/authentication.c
 COMMON_PERMISSIONS_SRCS = ./src/common_permissions/common_permissions.c
+MESSAGE_VALIDATION_SRCS = ./src/message_validation/message_validation.c
 
 FILEHANDLE_MANAGEMENT_SRCS = ./src/filehandle_management/filehandle_management.c
 FILESYSTEM_DAG_SRCS = ./src/repl/filesystem_dag/filesystem_dag.c
@@ -64,16 +65,17 @@ COMMON_TESTS_SRCS = ./tests/procedures/test_*.c \
 TESTS_SRCS = ${COMMON_TESTS_SRCS} ${TCP_RPC_PROGRAM_CLIENT_SRCS} ${QUIC_RPC_PROGRAM_CLIENT_SRCS}
 
 # files used by the Repl
-COMMON_REPL_SRCS = ./src/repl/handlers/*.c ./src/repl/validation/validation.c \
-	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${AUTHENTICATION_SRCS} ${COMMON_PERMISSIONS_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${SOFT_LINKS_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
+COMMON_REPL_SRCS = ./src/repl/handlers/*.c \
+	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${AUTHENTICATION_SRCS} ${COMMON_PERMISSIONS_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${SOFT_LINKS_SRCS} ${MESSAGE_VALIDATION_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
 REPL_SRCS = ${COMMON_REPL_SRCS} ${TCP_RPC_PROGRAM_CLIENT_SRCS} ${QUIC_RPC_PROGRAM_CLIENT_SRCS}
 
 # files used by the FUSE file system
-COMMON_FUSE_FS_SRCS = ./src/fuse/handlers/handlers.c ./src/fuse/handlers/fuse_*.c ${COMMON_REPL_SRCS}
+COMMON_FUSE_FS_SRCS = ./src/fuse/handlers/handlers.c ./src/fuse/path_resolution.c ./src/fuse/handlers/fuse_*.c \
+	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${AUTHENTICATION_SRCS} ${COMMON_PERMISSIONS_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${MESSAGE_VALIDATION_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
 FUSE_FS_SRCS = ${COMMON_FUSE_FS_SRCS} ${TCP_RPC_PROGRAM_CLIENT_SRCS} ${QUIC_RPC_PROGRAM_CLIENT_SRCS}
 
-all: create-build-dir mount-and-nfs-server repl
-all-debug: create-build-dir mount-and-nfs-server-debug repl-debug
+all: create-build-dir mount-and-nfs-server repl fuse-fs
+all-debug: create-build-dir mount-and-nfs-server-debug repl-debug fuse-fs-debug
 
 serialization-library: google-protos rpc-serialization nfs-filehandle-serialization mount-serialization nfs-serialization
 google-protos: any empty
@@ -105,7 +107,7 @@ repl: ./src/repl/repl.c create-build-dir ${REPL_SRCS} $(TQUIC_LIB_DIR)/libtquic.
 	gcc $< ${REPL_SRCS} ${CFLAGS} -o ./build/repl ${LIBS}
 
 fuse-fs: ./src/fuse/nfs_fuse.c create-build-dir ${FUSE_FS_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
-	gcc $< ${FUSE_FS_SRCS} ${CFLAGS} -D_FILE_OFFSET_BITS=64 -o ./build/fuse_fs ${DEBUG_FLAGS} ${LIBS} -l fuse3
+	gcc $< ${FUSE_FS_SRCS} ${CFLAGS} -D_FILE_OFFSET_BITS=64 -o ./build/fuse_fs ${LIBS} -l fuse3
 
 # debugging versions of all targets
 mount-and-nfs-server-debug: ./src/nfs/server/server.c create-build-dir ${MOUNT_AND_NFS_SERVER_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
@@ -119,6 +121,9 @@ test-quic-debug: create-build-dir ${TESTS_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
 
 repl-debug: ./src/repl/repl.c create-build-dir ${REPL_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
 	gcc $< ${REPL_SRCS} ${CFLAGS} -o ./build/repl ${DEBUG_FLAGS} ${LIBS}
+
+fuse-fs-debug: ./src/fuse/nfs_fuse.c create-build-dir ${FUSE_FS_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
+	gcc $< ${FUSE_FS_SRCS} ${CFLAGS} -D_FILE_OFFSET_BITS=64 -o ./build/fuse_fs ${DEBUG_FLAGS} ${LIBS} -l fuse3
 
 $(TQUIC_LIB_DIR)/libtquic.a:
 	git submodule update --init --recursive && \

@@ -25,7 +25,7 @@ void *blocking_readdir(void *arg) {
     pthread_mutex_lock(&nfs_mutex);
 
     Nfs__FType file_type;
-    Nfs__FHandle *file_fhandle = resolve_path("readdir", rpc_connection_context, filesystem_dag_root, cwd_node, readdir_data->path, &file_type);
+    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, readdir_data->path, &file_type);
     if(file_fhandle == NULL) {
         printf("nfs_readdir: failed to resolve the path %s to a file\n", readdir_data->path);
 

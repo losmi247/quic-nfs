@@ -1,7 +1,11 @@
 #include "soft_links.h"
 
-#include "src/repl/validation/validation.h"
+#include "src/message_validation/message_validation.h"
 #include "src/path_building/path_building.h"
+#include "src/filehandle_management/filehandle_management.h"
+
+#include "src/nfs/clients/nfs_client.h"
+#include "src/nfs/clients/mount_client.h"
 
 #define SYMLINK_LEVELS_LIMIT 40
 

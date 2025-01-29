@@ -1,8 +1,8 @@
-#ifndef validation__header__INCLUDED
-#define validation__header__INCLUDED
+#ifndef message_validation__HEADER__INCLUDED
+#define message_validation__HEADER__INCLUDED
 
-#include "src/nfs/clients/mount_client.h"
-#include "src/nfs/clients/nfs_client.h"
+#include "src/serialization/mount/mount.pb-c.h"
+#include "src/serialization/nfs/nfs.pb-c.h"
 
 int validate_mount_fh_status(Mount__FhStatus *fh_status);
 
@@ -18,4 +18,4 @@ int validate_nfs_read_res(Nfs__ReadRes *readres);
 
 int validate_nfs_read_link_res(Nfs__ReadLinkRes *readlinkres);
 
-#endif /* validation__header__INCLUDED */
+#endif /* message_validation__HEADER__INCLUDED */

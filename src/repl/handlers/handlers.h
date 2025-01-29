@@ -9,6 +9,7 @@
 
 #include "src/parsing/parsing.h"
 #include "src/filehandle_management/filehandle_management.h"
+#include "src/message_validation/message_validation.h"
 #include "src/common_rpc/rpc_connection_context.h"
 
 #include "src/transport/transport_common.h"
