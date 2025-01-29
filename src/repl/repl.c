@@ -97,7 +97,7 @@ void clear_transport_protocol_menu(int num_choices, int highlighted_choice) {
 }
 
 /*
-* Allos the user select between TCP and QUIC as transport protocols.
+* Allows the user select between TCP and QUIC as transport protocols.
 */
 int display_transport_protocol_menu() {
     struct termios oldt, newt;

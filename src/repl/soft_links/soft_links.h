@@ -9,6 +9,8 @@
 
 #include "src/common_rpc/rpc_connection_context.h"
 
+Nfs__FHandle *resolve_path(char *command_name, RpcConnectionContext *rpc_connection_context, DAGNode *filesystem_dag_root, DAGNode *cwd_node, char *path, Nfs__FType *ftype);
+
 Nfs__FHandle *follow_symbolic_links(char *command_name, RpcConnectionContext *rpc_connection_context, DAGNode *filesystem_dag_root, DAGNode *cwd_node, Nfs__FHandle *start_file_fhandle, Nfs__FType start_file_type);
 
 #endif /* soft_links__HEADER__INCLUDED */

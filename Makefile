@@ -4,7 +4,7 @@ TQUIC_LIB_DIR = $(TQUIC_DIR)/target/release
 TRANSPORT_PROTOCOL_CFLAGS_TCP = -D TEST_TRANSPORT_PROTOCOL=TRANSPORT_PROTOCOL_TCP
 TRANSPORT_PROTOCOL_CFLAGS_QUIC = -D TEST_TRANSPORT_PROTOCOL=TRANSPORT_PROTOCOL_QUIC
 # -I flag adds the project root dir to include paths (so that we can include libraries in our files as serialization/mount/mount.pb-c.h e.g.)
-CFLAGS = -I . -I $(TQUIC_DIR)/include -I $(TQUIC_DIR)/deps/boringssl/src/include
+CFLAGS = -I . -I $(TQUIC_DIR)/include -I $(TQUIC_DIR)/deps/boringssl/src/include -I/usr/include/fuse3 -pthread -lfuse3
 SANITIZER_FLAGS = -fsanitize=address -fsanitize=undefined -g
 LIBS = $(TQUIC_LIB_DIR)/libtquic.a -l ev -l dl -l m -l protobuf-c
 DEBUG_FLAGS = ${SANITIZER_FLAGS}
@@ -68,6 +68,10 @@ COMMON_REPL_SRCS = ./src/repl/handlers/*.c ./src/repl/validation/validation.c \
 	${CLIENTS_SRCS} ${SERIALIZATION_SRCS} ${PARSING_SRCS} ${ERROR_HANDLING_SRCS} ${PATH_BUILDING_SRCS} ${FILESYSTEM_DAG_SRCS} ${AUTHENTICATION_SRCS} ${COMMON_PERMISSIONS_SRCS} ${FILEHANDLE_MANAGEMENT_SRCS} ${SOFT_LINKS_SRCS} ${RPC_PROGRAM_COMMON_CLIENT_SRCS}
 REPL_SRCS = ${COMMON_REPL_SRCS} ${TCP_RPC_PROGRAM_CLIENT_SRCS} ${QUIC_RPC_PROGRAM_CLIENT_SRCS}
 
+# files used by the FUSE file system
+COMMON_FUSE_FS_SRCS = ./src/fuse/handlers/handlers.c ./src/fuse/handlers/fuse_*.c ${COMMON_REPL_SRCS}
+FUSE_FS_SRCS = ${COMMON_FUSE_FS_SRCS} ${TCP_RPC_PROGRAM_CLIENT_SRCS} ${QUIC_RPC_PROGRAM_CLIENT_SRCS}
+
 all: create-build-dir mount-and-nfs-server repl
 all-debug: create-build-dir mount-and-nfs-server-debug repl-debug
 
@@ -99,6 +103,9 @@ test-quic: create-build-dir ${TESTS_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
 
 repl: ./src/repl/repl.c create-build-dir ${REPL_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
 	gcc $< ${REPL_SRCS} ${CFLAGS} -o ./build/repl ${LIBS}
+
+fuse-fs: ./src/fuse/nfs_fuse.c create-build-dir ${FUSE_FS_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
+	gcc $< ${FUSE_FS_SRCS} ${CFLAGS} -D_FILE_OFFSET_BITS=64 -o ./build/fuse_fs ${DEBUG_FLAGS} ${LIBS} -l fuse3
 
 # debugging versions of all targets
 mount-and-nfs-server-debug: ./src/nfs/server/server.c create-build-dir ${MOUNT_AND_NFS_SERVER_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
