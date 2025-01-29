@@ -163,15 +163,19 @@ signal:
     return NULL;
 }
 
+/*
+* Handles the FUSE call to read from a directory.
+*
+* Returns 0 on succes and the appropriate negative error code on failure.
+*/
 int nfs_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi, enum fuse_readdir_flags flags) {
-    printf("path is %s\n", path); fflush(stdout);
     CallbackData callback_data;
     memset(&callback_data, 0, sizeof(CallbackData));
     callback_data.is_finished = 0;
     callback_data.error_code = 0;
 
     ReaddirData readdir_data;
-    readdir_data.path = path;
+    readdir_data.path = discard_const(path);
 	readdir_data.buffer = buffer;
     readdir_data.filler = filler;
 

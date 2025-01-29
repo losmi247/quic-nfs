@@ -1,25 +1,27 @@
 #include "handlers.h"
 
-typedef struct GetattrData {
-    char *path;
-    struct stat *stbuf;
-} GetattrData;
+#include <time.h>
 
-void *blocking_getattr(void *arg) {
+typedef struct UtimensData {
+    char *path;
+    
+    time_t atime_sec;
+    long atime_nsec;
+    time_t mtime_sec;
+    long mtime_nsec;
+} UtimensData;
+
+void *blocking_utimens(void *arg) {
     CallbackData *callback_data = (CallbackData *) arg;
 
-    GetattrData *getattr_data = (GetattrData *) callback_data->return_data;
-
-    struct stat *stbuf = getattr_data->stbuf;
-
-    memset(stbuf, 0, sizeof(struct stat));
+    UtimensData *utimens_data = (UtimensData *) callback_data->return_data;
 
     pthread_mutex_lock(&nfs_mutex);
 
     Nfs__FType file_type;
-    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, getattr_data->path, &file_type);
+    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, utimens_data->path, &file_type);
     if(file_fhandle == NULL) {
-        printf("nfs_getattr: failed to resolve the path %s to a file\n", getattr_data->path);
+        printf("nfs_getattr: failed to resolve the path %s to a file\n", utimens_data->path);
 
         callback_data->error_code = -ENOENT;
 
@@ -28,8 +30,53 @@ void *blocking_getattr(void *arg) {
         goto signal;
     }
 
+    Nfs__SAttrArgs sattrargs = NFS__SATTR_ARGS__INIT;
+    sattrargs.file = file_fhandle;
+
+    Nfs__SAttr sattr = NFS__SATTR__INIT;
+    sattr.mode = -1;
+    sattr.uid = -1;
+    sattr.gid = -1;
+    sattr.size = -1;
+    Nfs__TimeVal atime = NFS__TIME_VAL__INIT, mtime = NFS__TIME_VAL__INIT;
+
+    if(utimens_data->atime_sec == UTIME_OMIT || utimens_data->atime_nsec == UTIME_OMIT) {
+        atime.seconds = atime.useconds = -1;
+    }
+    else if(utimens_data->atime_nsec == UTIME_NOW) {
+        struct timespec current_time;
+        clock_gettime(CLOCK_REALTIME, &current_time);
+
+        atime.seconds = current_time.tv_sec;
+        atime.useconds = current_time.tv_nsec / 1000;
+    }
+    else {
+        atime.seconds = utimens_data->atime_sec;
+        atime.useconds = utimens_data->atime_nsec / 1000;
+    }
+
+    if(utimens_data->mtime_sec == UTIME_OMIT || utimens_data->mtime_nsec == UTIME_OMIT) {
+        mtime.seconds = mtime.useconds = -1;
+    }
+    else if(utimens_data->mtime_nsec == UTIME_NOW) {
+        struct timespec current_time;
+        clock_gettime(CLOCK_REALTIME, &current_time);
+
+        mtime.seconds = current_time.tv_sec;
+        mtime.useconds = current_time.tv_nsec / 1000;
+    }
+    else {
+        mtime.seconds = utimens_data->mtime_sec;
+        mtime.useconds = utimens_data->mtime_nsec / 1000;
+    }
+    
+    sattr.atime = &atime;
+    sattr.mtime = &mtime;
+
+    sattrargs.attributes = &sattr;
+
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
-    int status = nfs_procedure_1_get_file_attributes(rpc_connection_context, *file_fhandle, attrstat);
+    int status = nfs_procedure_2_set_file_attributes(rpc_connection_context, sattrargs, attrstat);
     if(status != 0) {
         printf("Error: Invalid RPC reply received from the server with status %d\n", status);
 
@@ -75,28 +122,6 @@ void *blocking_getattr(void *arg) {
         goto signal;
     }
 
-    stbuf->st_dev = attrstat->attributes->fsid;
-    stbuf->st_ino = attrstat->attributes->fileid;
-    stbuf->st_mode = attrstat->attributes->mode;
-    stbuf->st_nlink = attrstat->attributes->nlink;
-
-    stbuf->st_uid = attrstat->attributes->uid;
-    stbuf->st_gid = attrstat->attributes->gid;
-
-    stbuf->st_rdev = attrstat->attributes->rdev;
-    stbuf->st_size = attrstat->attributes->size;
-    stbuf->st_blksize = attrstat->attributes->blocksize;
-    stbuf->st_blocks = attrstat->attributes->blocks;
-
-    stbuf->st_atim.tv_sec = attrstat->attributes->atime->seconds;
-    stbuf->st_atim.tv_nsec = attrstat->attributes->atime->useconds;
-
-    stbuf->st_mtim.tv_sec = attrstat->attributes->mtime->seconds;
-    stbuf->st_mtim.tv_nsec = attrstat->attributes->mtime->useconds;
-
-    stbuf->st_ctim.tv_sec = attrstat->attributes->ctime->seconds;
-    stbuf->st_ctim.tv_nsec = attrstat->attributes->ctime->useconds;
-    
     nfs__attr_stat__free_unpacked(attrstat, NULL);
     free(file_fhandle->nfs_filehandle);
     free(file_fhandle);
@@ -113,37 +138,30 @@ signal:
 }
 
 /*
-* Handles the FUSE call to get file attributes.
+* Handles the FUSE call to update times of the given file.
 *
 * Returns 0 on succes and the appropriate negative error code on failure.
 */
-int nfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi) {
-    /*memset(stbuf, 0, sizeof(struct stat));
-
-    if (strcmp(path, "/") == 0) {
-        stbuf->st_mode = S_IFDIR | 0755;
-        stbuf->st_nlink = 2;
-        return 0;
-    }
-
-    return -ENOENT;*/
-
+int nfs_utimens(const char *path, const struct timespec tv[2], struct fuse_file_info *fi)  {
     CallbackData callback_data;
     memset(&callback_data, 0, sizeof(CallbackData));
     callback_data.is_finished = 0;
     callback_data.error_code = 0;
 
-    GetattrData getattr_data;
-    getattr_data.path = discard_const(path);
-	getattr_data.stbuf = stbuf;
+    UtimensData utimens_data;
+    utimens_data.path = discard_const(path);
+	utimens_data.atime_sec = tv[0].tv_sec;
+    utimens_data.atime_nsec = tv[0].tv_nsec;
+    utimens_data.mtime_sec = tv[1].tv_sec;
+    utimens_data.mtime_nsec = tv[1].tv_nsec;
 
-    callback_data.return_data = &getattr_data;
+    callback_data.return_data = &utimens_data;
 
     pthread_mutex_init(&callback_data.lock, NULL);
     pthread_cond_init(&callback_data.cond, NULL);
 
     pthread_t blocking_thread;
-    if(pthread_create(&blocking_thread, NULL, blocking_getattr, &callback_data) != 0) {
+    if(pthread_create(&blocking_thread, NULL, blocking_utimens, &callback_data) != 0) {
         return -EIO;
     }
 

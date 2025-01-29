@@ -120,6 +120,11 @@ signal:
     return NULL;
 }
 
+/*
+* Handles the FUSE call to write to a file.
+*
+* Returns 0 on succes and the appropriate negative error code on failure.
+*/
 int nfs_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi) {
 	CallbackData callback_data;
     memset(&callback_data, 0, sizeof(CallbackData));
@@ -127,9 +132,9 @@ int nfs_write(const char *path, const char *buffer, size_t size, off_t offset, s
     callback_data.error_code = 0;
 
 	WriteData write_data;
-    write_data.path = path;
+    write_data.path = discard_const(path);
 	
-	write_data.write_buffer = buffer;
+	write_data.write_buffer = discard_const(buffer);
 	write_data.write_buffer_size = size;
 	write_data.offset = offset;
 

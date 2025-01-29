@@ -129,6 +129,11 @@ signal:
     return NULL;
 }
 
+/*
+* Handles the FUSE call to read from a file.
+*
+* Returns 0 on succes and the appropriate negative error code on failure.
+*/
 int nfs_read(const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi) {
 	CallbackData callback_data;
     memset(&callback_data, 0, sizeof(CallbackData));
@@ -136,7 +141,7 @@ int nfs_read(const char *path, char *buffer, size_t size, off_t offset, struct f
     callback_data.error_code = 0;
 
 	ReadData read_data;
-    read_data.path = path;
+    read_data.path = discard_const(path);
 	
 	read_data.read_buffer = buffer;
 	read_data.bytes_to_read = size;

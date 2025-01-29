@@ -7,12 +7,15 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <libgen.h> // dirname(), basename()
 
 #include "src/nfs/clients/nfs_client.h"
 
 #include "src/message_validation/message_validation.h"
 
 #include "src/fuse/path_resolution.h"
+
+#define discard_const(ptr) ((void *)((intptr_t)(ptr)))
 
 typedef struct CallbackData {
 	int is_finished;
@@ -32,6 +35,10 @@ int nfs_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, off_t of
 int nfs_read(const char *path, char *buffer, size_t size, off_t offset, struct fuse_file_info *fi);
 
 int nfs_write(const char *path, const char *buffer, size_t size, off_t offset, struct fuse_file_info *fi);
+
+int nfs_mknod(const char *path, mode_t mode, dev_t rdev);
+
+int nfs_utimens(const char *path, const struct timespec tv[2], struct fuse_file_info *fi);
 
 extern pthread_mutex_t nfs_mutex;
 
