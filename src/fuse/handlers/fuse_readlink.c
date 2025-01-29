@@ -77,11 +77,11 @@ void *blocking_readlink(void *arg) {
     strncpy(readlink_data->buffer, readlinkres->data->path, readlink_data->max_bytes_to_read);
     readlink_data->buffer[readlink_data->max_bytes_to_read - 1] = '\0';     // null terminate the retrieved path
 
-    callback_data->error_code = 0;
-
     free(file_fhandle->nfs_filehandle);
     free(file_fhandle);
     nfs__read_link_res__free_unpacked(readlinkres, NULL);
+
+    callback_data->error_code = 0;
 
 signal:
     pthread_mutex_lock(&callback_data->lock);

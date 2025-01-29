@@ -56,6 +56,8 @@ int nfs_symlink(const char *target_path, const char *link_path);
 
 int nfs_readlink(const char *path, char *buffer, size_t size);
 
+int nfs_rename(const char *from, const char *to, unsigned int flags);
+
 extern pthread_mutex_t nfs_mutex;
 
 #endif /* handlers__HEADER__INCLUDED */

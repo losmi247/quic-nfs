@@ -17,7 +17,7 @@ void *blocking_link(void *arg) {
     int error_code;
     Nfs__FHandle *containing_directory_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, link_data->containing_directory_path, &file_type, &error_code);
     if(containing_directory_fhandle == NULL) {
-        printf("nfs_link: failed to resolve the path %s to a file\n", link_data->containing_directory_path);
+        printf("nfs_symlink: failed to resolve the path %s to a file\n", link_data->containing_directory_path);
 
         callback_data->error_code = -error_code;
 

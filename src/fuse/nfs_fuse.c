@@ -19,6 +19,7 @@ static struct fuse_operations nfs_oper = {
     .mknod = nfs_mknod,
     .mkdir = nfs_mkdir,
     .symlink = nfs_symlink,
+    .rename = nfs_rename,
 
     .utimens = nfs_utimens,
     .truncate = nfs_truncate,
