@@ -13,7 +13,8 @@ void *blocking_truncate(void *arg) {
     pthread_mutex_lock(&nfs_mutex);
 
     Nfs__FType file_type;
-    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, truncate_data->path, &file_type);
+    int error_code;
+    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, truncate_data->path, &file_type, &error_code);
     if(file_fhandle == NULL) {
         printf("nfs_truncate: failed to resolve the path %s to a file\n", truncate_data->path);
 

@@ -20,11 +20,12 @@ void *blocking_read(void *arg) {
     pthread_mutex_lock(&nfs_mutex);
 
     Nfs__FType file_type;
-    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, read_data->path, &file_type);
+    int error_code;
+    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, read_data->path, &file_type, &error_code);
     if(file_fhandle == NULL) {
         printf("nfs_read: failed to resolve the path %s to a file\n", read_data->path);
 
-        callback_data->error_code = -ENOENT;
+        callback_data->error_code = -error_code;
 
         pthread_mutex_unlock(&nfs_mutex);
 

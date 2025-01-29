@@ -1,17 +1,16 @@
 #include "handlers.h"
 
-typedef struct MknodData {
+typedef struct MkdirData {
     char *containing_directory_path;
-    char *new_file_name;
+    char *new_directory_name;
 
     mode_t mode;
-    dev_t rdev;
-} MknodData;
+} MkdirData;
 
-void *blocking_mknod(void *arg) {
+void *blocking_mkdir(void *arg) {
     CallbackData *callback_data = (CallbackData *) arg;
 
-    MknodData *mknod_data = (MknodData *) callback_data->return_data;
+    MkdirData *mknod_data = (MkdirData *) callback_data->return_data;
 
     pthread_mutex_lock(&nfs_mutex);
 
@@ -32,7 +31,7 @@ void *blocking_mknod(void *arg) {
     diropargs.dir = containing_directory_fhandle;
 
     Nfs__FileName filename = NFS__FILE_NAME__INIT;
-    filename.filename = mknod_data->new_file_name;
+    filename.filename = mknod_data->new_directory_name;
     diropargs.name = &filename;
 
     Nfs__CreateArgs createargs = NFS__CREATE_ARGS__INIT;
@@ -51,7 +50,7 @@ void *blocking_mknod(void *arg) {
     createargs.attributes = &sattr;
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
-    int status = nfs_procedure_9_create_file(rpc_connection_context, createargs, diropres);
+    int status = nfs_procedure_14_create_directory(rpc_connection_context, createargs, diropres);
     if(status != 0) {
         printf("Error: Invalid RPC reply received from the server with status %d\n", status);
 
@@ -113,11 +112,11 @@ signal:
 }
 
 /*
-* Handles the FUSE call to create a file.
+* Handles the FUSE call to create a directory.
 *
 * Returns 0 on success and the appropriate negative error code on failure.
 */
-int nfs_mknod(const char *path, mode_t mode, dev_t rdev) {
+int nfs_mkdir(const char *path, mode_t mode) {
     CallbackData callback_data;
     memset(&callback_data, 0, sizeof(CallbackData));
     callback_data.is_finished = 0;
@@ -127,20 +126,19 @@ int nfs_mknod(const char *path, mode_t mode, dev_t rdev) {
     char *dir_copy = strdup(path);
     char *path_copy = strdup(path);
 
-    MknodData mknod_data;
-    mknod_data.containing_directory_path = dirname(dir_copy);
-    mknod_data.new_file_name = basename(path_copy);
+    MkdirData mkdir_data;
+    mkdir_data.containing_directory_path = dirname(dir_copy);
+    mkdir_data.new_directory_name = basename(path_copy);
 
-    mknod_data.mode = mode;
-    mknod_data.rdev = rdev;
+    mkdir_data.mode = mode;
 
-    callback_data.return_data = &mknod_data;
+    callback_data.return_data = &mkdir_data;
 
     pthread_mutex_init(&callback_data.lock, NULL);
     pthread_cond_init(&callback_data.cond, NULL);
 
     pthread_t blocking_thread;
-    if(pthread_create(&blocking_thread, NULL, blocking_mknod, &callback_data) != 0) {
+    if(pthread_create(&blocking_thread, NULL, blocking_mkdir, &callback_data) != 0) {
         return -EIO;
     }
 

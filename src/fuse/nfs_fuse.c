@@ -15,9 +15,10 @@ static struct fuse_operations nfs_oper = {
     .read = nfs_read,
     .write = nfs_write,
     .mknod = nfs_mknod,
+    .mkdir = nfs_mkdir,
     .utimens = nfs_utimens,
     .truncate = nfs_truncate,
-    .open = nfs_open
+    .open = nfs_open,
 };
 
 /*

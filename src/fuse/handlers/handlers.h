@@ -44,6 +44,8 @@ int nfs_truncate(const char *path, off_t size, struct fuse_file_info *fi);
 
 int nfs_open(const char *path, struct fuse_file_info *fi);
 
+int nfs_mkdir(const char *path, mode_t mode);
+
 extern pthread_mutex_t nfs_mutex;
 
 #endif /* handlers__HEADER__INCLUDED */

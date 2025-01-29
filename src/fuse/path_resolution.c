@@ -13,25 +13,29 @@
 * Performs LOOKUP procedures from the filesystem root to resolve component by component of the
 * pathname. Returns the NFS fhandle of the resolved file and places that file's type in the 'ftype' argument.
 *
-* Returns NULL on failure.
+* On failure, returns NULL and places the error appropriate error code in 'error_code' argument.
 *
 * The user of this function takes the responsibility to free the received Nfs__FHandle and
 * the NfsFh__NfsFileHandle inside it.
 */
-Nfs__FHandle *resolve_absolute_path(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *filesystem_root_fhandle, char *path, Nfs__FType *ftype) {    
+Nfs__FHandle *resolve_absolute_path(RpcConnectionContext *rpc_connection_context, Nfs__FHandle *filesystem_root_fhandle, char *path, Nfs__FType *ftype, int *error_code) {
     if(rpc_connection_context == NULL) {
+        *error_code = EINVAL;
         return NULL;
     }
 
     if(filesystem_root_fhandle == NULL) {
+        *error_code = EINVAL;
         return NULL;
     }
 
     if(path == NULL) {
+        *error_code = EINVAL;
         return NULL;
     }
 
     if(path[0] != '/') {  // we only resolve absolute paths
+        *error_code = EINVAL;
         return NULL;
     }
 
@@ -50,6 +54,9 @@ Nfs__FHandle *resolve_absolute_path(RpcConnectionContext *rpc_connection_context
     while(pathname_component != NULL) {
         if(curr_ftype != NFS__FTYPE__NFDIR) {
             free(path_copy);
+            
+            *error_code = ENOTDIR;
+
             return NULL;
         }
 
@@ -68,6 +75,8 @@ Nfs__FHandle *resolve_absolute_path(RpcConnectionContext *rpc_connection_context
             free(path_copy);
             free(diropres);
 
+            *error_code = EIO;
+
             return NULL;
         }
 
@@ -76,6 +85,8 @@ Nfs__FHandle *resolve_absolute_path(RpcConnectionContext *rpc_connection_context
 
             free(path_copy);
             nfs__dir_op_res__free_unpacked(diropres, NULL);
+
+            *error_code = EIO;
 
             return NULL;
         }
@@ -86,6 +97,8 @@ Nfs__FHandle *resolve_absolute_path(RpcConnectionContext *rpc_connection_context
             free(path_copy);
             nfs__dir_op_res__free_unpacked(diropres, NULL);
 
+            *error_code = EACCES;
+
             return NULL;
         }
         else if(diropres->nfs_status->stat != NFS__STAT__NFS_OK) {
@@ -95,6 +108,8 @@ Nfs__FHandle *resolve_absolute_path(RpcConnectionContext *rpc_connection_context
 
             free(path_copy);
             nfs__dir_op_res__free_unpacked(diropres, NULL);
+
+            *error_code = ENOENT;
 
             return NULL;
         }
@@ -111,15 +126,24 @@ Nfs__FHandle *resolve_absolute_path(RpcConnectionContext *rpc_connection_context
         // make a stack allocated fhandle for this looked up file
         NfsFh__NfsFileHandle *nfs_filehandle = malloc(sizeof(NfsFh__NfsFileHandle));
         if(nfs_filehandle == NULL) {
+            free(path_copy);
+            nfs__dir_op_res__free_unpacked(diropres, NULL);
+
+            *error_code = EIO;
+
             return NULL;
         }
         *nfs_filehandle = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
         nfs__dir_op_res__free_unpacked(diropres, NULL);
         curr_fhandle = malloc(sizeof(Nfs__FHandle));
-        nfs__fhandle__init(curr_fhandle);
         if(curr_fhandle == NULL) {
+            free(path_copy);
+
+            *error_code = EIO;
+
             return NULL;
         }
+        nfs__fhandle__init(curr_fhandle);
         curr_fhandle->nfs_filehandle = nfs_filehandle;
 
         // get the next pathname component
@@ -142,6 +166,8 @@ Nfs__FHandle *resolve_absolute_path(RpcConnectionContext *rpc_connection_context
         free(curr_fhandle->nfs_filehandle);
         free(curr_fhandle);
     }
+
+    *error_code = 0;
 
     return file_fhandle;
 }
