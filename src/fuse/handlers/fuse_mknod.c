@@ -128,7 +128,8 @@ int nfs_mknod(const char *path, mode_t mode, dev_t rdev) {
     char *path_copy = strdup(path);
 
     MknodData mknod_data;
-    mknod_data.containing_directory_path = dirname(dir_copy);
+    char *directory_path = dirname(dir_copy);   // returns "." if there are no '/'s in the path (i.e. just file name 'file')
+    mknod_data.containing_directory_path = strcmp(directory_path,".") == 0 ? "/" : directory_path;
     mknod_data.new_file_name = basename(path_copy);
 
     mknod_data.mode = mode;

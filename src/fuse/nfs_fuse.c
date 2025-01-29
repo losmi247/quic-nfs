@@ -8,17 +8,23 @@
 #include "src/nfs/clients/nfs_client.h"
 #include "src/nfs/clients/mount_client.h"
 
-// FUSE operation structure
 static struct fuse_operations nfs_oper = {
     .getattr = nfs_getattr,
+
     .readdir = nfs_readdir,
     .read = nfs_read,
     .write = nfs_write,
+    .readlink = nfs_readlink,
+
     .mknod = nfs_mknod,
     .mkdir = nfs_mkdir,
+    .symlink = nfs_symlink,
+
     .utimens = nfs_utimens,
     .truncate = nfs_truncate,
+
     .open = nfs_open,
+
     .rmdir = nfs_rmdir,
     .unlink = nfs_unlink
 };

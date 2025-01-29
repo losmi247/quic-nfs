@@ -52,6 +52,10 @@ int nfs_rmdir(const char *path);
 
 int nfs_unlink(const char *path);
 
+int nfs_symlink(const char *target_path, const char *link_path);
+
+int nfs_readlink(const char *path, char *buffer, size_t size);
+
 extern pthread_mutex_t nfs_mutex;
 
 #endif /* handlers__HEADER__INCLUDED */

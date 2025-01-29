@@ -108,7 +108,8 @@ int nfs_unlink(const char *path) {
     char *path_copy = strdup(path);
 
     UnlinkData unlink_data;
-    unlink_data.containing_directory_path = dirname(dir_copy);
+    char *directory_path = dirname(dir_copy);   // returns "." if there are no '/'s in the path (i.e. just file name 'file')
+    unlink_data.containing_directory_path = strcmp(directory_path,".") == 0 ? "/" : directory_path;
     unlink_data.file_name = basename(path_copy);
 
     callback_data.return_data = &unlink_data;

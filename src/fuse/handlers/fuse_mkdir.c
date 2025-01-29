@@ -127,7 +127,8 @@ int nfs_mkdir(const char *path, mode_t mode) {
     char *path_copy = strdup(path);
 
     MkdirData mkdir_data;
-    mkdir_data.containing_directory_path = dirname(dir_copy);
+    char *directory_path = dirname(dir_copy);   // returns "." if there are no '/'s in the path (i.e. just file name 'file')
+    mkdir_data.containing_directory_path = strcmp(directory_path,".") == 0 ? "/" : directory_path;
     mkdir_data.new_directory_name = basename(path_copy);
 
     mkdir_data.mode = mode;
