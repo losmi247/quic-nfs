@@ -4,7 +4,7 @@ This is a user-space implementation of a **NFSv2 client-server pair** ([RFC 1094
 
 After cloning the directory:
 
-1. Install [**Protobuf**](https://github.com/protocolbuffers/protobuf), [**Protobuf-C**](https://github.com/protobuf-c/protobuf-c), [**Criterion**](https://github.com/Snaipe/Criterion), [**TQUIC**](https://github.com/Tencent/tquic), and other project dependencies by running:
+1. Install [**Protobuf**](https://github.com/protocolbuffers/protobuf), [**Protobuf-C**](https://github.com/protobuf-c/protobuf-c), [**Criterion**](https://github.com/Snaipe/Criterion), [**TQUIC**](https://github.com/Tencent/tquic), [**FUSE**](https://github.com/libfuse/libfuse), and other project dependencies by running:
     ```
     ./install_dependencies
     ```
@@ -20,14 +20,8 @@ After cloning the directory:
    sudo ./build/mount_and_nfs_server <port> --proto=<transport_protocol>
    ``` 
    to start the NFS+MOUNT server at port ```port``` (e.g. ```3000```), where ```transport_protocol``` is either ```tcp``` or ```quic```. The **NFS server always runs as root**.
-6. On the client machine, run 
-   ```
-   ./build/repl
-   ```
-   to start the NFS client Read-Eval-Print Loop. This will prompt you to **select a transport protocol** - make sure to select the same transport protocol as the one chosen for the NFS server.
+6. To run the NFS client, please follow the instruction either in the *NFS Client as a FUSE File System* or in *NFS Client as a User-Space REPL*  
    
-   Use the REPL to mount the exported NFS share as ```mount 192.168.100.1 3000 /nfs_share``` (assuming the server machine is at IPv4 192.168.100.1).
-
 Note that the Nfs and Mount server are implemented as a single process, to allow efficient sharing of the cache containing mappings of inode numbers to files/directories.
 
 # NFS Server
@@ -55,9 +49,48 @@ The NFSv2 server currently supports the following NFSv2 procedures:
 | 16  | **READDIR**        | read from directory                          |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 | 17  | **STATFS**         | get filesystem attributes                    |   done &#10004;     |   done &#10004;       |   done &#10004;    |
 
-# NFS Client as a User-Space REPL
+# NFS Client
 
-The NFSv2 client is implemented as a user-space application that acts as a Read-Eval-Print Loop that parses Unix-like file management commands (```mount```, ```ls```, ```cat```, etc.) and carries them out by sending an appropriate sequence of Remote Procedure Calls (RPC) to the server.
+The NFSv2 client was implemented in two similar flavours - as a FUSE file system, and as a custom user-space read-eval-print-loop.
+
+## NFS Client as a FUSE File System
+
+[**FUSE**](https://github.com/libfuse/libfuse) was used to expose the mounted remote filsystem (backed by the NFS server implementation) as a user-space file system on the local machine.
+
+To start this FUSE file system, after *step 5* in the *Directions For Use* section (i.e. after the server is started) do the following on the client machine:
+
+```
+make fuse-fs
+```
+
+followed by
+
+```
+./build/nfs_fuse <server IPv4 address> <port number> --proto=<tcp or quic> <remote absolute path> <local mount point>
+```
+
+Make sure to select the same transport protocol as the one that your server is using.
+
+For example, for a QUIC server running at port ```3000``` at ```192.168.100.1```, exporting the file system ```/nfs_share```, to mount this as a FUSE file system at ```~/Desktop/mountpoint```, you need to do:
+
+```
+./build/nfs_fuse 192.168.100.1 3000 --proto=quic /nfs_share ~/Desktop/mountpoint
+```
+
+After this, you can use the filesystem as you would normally, using any Linux file management commands.
+
+## NFS Client as a User-Space REPL
+
+Another implementation of the NFSv2 client is implemented as a user-space application that acts as a Read-Eval-Print Loop that parses Unix-like file management commands (```mount```, ```ls```, ```cat```, etc.) and carries them out by sending an appropriate sequence of Remote Procedure Calls (RPC) to the server.
+
+To start the REPL, after *step 5* in the *Directions For Use* section (i.e. after the server is started) do the following on the client machine:
+
+```
+./build/repl
+```
+
+This will prompt you to **select a transport protocol** - make sure to select the same transport protocol as the one chosen for the NFS server. 
+Finally, use the REPL to mount the exported NFS share as ```mount 192.168.100.1 3000 /nfs_share``` (assuming the server machine is at IPv4 192.168.100.1).
 
 The client REPL currently supports the following set of Unix-like commands:
 
@@ -74,6 +107,7 @@ The client REPL currently supports the following set of Unix-like commands:
 | `rmdir <directory name>`  | removes a directory in the current working directory        |
 
 When the REPL is started, the user is able to select between **TCP** and **QUIC** for transport.
+
 
 # Transport
 

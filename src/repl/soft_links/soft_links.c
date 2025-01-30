@@ -1,7 +1,11 @@
 #include "soft_links.h"
 
-#include "src/repl/validation/validation.h"
+#include "src/message_validation/message_validation.h"
 #include "src/path_building/path_building.h"
+#include "src/filehandle_management/filehandle_management.h"
+
+#include "src/nfs/clients/nfs_client.h"
+#include "src/nfs/clients/mount_client.h"
 
 #define SYMLINK_LEVELS_LIMIT 40
 
@@ -53,13 +57,14 @@ Nfs__FHandle *resolve_path(char *command_name, RpcConnectionContext *rpc_connect
     Nfs__FType curr_ftype = NFS__FTYPE__NFDIR;
 
     int pathname_length = strlen(path);
-    char *path_copy = malloc(sizeof(char) *  pathname_length);
+    char *path_copy = malloc(sizeof(char) *  (pathname_length + 1));
     strncpy(path_copy, path, pathname_length);
     path_copy[pathname_length] = '\0';
 
     // look up component by component of the pathname
     char *save_ptr;
     char *pathname_component = strtok_r(path_copy, "/", &save_ptr);
+    int is_first_component = 1;
     while(pathname_component != NULL) {
         if(curr_ftype != NFS__FTYPE__NFDIR) {
             free(path_copy);
@@ -114,13 +119,26 @@ Nfs__FHandle *resolve_path(char *command_name, RpcConnectionContext *rpc_connect
                 
         curr_ftype = diropres->diropok->attributes->nfs_ftype->ftype;
 
-        // make a stack allocated fhandle for this looked up file
-        NfsFh__NfsFileHandle file_nfs_filehandle_copy = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
-        nfs__dir_op_res__free_unpacked(diropres, NULL);
-        Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
-        file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
+        // free the previous file handle if it's not the starting one
+        if(!is_first_component) {
+            free(curr_fhandle->nfs_filehandle);
+            free(curr_fhandle);
+        }
+        is_first_component = 0;
 
-        curr_fhandle = &file_fhandle;
+        // make a stack allocated fhandle for this looked up file
+        NfsFh__NfsFileHandle *nfs_filehandle = malloc(sizeof(NfsFh__NfsFileHandle));
+        if(nfs_filehandle == NULL) {
+            return NULL;
+        }
+        *nfs_filehandle = deep_copy_nfs_filehandle(diropres->diropok->file->nfs_filehandle);
+        nfs__dir_op_res__free_unpacked(diropres, NULL);
+        curr_fhandle = malloc(sizeof(Nfs__FHandle));
+        nfs__fhandle__init(curr_fhandle);
+        if(curr_fhandle == NULL) {
+            return NULL;
+        }
+        curr_fhandle->nfs_filehandle = nfs_filehandle;
 
         // get the next pathname component
         pathname_component = strtok_r(NULL, "/", &save_ptr);

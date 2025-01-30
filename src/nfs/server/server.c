@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
             transport_protocol = TRANSPORT_PROTOCOL_QUIC;
         } 
         else {
-            fprintf(stderr, "Error: Invalid transport protocol protocol: %s\n", protocol);
+            fprintf(stderr, "Error: Invalid transport protocol: %s\n", protocol);
             return 1;
         }
     }

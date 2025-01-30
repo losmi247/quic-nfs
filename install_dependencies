@@ -32,6 +32,11 @@ apt-get install -y \
     libprotobuf-c-dev \
     protobuf-c-compiler
 
+# Install FUSE
+apt-get install -y \
+    fuse3 \
+    libfuse3-dev
+
 echo "protoc version:"
 protoc --version
 

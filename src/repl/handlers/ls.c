@@ -1,7 +1,5 @@
 #include "handlers.h"
 
-#include "src/repl/validation/validation.h"
-
 #define READDIR_BYTES_PER_RPC 50
 
 typedef struct FileNamesList {

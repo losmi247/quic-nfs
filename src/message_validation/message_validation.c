@@ -1,4 +1,4 @@
-#include "validation.h"
+#include "message_validation.h"
 
 /*
 * Validates the structure of the given FHandle.

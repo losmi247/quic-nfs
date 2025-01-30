@@ -1,6 +1,5 @@
 #include "handlers.h" 
 
-#include "src/repl/validation/validation.h"
 #include "src/path_building/path_building.h"
 
 /*
