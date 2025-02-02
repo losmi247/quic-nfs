@@ -14,14 +14,16 @@ void client_on_conn_established(void *tctx, struct quic_conn_t *conn) {
     int error_code = send_rm_record_quic(conn, 0, client->call_rpc_msg_buffer, client->call_rpc_msg_size);
     client->call_rpc_msg_successfully_sent = (error_code == 0);
 
-    client->attempted_call_rpc_msg_send = true;
+    if(!client->call_rpc_msg_successfully_sent) {
+        ev_break(client->event_loop, EVBREAK_ALL);
+    }
 }
 
 void client_on_conn_closed(void *tctx, struct quic_conn_t *conn) {
     struct QuicClient *client = tctx;
 
-    ev_break(client->event_loop, EVBREAK_ALL);
     client->finished = true;
+    ev_break(client->event_loop, EVBREAK_ALL);
 }
 
 void client_on_stream_created(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {}
@@ -282,25 +284,19 @@ Rpc__RpcMsg *execute_rpc_call_quic(const char *host, const char *port, Rpc__RpcM
     process_connections(&client);
 
     // start the event loop
-    ev_io watcher;
-    ev_io_init(&watcher, read_callback, client.socket_fd, EV_READ);
-    ev_io_start(client.event_loop, &watcher);
-    watcher.data = &client;
+    ev_io udp_socket_watcher;
+    ev_io_init(&udp_socket_watcher, read_callback, client.socket_fd, EV_READ);
+    udp_socket_watcher.data = &client;
+    ev_io_start(client.event_loop, &udp_socket_watcher);
 
-    // wait for client to send the RPC call
-    while(!client.attempted_call_rpc_msg_send) {
-        ev_run(client.event_loop, EVRUN_ONCE);
-    }
+    ev_run(client.event_loop, 0);
+
     if(!client.call_rpc_msg_successfully_sent) {
         fprintf(stderr, "execute_rpc_call_quic: failed to send RPC call message\n");
         ret = NULL;
         goto cleanup;
     }
 
-    // wait for client to receive the RPC reply, and then for the QUIC connection to close
-    while(!client.finished) {
-        ev_run(client.event_loop, EVRUN_ONCE);
-    }
     if(!client.reply_rpc_msg_successfully_received) {
         fprintf(stderr, "execute_rpc_call_quic: failed to receive RPC reply message\n");
         ret = NULL;

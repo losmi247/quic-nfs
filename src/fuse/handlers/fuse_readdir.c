@@ -1,6 +1,6 @@
 #include "handlers.h"
 
-#define READDIR_BYTES_PER_RPC 50
+#define READDIR_BYTES_PER_RPC 500
 
 typedef struct ReaddirData {
     char *path;

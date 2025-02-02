@@ -26,7 +26,7 @@
 #include "src/common_rpc/common_rpc.h"
 #include "src/common_rpc/rpc_connection_context.h"
 
-#define MAX_DATAGRAM_SIZE 1200
+#define MAX_DATAGRAM_SIZE 10000
 
 struct QuicClient {
     struct quic_endpoint_t *quic_endpoint;
