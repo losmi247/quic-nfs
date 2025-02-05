@@ -1,5 +1,9 @@
 #include "tcp_rpc_server.h"
 
+#include "src/nfs/server/server.h"
+
+#include "src/nfs/server/nfs_server_threads.h"
+
 /*
 *  Define TCP Nfs+Mount server state.
 */
@@ -161,11 +165,11 @@ int validate_credential_and_verifier_tcp(int rpc_client_socket_fd, Rpc__OpaqueAu
 }
 
 /*
-* Takes an opened TCP client socket and reads and processes one RPC from it.
+* Takes an opened TCP client socket and reads and processes a single RPC from it.
 *
 * Returns 0 on success and > 0 on failure.
 */
-int handle_client_tcp(int rpc_client_socket_fd) {
+int process_single_rpc_tcp(int rpc_client_socket_fd) {
     // read one RPC call as a single Record Marking record
     size_t rpc_msg_size = -1;
     uint8_t *rpc_msg_buffer = receive_rm_record_tcp(rpc_client_socket_fd, &rpc_msg_size);
@@ -231,6 +235,69 @@ int handle_client_tcp(int rpc_client_socket_fd) {
     }
 
     return 0;
+}
+
+/*
+* Returns 0 if the client-side socket that was connected to the given rpc_client_socket_fd
+* has been closed using close() (i.e. the TCP connection has been closed).
+*
+* Returns < 0 if an error occurred, and 1 if the TCP connection is still alive.
+*/
+int is_tcp_connection_closed(int rpc_client_socket_fd) {
+    // peek at the first byte to be read (blocks if connection alive and no data to be read yet)
+    char peek_buffer;
+    ssize_t peek_res = recv(rpc_client_socket_fd, &peek_buffer, 1, MSG_PEEK);
+    if(peek_res < 0) {
+        return peek_res;
+    }
+    
+    if(peek_res == 0) {
+        return 0;
+    }
+
+    return 1;
+}
+
+/*
+* Function for a single NFS thread to wait for client RPCs and respond to them.
+*/
+void *handle_client_tcp(void *arg) {
+    pthread_t tid = pthread_self();
+
+    int *rpc_client_socket_fd = (int *) arg;
+    if(rpc_client_socket_fd == NULL) {
+        fprintf(stderr, "handle_client_tcp: server thread received a NULL client socket\n");
+
+        remove_server_thread(tid, &nfs_server_threads_list);
+
+        return NULL;
+    }
+
+    while(1) {
+        int status = is_tcp_connection_closed(*rpc_client_socket_fd);
+        if(status < 0) {
+            perror_msg("handle_client_tcp: server thread failed to check if the TCP connection is alive\n");
+
+            remove_server_thread(tid, &nfs_server_threads_list);
+
+            return NULL;
+        }
+        else if(status == 0) {
+            // client-side socket has been closed, so terminate this server thread
+            return NULL;
+        }
+
+        int error_code = process_single_rpc_tcp(*rpc_client_socket_fd);
+        if(error_code > 0) {
+            fprintf(stderr, "handle_client_tcp: server thread failed to process a RPC with status %d\n", error_code);
+
+            remove_server_thread(tid, &nfs_server_threads_list);
+
+            return NULL;
+        }
+    }
+
+    return NULL;
 }
 
 /*
@@ -302,15 +369,45 @@ int run_server_tcp(uint16_t port_number) {
         struct sockaddr_in rpc_client_addr;
         socklen_t rpc_client_addr_len = sizeof(rpc_client_addr);
 
-        int rpc_client_socket_fd = accept(rpc_server_socket_fd, (struct sockaddr *) &rpc_client_addr, &rpc_client_addr_len);
-        if(rpc_client_socket_fd < 0) { 
-            fprintf(stderr, "run_server_tcp: server failed to accept connection\n"); 
-            continue;
+        int *rpc_client_socket_fd = malloc(sizeof(int));
+        if(rpc_client_socket_fd == NULL) {
+            fprintf(stderr, "run_server_tcp: server failed to allocate memory\n");
+            break;
         }
-    
-        handle_client_tcp(rpc_client_socket_fd);
+        *rpc_client_socket_fd = accept(rpc_server_socket_fd, (struct sockaddr *) &rpc_client_addr, &rpc_client_addr_len);
+        if(*rpc_client_socket_fd < 0) {
+            fprintf(stderr, "run_server_tcp: server failed to accept connection\n");
 
-        close(rpc_client_socket_fd);
+            free(rpc_client_socket_fd);
+
+            break;
+        }
+
+        // start a new thread for handling this client
+        pthread_t server_thread;
+        if(pthread_create(&server_thread, NULL, handle_client_tcp, rpc_client_socket_fd) != 0) {
+            fprintf(stderr, "run_server_tcp: server failed to create a new client-handling thread\n");
+
+            close(*rpc_client_socket_fd);
+            free(rpc_client_socket_fd);
+
+            break;
+        }
+
+        TransportConnection transport_connection;
+        transport_connection.rpc_client_socket_fd = rpc_client_socket_fd;
+        int error_code = add_server_thread(server_thread, TRANSPORT_PROTOCOL_TCP, transport_connection, &nfs_server_threads_list);
+        if(error_code > 0) {
+            fprintf(stderr, "run_server_tcp: server failed to add a new entry in the NFS server threads list\n");
+
+            close(*rpc_client_socket_fd);
+            free(rpc_client_socket_fd);
+
+            pthread_cancel(server_thread);
+            pthread_join(server_thread, NULL);
+
+            break;
+        }
     }
      
     clean_up_tcp_server_state();

@@ -10,7 +10,12 @@
 TestSuite(nfs_remove_test_suite);
 
 Test(nfs_remove_test_suite, remove_ok, .description = "NFSPROC_REMOVE ok") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("remove_ok: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup the remove_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -18,14 +23,14 @@ Test(nfs_remove_test_suite, remove_ok, .description = "NFSPROC_REMOVE ok") {
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *remove_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "remove_test", NFS__FTYPE__NFDIR);
+    Nfs__DirOpRes *remove_test_dir_diropres = lookup_file_or_directory_success(rpc_connection_context, &fhandle, "remove_test", NFS__FTYPE__NFDIR);
 
     // lookup the remove_test_file.txt that we are going to delete inside this directory - this will create an inode mapping for it in the inode cache
     Nfs__FHandle remove_test_dir_fhandle = NFS__FHANDLE__INIT;
     NfsFh__NfsFileHandle remove_test_dir_nfs_filehandle_copy = deep_copy_nfs_filehandle(remove_test_dir_diropres->diropok->file->nfs_filehandle);
     remove_test_dir_fhandle.nfs_filehandle = &remove_test_dir_nfs_filehandle_copy;
 
-    Nfs__DirOpRes *remove_test_file_diropres = lookup_file_or_directory_success(NULL, &remove_test_dir_fhandle, "remove_test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *remove_test_file_diropres = lookup_file_or_directory_success(rpc_connection_context, &remove_test_dir_fhandle, "remove_test_file.txt", NFS__FTYPE__NFREG);
 
     // remove the file remove_test_file.txt inside this /nfs_share/remove_test directory
     Nfs__NfsStat *nfsstat = remove_file_success(NULL, &remove_test_dir_fhandle, "remove_test_file.txt");
@@ -35,17 +40,24 @@ Test(nfs_remove_test_suite, remove_ok, .description = "NFSPROC_REMOVE ok") {
     int expected_number_of_entries = 2;
     char *expected_filenames[2] = {"..", "."};
 
-    Nfs__ReadDirRes *readdirres = read_from_directory_success(NULL, &remove_test_dir_fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
+    Nfs__ReadDirRes *readdirres = read_from_directory_success(rpc_connection_context, &remove_test_dir_fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
 
     // try to read from the deleted file to ensure its inode mapping was deleted from the inode cache
-    read_from_file_fail(NULL, remove_test_file_diropres->diropok->file, 0, 10, NFS__STAT__NFSERR_NOENT);
+    read_from_file_fail(rpc_connection_context, remove_test_file_diropres->diropok->file, 0, 10, NFS__STAT__NFSERR_NOENT);
 
     nfs__dir_op_res__free_unpacked(remove_test_file_diropres, NULL);
     nfs__nfs_stat__free_unpacked(nfsstat, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_remove_test_suite, remove_no_such_directory, .description = "NFSPROC_REMOVE no such directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("remove_no_such_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // try to remove a file 'remove_test_file.txt' inside a nonexistent directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -55,13 +67,20 @@ Test(nfs_remove_test_suite, remove_no_such_directory, .description = "NFSPROC_RE
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = &nfs_filehandle;
 
-    remove_file_fail(NULL, &fhandle, "remove_file_test.txt", NFS__STAT__NFSERR_NOENT);
+    remove_file_fail(rpc_connection_context, &fhandle, "remove_file_test.txt", NFS__STAT__NFSERR_NOENT);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_remove_test_suite, remove_file_in_a_non_directory, .description = "NFSPROC_REMOVE remove file in a non-directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("remove_file_in_a_non_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -69,7 +88,7 @@ Test(nfs_remove_test_suite, remove_file_in_a_non_directory, .description = "NFSP
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *dir_diropres = lookup_file_or_directory_success(rpc_connection_context, &fhandle, "test_file.txt", NFS__FTYPE__NFREG);
 
     // try to remove a file "remove_test_file.txt" inside this test_file.txt file
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -77,11 +96,18 @@ Test(nfs_remove_test_suite, remove_file_in_a_non_directory, .description = "NFSP
     nfs__dir_op_res__free_unpacked(dir_diropres, NULL);
     file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
 
-    remove_file_fail(NULL, &file_fhandle, "remove_test_file.txt", NFS__STAT__NFSERR_NOTDIR);
+    remove_file_fail(rpc_connection_context, &file_fhandle, "remove_test_file.txt", NFS__STAT__NFSERR_NOTDIR);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_remove_test_suite, remove_no_such_file, .description = "NFSPROC_REMOVE no such file") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("remove_no_such_file: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // try to remove a nonexistent file
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -89,11 +115,18 @@ Test(nfs_remove_test_suite, remove_no_such_file, .description = "NFSPROC_REMOVE 
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    remove_file_fail(NULL, &fhandle, NONEXISTENT_FILENAME, NFS__STAT__NFSERR_NOENT);
+    remove_file_fail(rpc_connection_context, &fhandle, NONEXISTENT_FILENAME, NFS__STAT__NFSERR_NOENT);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_remove_test_suite, remove_is_directory, .description = "NFSPROC_REMOVE directory specified for a non-directory operation") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("remove_is_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // try to remove the remove_test directory from the mounted directory using REMOVE
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -101,7 +134,9 @@ Test(nfs_remove_test_suite, remove_is_directory, .description = "NFSPROC_REMOVE 
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    remove_file_fail(NULL, &fhandle, "remove_test", NFS__STAT__NFSERR_ISDIR);
+    remove_file_fail(rpc_connection_context, &fhandle, "remove_test", NFS__STAT__NFSERR_ISDIR);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 /*
@@ -137,6 +172,9 @@ Test(nfs_remove_test_suite, remove_no_write_permission_on_containing_directory, 
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("remove_no_write_permission_on_containing_directory: Failed to connect to the server\n");
+    }
 
     // fail since you don't have write permission on containing directory
     remove_file_fail(rpc_connection_context, &only_owner_write_fhandle, "remove_file1.txt", NFS__STAT__NFSERR_ACCES);
@@ -173,6 +211,9 @@ Test(nfs_remove_test_suite, remove_has_write_permission_on_containing_directory,
     Rpc__OpaqueAuth *owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("remove_has_write_permission_on_containing_directory: Failed to connect to the server\n");
+    }
 
     // succeed since you have write permission on containing directory
     Nfs__NfsStat *nfsstat = remove_file_success(rpc_connection_context, &only_owner_write_fhandle, "remove_file2.txt");

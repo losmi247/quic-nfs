@@ -50,26 +50,8 @@ Rpc__RpcMsg *execute_rpc_call_tcp(int rpc_client_socket_fd, Rpc__RpcMsg *call_rp
 * when it's done using the rpc_reply and it's subfields (e.g. procedure parameters).
 */
 Rpc__RpcMsg *invoke_rpc_remote_tcp(RpcConnectionContext *rpc_connection_context, uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any parameters) {
-    // create TCP socket and verify
-    int rpc_client_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if(rpc_client_socket_fd < 0) {
-        perror_msg("Socket creation failed");
-        return NULL;
-    }
-
     if(rpc_connection_context == NULL) {
         fprintf(stderr, "RpcConnectionContext is NULL\n");
-        return NULL;
-    }
-
-    struct sockaddr_in rpc_server_addr;
-    rpc_server_addr.sin_family = AF_INET;
-    rpc_server_addr.sin_addr.s_addr = inet_addr(rpc_connection_context->server_ipv4_addr); 
-    rpc_server_addr.sin_port = htons(rpc_connection_context->server_port);
-
-    // connect the rpc client socket to rpc server socket
-    if(connect(rpc_client_socket_fd, (struct sockaddr *) &rpc_server_addr, sizeof(rpc_server_addr)) < 0) {
-        perror_msg("Connection with the server failed");
         return NULL;
     }
 
@@ -90,8 +72,7 @@ Rpc__RpcMsg *invoke_rpc_remote_tcp(RpcConnectionContext *rpc_connection_context,
     call_rpc_msg.body_case = RPC__RPC_MSG__BODY_CBODY; // this body_case enum is not actually sent over the network
     call_rpc_msg.cbody = &call_body;
 
-    Rpc__RpcMsg *reply_rpc_msg = execute_rpc_call_tcp(rpc_client_socket_fd, &call_rpc_msg);
-    close(rpc_client_socket_fd);
+    Rpc__RpcMsg *reply_rpc_msg = execute_rpc_call_tcp(rpc_connection_context->tcp_rpc_client_socket_fd, &call_rpc_msg);
 
     return reply_rpc_msg;
 }

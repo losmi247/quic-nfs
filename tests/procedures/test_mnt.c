@@ -11,6 +11,9 @@ TestSuite(mount_test_suite);
 // MOUNTPROC_NULL (0)
 Test(mount_test_suite, null, .description = "MOUNTPROC_NULL") {
     RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("MOUNTPROC_NULL failed - failed to connect to the server\n");
+    }
     int status = mount_procedure_0_do_nothing(rpc_connection_context);
     free_rpc_connection_context(rpc_connection_context);
     if (status != 0) {

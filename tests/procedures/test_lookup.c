@@ -7,7 +7,12 @@
 TestSuite(nfs_lookup_test_suite);
 
 Test(nfs_lookup_test_suite, lookup_ok, .description = "NFSPROC_LOOKUP ok") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("lookup_ok: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle dir_fhandle = NFS__FHANDLE__INIT;
@@ -15,13 +20,20 @@ Test(nfs_lookup_test_suite, lookup_ok, .description = "NFSPROC_LOOKUP ok") {
     mount__fh_status__free_unpacked(fhstatus, NULL);
     dir_fhandle.nfs_filehandle = &dir_nfs_filehandle_copy;
 
-    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(NULL, &dir_fhandle, "test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(rpc_connection_context, &dir_fhandle, "test_file.txt", NFS__FTYPE__NFREG);
 
     nfs__dir_op_res__free_unpacked(diropres, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_lookup_test_suite, lookup_inside_non_existent_directory, .description = "NFSPROC_LOOKUP inside non-existent directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("lookup_inside_non_existent_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup a test_file.txt inside a different nonexistent directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -31,13 +43,20 @@ Test(nfs_lookup_test_suite, lookup_inside_non_existent_directory, .description =
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = &nfs_filehandle;
 
-    lookup_file_or_directory_fail(NULL, &fhandle, "test_file.txt", NFS__STAT__NFSERR_NOENT);
+    lookup_file_or_directory_fail(rpc_connection_context, &fhandle, "test_file.txt", NFS__STAT__NFSERR_NOENT);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_lookup_test_suite, lookup_no_such_file_or_directory, .description = "NFSPROC_LOOKUP no such file or directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("lookup_no_such_file_or_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup a nonexistent file inside this mounted directory
     Nfs__FHandle dir_fhandle = NFS__FHANDLE__INIT;
@@ -45,11 +64,18 @@ Test(nfs_lookup_test_suite, lookup_no_such_file_or_directory, .description = "NF
     mount__fh_status__free_unpacked(fhstatus, NULL);
     dir_fhandle.nfs_filehandle = &dir_nfs_filehandle_copy;
 
-    lookup_file_or_directory_fail(NULL, &dir_fhandle, NONEXISTENT_FILENAME, NFS__STAT__NFSERR_NOENT);
+    lookup_file_or_directory_fail(rpc_connection_context, &dir_fhandle, NONEXISTENT_FILENAME, NFS__STAT__NFSERR_NOENT);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_lookup_test_suite, lookup_a_non_directory, .description = "NFSPROC_LOOKUP lookup a non-directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("lookup_a_non_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -57,7 +83,7 @@ Test(nfs_lookup_test_suite, lookup_a_non_directory, .description = "NFSPROC_LOOK
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *dir_diropres = lookup_file_or_directory_success(rpc_connection_context, &fhandle, "test_file.txt", NFS__FTYPE__NFREG);
 
     // try to lookup a file name "a.txt" inside this test_file.txt file
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -65,7 +91,9 @@ Test(nfs_lookup_test_suite, lookup_a_non_directory, .description = "NFSPROC_LOOK
     nfs__dir_op_res__free_unpacked(dir_diropres, NULL);
     file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
 
-    lookup_file_or_directory_fail(NULL, &file_fhandle, "a.txt", NFS__STAT__NFSERR_NOTDIR);
+    lookup_file_or_directory_fail(rpc_connection_context, &file_fhandle, "a.txt", NFS__STAT__NFSERR_NOTDIR);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 /*
@@ -101,6 +129,9 @@ Test(nfs_lookup_test_suite, lookup_no_execute_permission_on_containing_directory
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("lookup_a_non_directory: Failed to connect to the server\n");
+    }
 
     // fail since you don't have execute permission on containing directory
     lookup_file_or_directory_fail(rpc_connection_context, &only_owner_execute_fhandle, "file.txt", NFS__STAT__NFSERR_ACCES);
@@ -137,6 +168,9 @@ Test(nfs_lookup_test_suite, lookup_has_execute_permission_on_containing_director
     Rpc__OpaqueAuth *owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("lookup_has_execute_permission_on_containing_directory: Failed to connect to the server\n");
+    }
 
     // succeed since you have read permission on containing directory
     Nfs__DirOpRes *diropres = lookup_file_or_directory_success(rpc_connection_context, &only_owner_execute_fhandle, "file.txt", NFS__FTYPE__NFREG);

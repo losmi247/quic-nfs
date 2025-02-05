@@ -6,6 +6,14 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+# create files and directories for procedure testing
+chmod +x ./tests/docker_scripts/setup_procedure_testing && \
+    ./tests/docker_scripts/setup_procedure_testing
+
+# create files and directories for testing of permission checking
+chmod +x ./tests/docker_scripts/setup_permission_testing && \
+    ./tests/docker_scripts/setup_permission_testing
+
 # build
 make clean-all
 make serialization-library

@@ -7,7 +7,12 @@
 TestSuite(nfs_setattr_test_suite);
 
 Test(nfs_setattr_test_suite, setattr_ok, .description = "NFSPROC_SETATTR ok") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("setattr_ok: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // now update attributes of /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -21,13 +26,20 @@ Test(nfs_setattr_test_suite, setattr_ok, .description = "NFSPROC_SETATTR ok") {
     mtime.seconds = 200;
     mtime.useconds = 0;
     
-    Nfs__AttrStat *attrstat = set_attributes_success(NULL, &fhandle, 0, 0, 0, -1, &atime, &mtime, NFS__FTYPE__NFDIR);
+    Nfs__AttrStat *attrstat = set_attributes_success(rpc_connection_context, &fhandle, 0, 0, 0, -1, &atime, &mtime, NFS__FTYPE__NFDIR);
 
     nfs__attr_stat__free_unpacked(attrstat, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_setattr_test_suite, setattr_no_such_file_or_directory, .description = "NFSPROC_SETATTR no such file or directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("setattr_no_such_file_or_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // pick a nonexistent inode number in this mounted directory and try to update its attributes
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -43,9 +55,11 @@ Test(nfs_setattr_test_suite, setattr_no_such_file_or_directory, .description = "
     mtime.seconds = 200;
     mtime.useconds = 0;
 
-    set_attributes_fail(NULL, &fhandle, 0, 0, 0, 10, &atime, &mtime, NFS__STAT__NFSERR_NOENT);
+    set_attributes_fail(rpc_connection_context, &fhandle, 0, 0, 0, 10, &atime, &mtime, NFS__STAT__NFSERR_NOENT);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 /*
@@ -72,6 +86,9 @@ Test(nfs_setattr_test_suite, setattr_change_ownership_without_root_privileges, .
     Rpc__OpaqueAuth *non_root_credential = create_auth_sys_opaque_auth("test", 1000, 1000, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_root_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("setattr_no_such_file_or_directory: Failed to connect to the server\n");
+    }
 
     set_attributes_fail(rpc_connection_context, &fhandle, 0, 1000, 1000, -1, &atime, &mtime, NFS__STAT__NFSERR_ACCES);
 
@@ -113,6 +130,9 @@ Test(nfs_setattr_test_suite, setattr_no_write_permission, .description = "NFSPRO
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("setattr_no_write_permission: Failed to connect to the server\n");
+    }
 
     // fail since you don't have write permission
     set_attributes_fail(rpc_connection_context, &setattr_only_owner_write_fhandle, -1, -1, -1, -1, &atime, &mtime, NFS__STAT__NFSERR_ACCES);
@@ -155,6 +175,9 @@ Test(nfs_setattr_test_suite, setattr_has_write_permission, .description = "NFSPR
     Rpc__OpaqueAuth *owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("setattr_has_write_permission: Failed to connect to the server\n");
+    }
 
     // succeed because you are the owner and have write permission
     Nfs__AttrStat *attrstat = set_attributes_success(rpc_connection_context, &setattr_only_owner_write_fhandle, -1, -1, -1, -1, &atime, &mtime, NFS__FTYPE__NFREG);

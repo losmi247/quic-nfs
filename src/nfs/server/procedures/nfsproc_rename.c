@@ -1,5 +1,7 @@
 #include "nfsproc.h"
 
+#include <sys/stat.h>
+
 /*
 * Runs the NFSPROC_RENAME procedure (11).
 *
@@ -283,8 +285,22 @@ Rpc__AcceptedReply *serve_nfs_procedure_11_rename_file(Rpc__OpaqueAuth *credenti
     }
     // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
+
+
     // rename the file/directory
     char *new_file_absolute_path = get_file_absolute_path(to_directory_absolute_path, to_file_name->filename);
+
+struct stat stat_buf1, stat_buf2;
+int ercode1 = stat(old_file_absolute_path, &stat_buf1);
+if(ercode1 != 0) {
+    printf("error stat %s\n", old_file_absolute_path);
+}
+int ercode2 = stat(new_file_absolute_path, &stat_buf2);
+if(ercode2 != 0) {
+    printf("error stat %s\n", new_file_absolute_path);
+}
+fprintf(stderr, "Device IDs: %ld -> %ld, %s to %s\n", (long)stat_buf1.st_dev, (long)stat_buf2.st_dev, old_file_absolute_path, new_file_absolute_path);
+
     error_code = rename(old_file_absolute_path, new_file_absolute_path);
     if(error_code < 0) {
         if(errno == EDQUOT || errno == EINVAL || errno == ENAMETOOLONG || errno == ENOENT || errno == ENOSPC || errno == ENOTEMPTY || errno == EROFS) {
@@ -336,7 +352,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_11_rename_file(Rpc__OpaqueAuth *credenti
             return wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
         }
         else {
-            perror_msg("serve_nfs_procedure_11_rename_file: failed to 'rename' the file at absolute path '%s' to absolute path\n", old_file_absolute_path, new_file_absolute_path);
+            perror_msg("serve_nfs_procedure_11_rename_file: failed to 'rename' the file at absolute path '%s' to absolute path '%s'\n", old_file_absolute_path, new_file_absolute_path);
 
             free(old_file_absolute_path);
             free(new_file_absolute_path);

@@ -134,3 +134,6 @@ Tests are written using [**Criterion**](https://github.com/Snaipe/Criterion) tes
 To run the tests:
 - build Docker images for the server and the tests (client) over TCP/QUIC using ```./tests/build_images_tcp``` and ```./tests/build_images_quic``` respectively
 - run the tests for NFS over TCP/QUIC using ```./tests/run_tests_tcp``` or ```./tests/run_tests_quic``` respectively
+# Benchmarks
+
+[**FIO**](https://github.com/axboe/fio) was used for benchmarking the performances of different versions of NFSv2. The *fio* folder contains *.fio* benchmark files and their respective logs.

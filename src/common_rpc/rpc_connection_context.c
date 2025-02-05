@@ -1,11 +1,59 @@
 #include "rpc_connection_context.h"
 
+#include <unistd.h>
+#include <arpa/inet.h>
+
+/*
+* Given a RpcConnectionContext without an initialized TCP client socket,
+* creates a TCP client socket and connects it to the server given by its IPv4
+* address and port in the RpcConnectionContext, and saves the client TCP socket
+* in the given RpcConnectionContext.
+*
+* The user of this function takes the responsibility to close the client TCP
+* socket opened here.
+*
+* Returns 0 on success and > 0 on failure. 
+*/
+int connect_to_tcp_server(RpcConnectionContext *rpc_connection_context) {
+    if(rpc_connection_context == NULL) {
+        return 1;
+    }
+
+    if(rpc_connection_context->server_ipv4_addr == NULL) {
+        return 2;
+    }
+
+    rpc_connection_context->tcp_rpc_client_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(rpc_connection_context->tcp_rpc_client_socket_fd < 0) {
+        perror_msg("Socket creation failed");
+        return 3;
+    }
+
+    struct sockaddr_in rpc_server_addr;
+    rpc_server_addr.sin_family = AF_INET;
+    rpc_server_addr.sin_addr.s_addr = inet_addr(rpc_connection_context->server_ipv4_addr); 
+    rpc_server_addr.sin_port = htons(rpc_connection_context->server_port);
+
+    // connect the rpc client socket to rpc server socket
+    if(connect(rpc_connection_context->tcp_rpc_client_socket_fd, (struct sockaddr *) &rpc_server_addr, sizeof(rpc_server_addr)) < 0) {
+        perror_msg("Connection to the server failed");
+
+        close(rpc_connection_context->tcp_rpc_client_socket_fd);
+
+        return 4;
+    }
+
+    return 0;
+}
+
 /*
 * Creates a RpcConnectionContext with the given server IP address and server port,
 * and the given credential and verifier.
 *
 * The user of this function takes the responsiblity to free the allocated server_ipv4_addr string
 * and the RpcConnectionContext itself.
+*
+* Returns NULL on failure.
 */
 RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, TransportProtocol transport_protocol) {
     RpcConnectionContext *rpc_connection_context = malloc(sizeof(RpcConnectionContext));
@@ -17,6 +65,25 @@ RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_addres, ui
     rpc_connection_context->verifier = verifier;
 
     rpc_connection_context->transport_protocol = transport_protocol;
+    switch(transport_protocol) {
+        case TRANSPORT_PROTOCOL_TCP:
+            int error_code = connect_to_tcp_server(rpc_connection_context);
+            if(error_code > 0) {
+                printf("Failed to connect to the server with error code %d\n", error_code);
+
+                free(rpc_connection_context->server_ipv4_addr);
+                free(rpc_connection_context);
+
+                return NULL;
+            }
+            break;
+        case TRANSPORT_PROTOCOL_QUIC:
+            // establish a QUIC connection
+        default:
+            free(rpc_connection_context->server_ipv4_addr);
+            free(rpc_connection_context);
+            return NULL;
+    }
 
     return rpc_connection_context;
 }
@@ -27,6 +94,8 @@ RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_addres, ui
 *
 * The user of this function takes the responsiblity to deallocate the received RpcConnectionContext using
 * free_rpc_connection_context() function.
+*
+* Returns NULL on failure.
 */
 RpcConnectionContext *create_auth_none_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, TransportProtocol transport_protocol) {
     Rpc__OpaqueAuth *credential = create_auth_none_opaque_auth();
@@ -99,6 +168,13 @@ void free_rpc_connection_context(RpcConnectionContext *rpc_connection_context) {
     
     free_opaque_auth(rpc_connection_context->credential);
     free_opaque_auth(rpc_connection_context->verifier);
+
+    if(rpc_connection_context->transport_protocol == TRANSPORT_PROTOCOL_TCP) {
+        // close the TCP client socket if it was correctly opened
+        if(rpc_connection_context->tcp_rpc_client_socket_fd >= 0) {
+            close(rpc_connection_context->tcp_rpc_client_socket_fd);
+        }
+    }
 
     free(rpc_connection_context);
 }

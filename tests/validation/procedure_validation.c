@@ -67,6 +67,9 @@ Mount__FhStatus *mount_directory_success(RpcConnectionContext *rpc_connection_co
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("mount_directory_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Mount__FhStatus *fhstatus = mount_directory(rpc_connection_context, directory_absolute_path);
@@ -100,6 +103,9 @@ void mount_directory_fail(RpcConnectionContext *rpc_connection_context, char *di
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("mount_directory_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Mount__FhStatus *fhstatus = mount_directory(rpc_connection_context, directory_absolute_path);
@@ -163,6 +169,9 @@ Nfs__AttrStat *get_attributes_success(RpcConnectionContext *rpc_connection_conte
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("get_attributes_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = get_attributes(rpc_connection_context, file_fhandle);
@@ -197,6 +206,9 @@ void get_attributes_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHan
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("get_attributes_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = get_attributes(rpc_connection_context, file_fhandle);
@@ -274,6 +286,9 @@ Nfs__AttrStat *set_attributes_success(RpcConnectionContext *rpc_connection_conte
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("set_attributes_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = set_attributes(rpc_connection_context, file_fhandle, &sattr);
@@ -319,6 +334,9 @@ void set_attributes_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHan
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("set_attributes_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = set_attributes(rpc_connection_context, file_fhandle, &sattr);
@@ -391,6 +409,9 @@ Nfs__DirOpRes *lookup_file_or_directory_success(RpcConnectionContext *rpc_connec
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("lookup_file_or_directory_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = lookup_file_or_directory(rpc_connection_context, directory_fhandle, filename);
@@ -432,6 +453,9 @@ void lookup_file_or_directory_fail(RpcConnectionContext *rpc_connection_context,
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("lookup_file_or_directory_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = lookup_file_or_directory(rpc_connection_context, directory_fhandle, filename);
@@ -498,6 +522,9 @@ Nfs__ReadLinkRes *read_from_symbolic_link_success(RpcConnectionContext *rpc_conn
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("read_from_symbolic_link_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link(rpc_connection_context, file_fhandle);
@@ -536,6 +563,9 @@ void read_from_symbolic_link_fail(RpcConnectionContext *rpc_connection_context, 
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("read_from_symbolic_link_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link(rpc_connection_context, file_fhandle);
@@ -611,6 +641,9 @@ Nfs__ReadRes *read_from_file_success(RpcConnectionContext *rpc_connection_contex
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("read_from_file_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__ReadRes *readres = read_from_file(rpc_connection_context, file_fhandle, offset, byte_count);
@@ -661,6 +694,9 @@ void read_from_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHan
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("read_from_file_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__ReadRes *readres = read_from_file(rpc_connection_context, file_fhandle, offset, byte_count);
@@ -736,6 +772,9 @@ Nfs__AttrStat *write_to_file_success(RpcConnectionContext *rpc_connection_contex
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("write_to_file_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = write_to_file(rpc_connection_context, file_fhandle, offset, byte_count, source_buffer);
@@ -772,6 +811,9 @@ void write_to_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHand
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("write_to_file_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__AttrStat *attrstat = write_to_file(rpc_connection_context, file_fhandle, offset, byte_count, source_buffer);
@@ -857,6 +899,9 @@ Nfs__DirOpRes *create_file_success(RpcConnectionContext *rpc_connection_context,
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("create_file_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = create_file(rpc_connection_context, directory_fhandle, filename, &sattr);
@@ -907,6 +952,9 @@ void create_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("create_file_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = create_file(rpc_connection_context, directory_fhandle, filename, &sattr);
@@ -978,6 +1026,9 @@ Nfs__NfsStat *remove_file_success(RpcConnectionContext *rpc_connection_context, 
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("remove_file_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = remove_file(rpc_connection_context, directory_fhandle, filename);
@@ -1006,6 +1057,9 @@ void remove_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("remove_file_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = remove_file(rpc_connection_context, directory_fhandle, filename);
@@ -1087,6 +1141,9 @@ Nfs__NfsStat *rename_file_success(RpcConnectionContext *rpc_connection_context, 
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("rename_file_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = rename_file(rpc_connection_context, from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
@@ -1116,6 +1173,9 @@ void rename_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("rename_file_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = rename_file(rpc_connection_context, from_directory_fhandle, from_filename, to_directory_fhandle, to_filename);
@@ -1188,6 +1248,9 @@ Nfs__NfsStat *create_link_to_file_success(RpcConnectionContext *rpc_connection_c
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("create_link_to_file_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = create_link_to_file(rpc_connection_context, target_file, directory_fhandle, filename);
@@ -1216,6 +1279,9 @@ void create_link_to_file_fail(RpcConnectionContext *rpc_connection_context, Nfs_
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("create_link_to_file_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = create_link_to_file(rpc_connection_context, target_file, directory_fhandle, filename);
@@ -1298,6 +1364,9 @@ Nfs__NfsStat *create_symbolic_link_success(RpcConnectionContext *rpc_connection_
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("create_symbolic_link_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = create_symbolic_link(rpc_connection_context, directory_fhandle, filename, target);
@@ -1326,6 +1395,9 @@ void create_symbolic_link_fail(RpcConnectionContext *rpc_connection_context, Nfs
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("create_symbolic_link_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = create_symbolic_link(rpc_connection_context, directory_fhandle, filename, target);
@@ -1408,6 +1480,9 @@ Nfs__DirOpRes *create_directory_success(RpcConnectionContext *rpc_connection_con
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("create_directory_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = create_directory(rpc_connection_context, directory_fhandle, filename, &sattr);
@@ -1458,6 +1533,9 @@ void create_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FH
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("create_directory_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__DirOpRes *diropres = create_directory(rpc_connection_context, directory_fhandle, filename, &sattr);
@@ -1529,6 +1607,9 @@ Nfs__NfsStat *remove_directory_success(RpcConnectionContext *rpc_connection_cont
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("remove_directory_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = remove_directory(rpc_connection_context, directory_fhandle, filename);
@@ -1557,6 +1638,9 @@ void remove_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs__FH
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("remove_directory_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__NfsStat *nfsstat = remove_directory(rpc_connection_context, directory_fhandle, filename);
@@ -1628,6 +1712,9 @@ Nfs__ReadDirRes *read_from_directory_success(RpcConnectionContext *rpc_connectio
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("read_from_directory_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__ReadDirRes *readdirres = read_from_directory(rpc_connection_context, directory_fhandle, cookie, byte_count);
@@ -1702,6 +1789,9 @@ void read_from_directory_fail(RpcConnectionContext *rpc_connection_context, Nfs_
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("read_from_directory_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__ReadDirRes *readdirres = read_from_directory(rpc_connection_context, directory_fhandle, cookie, byte_count);
@@ -1765,6 +1855,9 @@ Nfs__StatFsRes *get_filesystem_attributes_success(RpcConnectionContext *rpc_conn
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("get_filesystem_attributes_success: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__StatFsRes *statfsres = get_filesystem_attributes(rpc_connection_context, fhandle);
@@ -1798,6 +1891,9 @@ void get_filesystem_attributes_fail(RpcConnectionContext *rpc_connection_context
     int created_rpc_connection_context = 0;
     if(rpc_connection_context == NULL) {
         rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+        if(rpc_connection_context == NULL) {
+            cr_fatal("get_filesystem_attributes_fail: Failed to connect to the server\n");
+        }
         created_rpc_connection_context = 1;
     }
     Nfs__StatFsRes *statfsres = get_filesystem_attributes(rpc_connection_context, fhandle);
