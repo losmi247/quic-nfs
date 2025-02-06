@@ -16,8 +16,6 @@
 
 #include "tquic.h"
 
-#include "src/transport/transport_common.h"
-
 #define READ_BUF_SIZE 10000
 
 /*

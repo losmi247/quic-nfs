@@ -1,5 +1,7 @@
 #include "quic_record_marking.h"
 
+#include "src/transport/transport_common.h"
+
 /*
 * Sends the buffer of the given number of bytes to the stream with the given ID in the
 * given QUIC connection.

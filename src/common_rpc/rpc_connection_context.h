@@ -29,15 +29,14 @@ typedef struct RpcConnectionContext {
     Rpc__OpaqueAuth *verifier;
 
     TransportProtocol transport_protocol;
-
-    int tcp_rpc_client_socket_fd;
+    TransportConnection *transport_connection;
 } RpcConnectionContext;
 
-RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, TransportProtocol transport_protocol);
+RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_address, uint16_t server_port, Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, TransportProtocol transport_protocol);
 
-RpcConnectionContext *create_auth_none_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, TransportProtocol transport_protocol);
+RpcConnectionContext *create_auth_none_rpc_connection_context(char *server_ipv4_address, uint16_t server_port, TransportProtocol transport_protocol);
 
-RpcConnectionContext *create_auth_sys_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, TransportProtocol transport_protocol);
+RpcConnectionContext *create_auth_sys_rpc_connection_context(char *server_ipv4_address, uint16_t server_port, TransportProtocol transport_protocol);
 
 void free_rpc_connection_context(RpcConnectionContext *rpc_connection_context);
 

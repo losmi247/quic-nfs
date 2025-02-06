@@ -5,13 +5,6 @@
 
 #include "src/transport/transport_common.h"
 
-typedef union {
-    // TCP
-    int *rpc_client_socket_fd;
-    // QUIC
-
-} TransportConnection;
-
 typedef struct NfsServerThreadsList {
     pthread_t server_thread;
 

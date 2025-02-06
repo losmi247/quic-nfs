@@ -2,14 +2,28 @@
 
 /*
 * Sends an RPC call for the given program number, program version, procedure number, and parameters,
-* to the given opened TCP socket.
+* to the opened TCP socket inside the given RpcConnectionContext.
 *
 * Returns the RPC reply received from the server on success, and NULL on failure.
 *
 * The user of this function takes on the responsibility to call 'rpc__rpc_msg__free_unpacked(rpc_reply, NULL)' 
 * when it's done using the rpc_reply and it's subfields (e.g. procedure parameters).
 */
-Rpc__RpcMsg *execute_rpc_call_tcp(int rpc_client_socket_fd, Rpc__RpcMsg *call_rpc_msg) {
+Rpc__RpcMsg *execute_rpc_call_tcp(RpcConnectionContext *rpc_connection_context, Rpc__RpcMsg *call_rpc_msg) {
+    if(rpc_connection_context == NULL) {
+        return NULL;
+    }
+
+    if(rpc_connection_context->transport_connection == NULL) {
+        return NULL;
+    }
+
+    if(rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd == NULL) {
+        return NULL;
+    }
+
+    int rpc_client_socket_fd = *(rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd);
+
     if(call_rpc_msg == NULL) {
         return NULL;
     }
@@ -72,7 +86,7 @@ Rpc__RpcMsg *invoke_rpc_remote_tcp(RpcConnectionContext *rpc_connection_context,
     call_rpc_msg.body_case = RPC__RPC_MSG__BODY_CBODY; // this body_case enum is not actually sent over the network
     call_rpc_msg.cbody = &call_body;
 
-    Rpc__RpcMsg *reply_rpc_msg = execute_rpc_call_tcp(rpc_connection_context->tcp_rpc_client_socket_fd, &call_rpc_msg);
+    Rpc__RpcMsg *reply_rpc_msg = execute_rpc_call_tcp(rpc_connection_context, &call_rpc_msg);
 
     return reply_rpc_msg;
 }

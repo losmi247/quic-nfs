@@ -289,18 +289,6 @@ Rpc__AcceptedReply *serve_nfs_procedure_11_rename_file(Rpc__OpaqueAuth *credenti
 
     // rename the file/directory
     char *new_file_absolute_path = get_file_absolute_path(to_directory_absolute_path, to_file_name->filename);
-
-struct stat stat_buf1, stat_buf2;
-int ercode1 = stat(old_file_absolute_path, &stat_buf1);
-if(ercode1 != 0) {
-    printf("error stat %s\n", old_file_absolute_path);
-}
-int ercode2 = stat(new_file_absolute_path, &stat_buf2);
-if(ercode2 != 0) {
-    printf("error stat %s\n", new_file_absolute_path);
-}
-fprintf(stderr, "Device IDs: %ld -> %ld, %s to %s\n", (long)stat_buf1.st_dev, (long)stat_buf2.st_dev, old_file_absolute_path, new_file_absolute_path);
-
     error_code = rename(old_file_absolute_path, new_file_absolute_path);
     if(error_code < 0) {
         if(errno == EDQUOT || errno == EINVAL || errno == ENAMETOOLONG || errno == ENOENT || errno == ENOSPC || errno == ENOTEMPTY || errno == EROFS) {

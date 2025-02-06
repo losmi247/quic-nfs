@@ -18,7 +18,7 @@ if [ "$1" = "--proto=tcp" ]; then
     ./build/test_tcp
 elif [ "$1" = "--proto=quic" ]; then
     echo "Using QUIC protocol."
-    make test-quic
+    make test-quic-debug
     chmod +x ./build/test_quic
     ./build/test_quic
 else

@@ -139,6 +139,8 @@ Test(nfs_symlink_test_suite, symlink_file_name_too_long, .description = "NFSPROC
     create_symbolic_link_fail(rpc_connection_context, &symlink_test_dir_fhandle, filename, &path, NFS__STAT__NFSERR_NAMETOOLONG);
 
     free_rpc_connection_context(rpc_connection_context);
+
+    free(filename);
 }
 
 Test(nfs_symlink_test_suite, create_symbolic_link_that_is_an_already_existing_file, .description = "NFSPROC_SYMLINK create symbolic link that is an already existing file") {

@@ -41,6 +41,7 @@ Test(nfs_remove_test_suite, remove_ok, .description = "NFSPROC_REMOVE ok") {
     char *expected_filenames[2] = {"..", "."};
 
     Nfs__ReadDirRes *readdirres = read_from_directory_success(rpc_connection_context, &remove_test_dir_fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
+    nfs__read_dir_res__free_unpacked(readdirres, NULL);
 
     // try to read from the deleted file to ensure its inode mapping was deleted from the inode cache
     read_from_file_fail(rpc_connection_context, remove_test_file_diropres->diropok->file, 0, 10, NFS__STAT__NFSERR_NOENT);

@@ -41,6 +41,7 @@ Test(nfs_rmdir_test_suite, rmdir_ok, .description = "NFSPROC_RMDIR ok") {
     char *expected_filenames[2] = {"..", "."};
 
     Nfs__ReadDirRes *readdirres = read_from_directory_success(rpc_connection_context, &rmdir_test_fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
+    nfs__read_dir_res__free_unpacked(readdirres, NULL);
 
     // try to read from the deleted directory to ensure its inode mapping was deleted from the inode cache
     read_from_directory_fail(rpc_connection_context, rmdir_test_dir_diropres->diropok->file, 0, 30, NFS__STAT__NFSERR_NOENT);

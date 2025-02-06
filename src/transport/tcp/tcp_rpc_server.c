@@ -395,7 +395,7 @@ int run_server_tcp(uint16_t port_number) {
         }
 
         TransportConnection transport_connection;
-        transport_connection.rpc_client_socket_fd = rpc_client_socket_fd;
+        transport_connection.tcp_rpc_client_socket_fd = rpc_client_socket_fd;
         int error_code = add_server_thread(server_thread, TRANSPORT_PROTOCOL_TCP, transport_connection, &nfs_server_threads_list);
         if(error_code > 0) {
             fprintf(stderr, "run_server_tcp: server failed to add a new entry in the NFS server threads list\n");
