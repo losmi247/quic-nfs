@@ -26,6 +26,7 @@
 
 #include "src/nfs/nfs_common.h"
 
+#include "nfs_server_threads.h"
 #include "mount_list.h"
 #include "inode_cache.h"
 #include "directory_reading.h"
@@ -49,6 +50,7 @@ extern Rpc__AcceptedReply *call_nfs(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth
 
 extern TransportProtocol transport_protocol;
 
+extern NfsServerThreadsList *nfs_server_threads_list;
 extern Mount__MountList *mount_list;
 extern InodeCache inode_cache;
 

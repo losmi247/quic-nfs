@@ -10,7 +10,12 @@
 TestSuite(nfs_symlink_test_suite);
 
 Test(nfs_symlink_test_suite, symlink_ok, .description = "NFSPROC_SYMLINK ok") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("symlink_ok: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup the symlink_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -18,7 +23,7 @@ Test(nfs_symlink_test_suite, symlink_ok, .description = "NFSPROC_SYMLINK ok") {
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *symlink_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "symlink_test", NFS__FTYPE__NFDIR);
+    Nfs__DirOpRes *symlink_test_dir_diropres = lookup_file_or_directory_success(rpc_connection_context, &fhandle, "symlink_test", NFS__FTYPE__NFDIR);
 
     // create a symbolic link 'symlink' to /nfs_share/symlink_test/existing_file, inside this /nfs_share/symlink_test directory
     Nfs__FHandle symlink_test_dir_fhandle = NFS__FHANDLE__INIT;
@@ -28,11 +33,11 @@ Test(nfs_symlink_test_suite, symlink_ok, .description = "NFSPROC_SYMLINK ok") {
 
     Nfs__Path target = NFS__PATH__INIT;
     target.path = "/nfs_share/symlink_test/existing_file";
-    Nfs__NfsStat *nfsstat = create_symbolic_link_success(NULL, &symlink_test_dir_fhandle, "symlink", &target);
+    Nfs__NfsStat *nfsstat = create_symbolic_link_success(rpc_connection_context, &symlink_test_dir_fhandle, "symlink", &target);
     nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 
     // lookup the created 'symlink' file to verify its file type is NFLNK
-    Nfs__DirOpRes *symlink_diropres = lookup_file_or_directory_success(NULL, &symlink_test_dir_fhandle, "symlink", NFS__FTYPE__NFLNK);
+    Nfs__DirOpRes *symlink_diropres = lookup_file_or_directory_success(rpc_connection_context, &symlink_test_dir_fhandle, "symlink", NFS__FTYPE__NFLNK);
 
     // read from the created symbolic link to verify the correct path was written into it
     Nfs__FHandle symlink_fhandle = NFS__FHANDLE__INIT;
@@ -40,12 +45,19 @@ Test(nfs_symlink_test_suite, symlink_ok, .description = "NFSPROC_SYMLINK ok") {
     nfs__dir_op_res__free_unpacked(symlink_diropres, NULL);
     symlink_fhandle.nfs_filehandle = &symlink_nfs_filehandle_copy;
 
-    Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link_success(NULL, &symlink_fhandle, target.path);
+    Nfs__ReadLinkRes *readlinkres = read_from_symbolic_link_success(rpc_connection_context, &symlink_fhandle, target.path);
     nfs__read_link_res__free_unpacked(readlinkres, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_symlink_test_suite, symlink_no_such_directory, .description = "NFSPROC_SYMLINK no such directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("symlink_no_such_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // try to create a symbolic link 'symlink' (to some target) inside a nonexistent directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -58,13 +70,20 @@ Test(nfs_symlink_test_suite, symlink_no_such_directory, .description = "NFSPROC_
     Nfs__Path path = NFS__PATH__INIT;
     path.path = "/nfs_share/symlink_test/existing_file";
 
-    create_symbolic_link_fail(NULL, &fhandle, "symlink", &path, NFS__STAT__NFSERR_NOENT);
+    create_symbolic_link_fail(rpc_connection_context, &fhandle, "symlink", &path, NFS__STAT__NFSERR_NOENT);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_symlink_test_suite, symlink_create_a_symbolic_link_in_a_non_directory, .description = "NFSPROC_SYMLINK create symbolic link in a non-directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("symlink_create_a_symbolic_link_in_a_non_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -72,7 +91,7 @@ Test(nfs_symlink_test_suite, symlink_create_a_symbolic_link_in_a_non_directory, 
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *dir_diropres = lookup_file_or_directory_success(rpc_connection_context, &fhandle, "test_file.txt", NFS__FTYPE__NFREG);
 
     // try to create a symbolic link "symlink" (to some target) inside this test_file.txt file
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -83,11 +102,18 @@ Test(nfs_symlink_test_suite, symlink_create_a_symbolic_link_in_a_non_directory, 
     Nfs__Path path = NFS__PATH__INIT;
     path.path = "/nfs_share/symlink_test/existing_file";
 
-    create_symbolic_link_fail(NULL, &file_fhandle, "symlink", &path, NFS__STAT__NFSERR_NOTDIR);
+    create_symbolic_link_fail(rpc_connection_context, &file_fhandle, "symlink", &path, NFS__STAT__NFSERR_NOTDIR);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_symlink_test_suite, symlink_file_name_too_long, .description = "NFSPROC_SYMLINK file name too long") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("symlink_file_name_too_long: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup the symlink_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -95,7 +121,7 @@ Test(nfs_symlink_test_suite, symlink_file_name_too_long, .description = "NFSPROC
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *symlink_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "symlink_test", NFS__FTYPE__NFDIR);
+    Nfs__DirOpRes *symlink_test_dir_diropres = lookup_file_or_directory_success(rpc_connection_context, &fhandle, "symlink_test", NFS__FTYPE__NFDIR);
 
     // try to create a symbolic link (to some target) with a too long filename inside this /nfs_share/symlink_test directory
     Nfs__FHandle symlink_test_dir_fhandle = NFS__FHANDLE__INIT;
@@ -110,11 +136,20 @@ Test(nfs_symlink_test_suite, symlink_file_name_too_long, .description = "NFSPROC
     Nfs__Path path = NFS__PATH__INIT;
     path.path = "/nfs_share/symlink_test/existing_file";
 
-    create_symbolic_link_fail(NULL, &symlink_test_dir_fhandle, filename, &path, NFS__STAT__NFSERR_NAMETOOLONG);
+    create_symbolic_link_fail(rpc_connection_context, &symlink_test_dir_fhandle, filename, &path, NFS__STAT__NFSERR_NAMETOOLONG);
+
+    free_rpc_connection_context(rpc_connection_context);
+
+    free(filename);
 }
 
 Test(nfs_symlink_test_suite, create_symbolic_link_that_is_an_already_existing_file, .description = "NFSPROC_SYMLINK create symbolic link that is an already existing file") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("create_symbolic_link_that_is_an_already_existing_file: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup the symlink_test directory inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -122,7 +157,7 @@ Test(nfs_symlink_test_suite, create_symbolic_link_that_is_an_already_existing_fi
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *symlink_test_dir_diropres = lookup_file_or_directory_success(NULL, &fhandle, "symlink_test", NFS__FTYPE__NFDIR);
+    Nfs__DirOpRes *symlink_test_dir_diropres = lookup_file_or_directory_success(rpc_connection_context, &fhandle, "symlink_test", NFS__FTYPE__NFDIR);
 
     // try to create a symbolic link (to some target) at /nfs_share/symlink_test/existing_file that already exists
     Nfs__FHandle symlink_test_dir_fhandle = NFS__FHANDLE__INIT;
@@ -133,7 +168,9 @@ Test(nfs_symlink_test_suite, create_symbolic_link_that_is_an_already_existing_fi
     Nfs__Path path = NFS__PATH__INIT;
     path.path = "/nfs_share/symlink_test/existing_file";
     
-    create_symbolic_link_fail(NULL, &symlink_test_dir_fhandle, "existing_file", &path, NFS__STAT__NFSERR_EXIST);
+    create_symbolic_link_fail(rpc_connection_context, &symlink_test_dir_fhandle, "existing_file", &path, NFS__STAT__NFSERR_EXIST);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 /*
@@ -169,6 +206,9 @@ Test(nfs_symlink_test_suite, symlink_no_write_permission_on_containing_directory
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("symlink_no_write_permission_on_containing_directory: Failed to connect to the server\n");
+    }
 
     Nfs__Path path = NFS__PATH__INIT;
     path.path = "path";
@@ -208,6 +248,9 @@ Test(nfs_symlink_test_suite, symlink_has_write_permission_on_containing_director
     Rpc__OpaqueAuth *owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("symlink_has_write_permission_on_containing_directory: Failed to connect to the server\n");
+    }
 
     Nfs__Path path = NFS__PATH__INIT;
     path.path = "path";

@@ -1,5 +1,7 @@
 #include "nfsproc.h"
 
+#include <sys/stat.h>
+
 /*
 * Runs the NFSPROC_RENAME procedure (11).
 *
@@ -283,6 +285,8 @@ Rpc__AcceptedReply *serve_nfs_procedure_11_rename_file(Rpc__OpaqueAuth *credenti
     }
     // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
 
+
+
     // rename the file/directory
     char *new_file_absolute_path = get_file_absolute_path(to_directory_absolute_path, to_file_name->filename);
     error_code = rename(old_file_absolute_path, new_file_absolute_path);
@@ -336,7 +340,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_11_rename_file(Rpc__OpaqueAuth *credenti
             return wrap_procedure_results_in_successful_accepted_reply(nfsstat_size, nfsstat_buffer, "nfs/NfsStat");
         }
         else {
-            perror_msg("serve_nfs_procedure_11_rename_file: failed to 'rename' the file at absolute path '%s' to absolute path\n", old_file_absolute_path, new_file_absolute_path);
+            perror_msg("serve_nfs_procedure_11_rename_file: failed to 'rename' the file at absolute path '%s' to absolute path '%s'\n", old_file_absolute_path, new_file_absolute_path);
 
             free(old_file_absolute_path);
             free(new_file_absolute_path);

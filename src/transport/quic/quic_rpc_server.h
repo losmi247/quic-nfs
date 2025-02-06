@@ -28,7 +28,7 @@
 
 #include "src/transport/quic/quic_record_marking.h"
 
-#define MAX_DATAGRAM_SIZE 1200
+#define MAX_DATAGRAM_SIZE 10000
 
 struct QuicServer {
     struct quic_endpoint_t *quic_endpoint;

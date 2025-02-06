@@ -48,6 +48,7 @@ CLIENTS_SRCS = ./src/nfs/clients/mount_client.c ./src/nfs/clients/nfs_client.c
 # files used by Nfs+Mount server
 COMMON_MOUNT_AND_NFS_SERVER_SRCS = ./src/nfs/server/mount.c ./src/nfs/server/procedures/mntproc_*.c \
 	./src/nfs/server/nfs.c ./src/nfs/server/procedures/nfsproc_*.c \
+	./src/nfs/server/nfs_server_threads.c \
 	./src/nfs/server/mount_list.c \
 	./src/nfs/server/inode_cache.c \
 	./src/nfs/server/file_management.c \
@@ -107,7 +108,7 @@ repl: ./src/repl/repl.c create-build-dir ${REPL_SRCS} $(TQUIC_LIB_DIR)/libtquic.
 	gcc $< ${REPL_SRCS} ${CFLAGS} -o ./build/repl ${LIBS}
 
 fuse-fs: ./src/fuse/nfs_fuse.c create-build-dir ${FUSE_FS_SRCS} $(TQUIC_LIB_DIR)/libtquic.a
-	gcc $< ${FUSE_FS_SRCS} ${CFLAGS} -D_FILE_OFFSET_BITS=64 -o ./build/fuse_fs ${LIBS} -l fuse3
+	gcc $< ${FUSE_FS_SRCS} ${CFLAGS} -o ./build/fuse_fs ${LIBS} -l fuse3
 
 # debugging versions of all targets
 mount-and-nfs-server-debug: ./src/nfs/server/server.c create-build-dir ${MOUNT_AND_NFS_SERVER_SRCS} $(TQUIC_LIB_DIR)/libtquic.a

@@ -16,9 +16,7 @@
 
 #include "tquic.h"
 
-#include "src/transport/transport_common.h"
-
-#define READ_BUF_SIZE 4096
+#define READ_BUF_SIZE 10000
 
 /*
 Sending Record Marking records

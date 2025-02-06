@@ -17,8 +17,9 @@
 /*
 * 'Context' of a RPC connection specifies the IPv4 address and port of
 * the server, the credential and verifier that should be sent as
-* part of CallBody of any RPC call sent to this server, and
-* the identifier of the transport protocol to be used for sending RPCs.
+* part of CallBody of any RPC call sent to this server,
+* the identifier of the transport protocol to be used for sending RPCs,
+* and the TCP client socket that is connected to the NFS server.
 */
 typedef struct RpcConnectionContext {
     char *server_ipv4_addr;
@@ -28,13 +29,14 @@ typedef struct RpcConnectionContext {
     Rpc__OpaqueAuth *verifier;
 
     TransportProtocol transport_protocol;
+    TransportConnection *transport_connection;
 } RpcConnectionContext;
 
-RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, TransportProtocol transport_protocol);
+RpcConnectionContext *create_rpc_connection_context(char *server_ipv4_address, uint16_t server_port, Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, TransportProtocol transport_protocol);
 
-RpcConnectionContext *create_auth_none_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, TransportProtocol transport_protocol);
+RpcConnectionContext *create_auth_none_rpc_connection_context(char *server_ipv4_address, uint16_t server_port, TransportProtocol transport_protocol);
 
-RpcConnectionContext *create_auth_sys_rpc_connection_context(char *server_ipv4_addres, uint16_t server_port, TransportProtocol transport_protocol);
+RpcConnectionContext *create_auth_sys_rpc_connection_context(char *server_ipv4_address, uint16_t server_port, TransportProtocol transport_protocol);
 
 void free_rpc_connection_context(RpcConnectionContext *rpc_connection_context);
 

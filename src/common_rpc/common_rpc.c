@@ -45,7 +45,7 @@ void log_rpc_msg_info(Rpc__RpcMsg *rpc_msg) {
     }
 
     char *msg_type = rpc_message_type_to_string(rpc_msg->mtype);
-    fprintf(stdout, "Received RPC message:\nxid: %u\nmessage type: %s\nbody case: %d\n", 
+    fprintf(stdout, "Received RPC message - xid: %u, message type: %s, body case: %d\n", 
         rpc_msg->xid, msg_type, rpc_msg->body_case);
     fflush(stdout);
 

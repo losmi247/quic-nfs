@@ -16,6 +16,7 @@ docker run --detach --name mount-and-nfs-server-tcp \
     --network=nfs-test-net-tcp --ip=192.168.100.1 \
     --volume $(pwd)/src:/quic-nfs/src \
     --volume $(pwd)/tests:/quic-nfs/tests \
+    --volume $(pwd)/Makefile:/quic-nfs/Makefile \
     --workdir /quic-nfs \
     mount-and-nfs-server-tcp:latest
 sleep 10
@@ -25,6 +26,7 @@ docker run --name mount-and-nfs-test-tcp \
     --network=nfs-test-net-tcp --ip=192.168.100.2 \
     --volume $(pwd)/src:/quic-nfs/src \
     --volume $(pwd)/tests:/quic-nfs/tests \
+    --volume $(pwd)/Makefile:/quic-nfs/Makefile \
     --workdir /quic-nfs \
     mount-and-nfs-test-tcp:latest
 # save the exit code of the tests

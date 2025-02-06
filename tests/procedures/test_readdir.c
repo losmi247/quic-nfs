@@ -10,7 +10,12 @@
 TestSuite(nfs_readdir_test_suite);
 
 Test(nfs_readdir_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("readdir_ok: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // read all entries from the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -21,13 +26,20 @@ Test(nfs_readdir_test_suite, readdir_ok, .description = "NFSPROC_READDIR ok") {
     int expected_number_of_entries = NFS_SHARE_NUMBER_OF_ENTRIES;
     char *expected_filenames[NFS_SHARE_NUMBER_OF_ENTRIES] = NFS_SHARE_ENTRIES;
 
-    Nfs__ReadDirRes *readdirres = read_from_directory_success(NULL, &fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
+    Nfs__ReadDirRes *readdirres = read_from_directory_success(rpc_connection_context, &fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
 
     nfs__read_dir_res__free_unpacked(readdirres, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_readdir_test_suite, readdir_no_such_directory, .description = "NFSPROC_READDIR no such directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("readdir_no_such_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // try to read from a nonexistent directory
     NfsFh__NfsFileHandle nfs_filehandle = NFS_FH__NFS_FILE_HANDLE__INIT;
@@ -36,13 +48,20 @@ Test(nfs_readdir_test_suite, readdir_no_such_directory, .description = "NFSPROC_
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
     fhandle.nfs_filehandle = &nfs_filehandle;
 
-    read_from_directory_fail(NULL, &fhandle, 0, 1000, NFS__STAT__NFSERR_NOENT);  // cookie=0, start from beginning of the directory stream
+    read_from_directory_fail(rpc_connection_context, &fhandle, 0, 1000, NFS__STAT__NFSERR_NOENT);  // cookie=0, start from beginning of the directory stream
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_readdir_test_suite, readdir_not_a_directory, .description = "NFSPROC_READDIR not a directory") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("readdir_not_a_directory: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup the test_file.txt inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -50,7 +69,7 @@ Test(nfs_readdir_test_suite, readdir_not_a_directory, .description = "NFSPROC_RE
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(NULL, &fhandle, "test_file.txt", NFS__FTYPE__NFREG);
+    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(rpc_connection_context, &fhandle, "test_file.txt", NFS__FTYPE__NFREG);
 
     // try to readdir this test_file.txt (non-directory)
     Nfs__FHandle file_fhandle = NFS__FHANDLE__INIT;
@@ -58,11 +77,18 @@ Test(nfs_readdir_test_suite, readdir_not_a_directory, .description = "NFSPROC_RE
     nfs__dir_op_res__free_unpacked(diropres, NULL);
     file_fhandle.nfs_filehandle = &file_nfs_filehandle_copy;
 
-    read_from_directory_fail(NULL, &file_fhandle, 0, 1000, NFS__STAT__NFSERR_NOTDIR);  // cookie=0, start from beginning of the directory stream
+    read_from_directory_fail(rpc_connection_context, &file_fhandle, 0, 1000, NFS__STAT__NFSERR_NOTDIR);  // cookie=0, start from beginning of the directory stream
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_readdir_test_suite, readdir_ok_lookup_then_readdir, .description = "NFSPROC_READDIR ok lookup then readdir") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("readdir_ok_lookup_then_readdir: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // lookup directory write_test inside the mounted directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -70,7 +96,7 @@ Test(nfs_readdir_test_suite, readdir_ok_lookup_then_readdir, .description = "NFS
     mount__fh_status__free_unpacked(fhstatus, NULL);
     fhandle.nfs_filehandle = &nfs_filehandle_copy;
 
-    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(NULL, &fhandle, "write_test", NFS__FTYPE__NFDIR);
+    Nfs__DirOpRes *diropres = lookup_file_or_directory_success(rpc_connection_context, &fhandle, "write_test", NFS__FTYPE__NFDIR);
 
     // read all entries in this directory write_test
     Nfs__FHandle dir_fhandle = NFS__FHANDLE__INIT;
@@ -81,13 +107,20 @@ Test(nfs_readdir_test_suite, readdir_ok_lookup_then_readdir, .description = "NFS
     int expected_number_of_entries = 3;
     char *expected_filenames[5] = {"..", ".", "write_test_file.txt"};
 
-    Nfs__ReadDirRes *readdirres = read_from_directory_success(NULL, &dir_fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
+    Nfs__ReadDirRes *readdirres = read_from_directory_success(rpc_connection_context, &dir_fhandle, 0, 1000, expected_number_of_entries, expected_filenames);
 
     nfs__read_dir_res__free_unpacked(readdirres, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_readdir_test_suite, readdir_ok_read_only_first_directory_entry, .description = "NFSPROC_READDIR ok read only first two directory entries") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("readdir_ok_read_only_first_directory_entry: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // read the first entry from the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -98,13 +131,20 @@ Test(nfs_readdir_test_suite, readdir_ok_read_only_first_directory_entry, .descri
     int expected_number_of_entries = 2;
     char *expected_filenames[2] = {"..", "."};
 
-    Nfs__ReadDirRes *readdirres = read_from_directory_success(NULL, &fhandle, 0, 40, expected_number_of_entries, expected_filenames);
+    Nfs__ReadDirRes *readdirres = read_from_directory_success(rpc_connection_context, &fhandle, 0, 40, expected_number_of_entries, expected_filenames);
 
     nfs__read_dir_res__free_unpacked(readdirres, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_readdir_test_suite, readdir_ok_read_directory_entries_in_batches, .description = "NFSPROC_READDIR ok read directory entries in batches") {
-    Mount__FhStatus *fhstatus = mount_directory_success(NULL, "/nfs_share");
+    RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("readdir_ok_read_directory_entries_in_batches: Failed to connect to the server\n");
+    }
+
+    Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // read from the /nfs_share directory
     Nfs__FHandle fhandle = NFS__FHANDLE__INIT;
@@ -126,13 +166,13 @@ Test(nfs_readdir_test_suite, readdir_ok_read_directory_entries_in_batches, .desc
         readdirargs.count = 30; // aim to read only one directory entry
 
         Nfs__ReadDirRes *readdirres = malloc(sizeof(Nfs__ReadDirRes));
-        RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
         int status = nfs_procedure_16_read_from_directory(rpc_connection_context, readdirargs, readdirres);
-        free_rpc_connection_context(rpc_connection_context);
         if(status != 0) {
             mount__fh_status__free_unpacked(fhstatus, NULL);
 
             free(readdirres);
+
+            free_rpc_connection_context(rpc_connection_context);
 
             cr_fatal("NFSPROC_READDIR failed - status %d\n", status);
         }
@@ -192,6 +232,8 @@ Test(nfs_readdir_test_suite, readdir_ok_read_directory_entries_in_batches, .desc
     cr_assert_eq(eof, 1);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
+
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 /*
@@ -227,6 +269,9 @@ Test(nfs_readdir_test_suite, readdir_no_read_permission, .description = "NFSPROC
     Rpc__OpaqueAuth *non_owner_credential = create_auth_sys_opaque_auth("test", NON_DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(non_owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("readdir_no_read_permission: Failed to connect to the server\n");
+    }
 
     // fail since you don't have execute permission
     read_from_directory_fail(rpc_connection_context, &only_owner_read_fhandle, 0, 1000, NFS__STAT__NFSERR_ACCES);
@@ -263,6 +308,9 @@ Test(nfs_readdir_test_suite, readdir_has_read_permission_on_containing_directory
     Rpc__OpaqueAuth *owner_credential = create_auth_sys_opaque_auth("test", DOCKER_IMAGE_TESTUSER_UID, DOCKER_IMAGE_TESTUSER_GID, 1, gids);
     Rpc__OpaqueAuth *verifier = create_auth_none_opaque_auth();
     RpcConnectionContext *rpc_connection_context = create_rpc_connection_context_with_test_ipaddr_and_port(owner_credential, verifier, TEST_TRANSPORT_PROTOCOL);
+    if(rpc_connection_context == NULL) {
+        cr_fatal("readdir_has_read_permission_on_containing_directory: Failed to connect to the server\n");
+    }
 
     int expected_number_of_entries = 4;
     char *expected_entries[] = {".", "..", "dir", "file.txt"};

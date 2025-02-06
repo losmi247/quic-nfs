@@ -529,7 +529,6 @@ int run_server_quic(uint16_t port_number) {
         ret = 1;
         goto cleanup;
     }
-    quic_config_set_max_idle_timeout(config, 5000);
     quic_config_set_recv_udp_payload_size(config, MAX_DATAGRAM_SIZE);
     quic_server.config = config;
 

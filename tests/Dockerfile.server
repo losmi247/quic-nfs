@@ -21,14 +21,6 @@ RUN mkdir -p /nfs_share && \
 RUN touch exports && \
     echo "/nfs_share *(rw)" > ./exports
 
-# create files and directories for procedure testing
-RUN chmod +x ./tests/docker_scripts/setup_procedure_testing && \
-    ./tests/docker_scripts/setup_procedure_testing
-
-# create files and directories for testing of permission checking
-RUN chmod +x ./tests/docker_scripts/setup_permission_testing && \
-    ./tests/docker_scripts/setup_permission_testing
-
 # run the default command with 'exec' so it replaces the shell and gets signals (e.g. SIGTERM)
 RUN chmod +x ./tests/docker_scripts/start_server
 CMD ["/bin/bash", "-c", "exec ./tests/docker_scripts/start_server --proto=${TRANSPORT_PROTOCOL}"]

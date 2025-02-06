@@ -20,39 +20,23 @@
 #include "tquic.h"
 
 #include "quic_record_marking.h"
+#include "quic_client.h"
 
 #include "src/serialization/rpc/rpc.pb-c.h"
 
 #include "src/common_rpc/common_rpc.h"
 #include "src/common_rpc/rpc_connection_context.h"
 
-#define MAX_DATAGRAM_SIZE 1200
 
-struct QuicClient {
-    struct quic_endpoint_t *quic_endpoint;
+#define MAX_DATAGRAM_SIZE 10000
 
-    // underlying UDP socket
-    int socket_fd;
-    struct sockaddr_storage local_addr;
-    socklen_t local_addr_len;
+/*
+* QUIC methods
+*/
 
-    struct quic_tls_config_t *tls_config;
-    struct quic_conn_t *quic_connection;
+extern struct quic_transport_methods_t quic_transport_methods;
 
-    struct ev_loop *event_loop;
-    ev_timer timer;
-
-    // the RPC message to be sent by the client
-    size_t call_rpc_msg_size;
-    uint8_t *call_rpc_msg_buffer;
-
-    // the RPC message being received as a Record Marking record
-    RecordMarkingReceivingContext *rm_receiving_context;
-
-    bool attempted_call_rpc_msg_send, call_rpc_msg_successfully_sent;
-    bool reply_rpc_msg_successfully_received;
-    bool finished;
-};
+extern struct quic_packet_send_methods_t quic_packet_send_methods;
 
 /*
 * RPC functions over QUIC

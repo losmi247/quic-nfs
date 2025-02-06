@@ -6,6 +6,7 @@
 
 TransportProtocol transport_protocol;
 
+NfsServerThreadsList *nfs_server_threads_list;
 Mount__MountList *mount_list;
 InodeCache inode_cache;
 
@@ -48,6 +49,10 @@ Rpc__AcceptedReply *forward_rpc_call_to_program(Rpc__OpaqueAuth *credential, Rpc
 void handle_signal(int signal) {
     if(signal == SIGTERM) {
         fprintf(stdout, "Received SIGTERM, shutting down gracefully...\n");
+
+        // terminate all server threads
+        fprintf(stdout, "Terminating NFS server threads...\n");
+        clean_up_nfs_server_threads_list(nfs_server_threads_list);
 
         switch(transport_protocol) {
             case TRANSPORT_PROTOCOL_TCP:
@@ -139,6 +144,7 @@ int main(int argc, char *argv[]) {
     }
 
     // initialize Nfs and Mount server state
+    nfs_server_threads_list = NULL;
     mount_list = NULL;
     inode_cache = NULL;
     readdir_sessions_list = NULL;

@@ -2,7 +2,7 @@
 #define authentication__header__INCLUDED
 
 #define MAX_MACHINENAME_LEN 255     // max length of the machinename string in AuthSysParams
-#define MAX_N_GIDS 16               // max number of gids in AuthSysParams
+#define MAX_N_GIDS 32               // max number of gids in AuthSysParams
 
 #include "src/serialization/rpc/rpc.pb-c.h"
 
