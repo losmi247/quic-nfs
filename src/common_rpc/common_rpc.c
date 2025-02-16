@@ -43,13 +43,14 @@ void log_rpc_msg_info(Rpc__RpcMsg *rpc_msg) {
     if(rpc_msg == NULL) {
         return;
     }
-
+#ifdef DEBUG
     char *msg_type = rpc_message_type_to_string(rpc_msg->mtype);
     fprintf(stdout, "Received RPC message - xid: %u, message type: %s, body case: %d\n", 
         rpc_msg->xid, msg_type, rpc_msg->body_case);
     fflush(stdout);
 
     free(msg_type);
+#endif
 }
 
 /*
@@ -59,7 +60,7 @@ void log_rpc_call_body_info(Rpc__CallBody *call_body) {
     if(call_body == NULL) {
         return;
     }
-
+#ifdef DEBUG
     printf("program number: %d\nprogram version: %d\nprocedure number: %d\n", call_body->prog, call_body->vers, call_body->proc);
 
     if(call_body->credential == NULL) {
@@ -77,4 +78,5 @@ void log_rpc_call_body_info(Rpc__CallBody *call_body) {
     }
     printf("\n");
     fflush(stdout);
+#endif
 }

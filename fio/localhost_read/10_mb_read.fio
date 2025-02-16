@@ -1,8 +1,8 @@
-[read_test]
+[10_mb_read]
 directory=/home/milos/Desktop/mountpoint
 rw=read
 ioengine=sync
 direct=1
 bs=4k
-size=50k
+size=10M
 numjobs=1
