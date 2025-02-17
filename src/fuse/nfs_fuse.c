@@ -8,7 +8,19 @@
 #include "src/nfs/clients/nfs_client.h"
 #include "src/nfs/clients/mount_client.h"
 
+static void *nfs_fuse_init(struct fuse_conn_info *conn, struct fuse_config *cfg) {
+    // Enable adaptive background requests (FUSE 3.x)
+    conn->max_background = 512; // Allow more outstanding operations
+    conn->max_write = 131072; // Allow large writes (128KB)
+    conn->max_readahead = 1024 * 1024; // 1MB read-ahead
+
+    return NULL;
+}
+
+
 static struct fuse_operations nfs_oper = {
+    .init = nfs_fuse_init,
+
     .getattr = nfs_getattr,
 
     .readdir = nfs_readdir,
@@ -96,7 +108,7 @@ int mount_remote_filesystem(char *server_ipv4_address, uint16_t server_port, cha
 
     if(fhstatus->mnt_status->stat == MOUNT__STAT__MNTERR_ACCES) {
         printf("mount: Permission denied: %s\n", remote_absolute_path);
-        
+
         free_rpc_connection_context(rpc_connection_context);
         mount__fh_status__free_unpacked(fhstatus, NULL);
 
@@ -178,6 +190,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char *args[] = {argv[0], argv[5], "-d"};
-    return fuse_main(3, args, &nfs_oper, NULL);
+    struct fuse_args args = FUSE_ARGS_INIT(0, NULL);
+    fuse_opt_add_arg(&args, argv[0]);
+    fuse_opt_add_arg(&args, argv[5]);		// pass the mount point to FUSE
+    fuse_opt_add_arg(&args, "-d");
+    // don't let FUSE decide when it wants to retry file system operations - allow NFS a long time of 60 seconds to reply
+    fuse_opt_add_arg(&args, "-oentry_timeout=60");
+    fuse_opt_add_arg(&args, "-oattr_timeout=60");
+    fuse_opt_add_arg(&args, "-oac_attr_timeout=60");
+
+    return fuse_main(args.argc, args.argv, &nfs_oper, NULL);
 }

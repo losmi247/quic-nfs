@@ -136,4 +136,43 @@ To run the tests:
 - run the tests for NFS over TCP/QUIC using ```./tests/run_tests_tcp``` or ```./tests/run_tests_quic``` respectively
 # Benchmarks
 
-[**FIO**](https://github.com/axboe/fio) was used for benchmarking the performances of different versions of NFSv2. The *fio* folder contains *.fio* benchmark files and their respective logs.
+[**FIO**](https://github.com/axboe/fio) was used for benchmarking the performances of different versions of NFSv2. The *benchmarks* folder contains *.fio* benchmark files and their respective logs.
+
+To run a benchmark file: ```fio <benchmark file> --output=<output file>```
+
+The main scenarios tested were the following:
+
+- 1 client reads a 10MB file (1C-10MB)
+- 16 concurrent clients read a 500MB file (16C-500MB)
+
+## Local benchmarks
+
+These set of benchmarks were carried out by running the server and the FUSE client on the same machine, with the RPCs being sent over the localhost loopback.
+
+| **Benchmark** | **TCP** | **QUIC** |
+| 1C-10MB |
+| 16C-500MB |
+
+## Physical Link Benchmarks (With Simulated Latency and Packet Loss)
+
+These benchmarks were set up so that the NFS client was a Raspberry PI with its ethernet port at static address 192.168.1.1, connected 
+by a physical link to a laptop's ethernet port at static address 192.168.1.2 which was running the NFS server at port 3000.
+
+The directory exported from the server was mounted on the PI as a FUSE file system, and the performance benchmarked using FIO.
+
+Some benchmarks were rerun in a different environment where **simulated latency and packet loss** were applied on the PI's network interface, 
+using ```tc``` as ```sudo tc qdisc add dev eth0 root netem delay 30ms loss 1%``` for instance.
+
+| **Benchmark** | **TCP** | **QUIC** |
+| 1C-10MB |	| 	|
+| 1C-10MB + random 25-30ms latency, 1% packet loss | 	|	|
+| 1C-10MB + random 40-50ms latency, 2% packet loss |	| 	|
+| 1C-10MB + random 90-100ms latency, 5% packet loss |	| 	|
+| 1C-10MB + random 180-200ms latency, 10% packet loss |	| 	|
+| 16C-500MB |	| 	|
+| 16C-500MB + random 25-30ms latency, 1% packet loss |	|	|
+| 16C-500MB + random 40-50ms latency, 2% packet loss |	| 	|
+| 16C-500MB + random 90-100ms latency, 5% packet loss |	| 	|
+| 16C-500MB + random 180-200ms latency, 10% packet loss |	| 	|
+
+
