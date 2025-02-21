@@ -5,9 +5,12 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 #include <netdb.h>
 #include <fcntl.h>
+
+#include "src/transport/tcp/tcp_rpc_server.h"
 
 #include "src/transport/quic/quic_rpc_client.h"
 
@@ -40,6 +43,16 @@ int connect_to_tcp_server(RpcConnectionContext *rpc_connection_context) {
         perror_msg("connect_to_tcp_server: Socket creation failed");
         return 4;
     }
+
+    // disable Nagle's algorithm - send TCP segments as soon as they are available
+    int flag = 1;
+    setsockopt(*tcp_rpc_client_socket_fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
+
+    int sndbuf_size = TCP_SNDBUF_SIZE;
+    setsockopt(*tcp_rpc_client_socket_fd, SOL_SOCKET, SO_RCVBUF, &sndbuf_size, sizeof(sndbuf_size));
+    int rcvbuf_size = TCP_RCVBUF_SIZE;
+    setsockopt(*tcp_rpc_client_socket_fd, SOL_SOCKET, SO_SNDBUF, &rcvbuf_size, sizeof(rcvbuf_size));
+
     TransportConnection *transport_connection = malloc(sizeof(TransportConnection));
     if(transport_connection == NULL) {
         return 5;

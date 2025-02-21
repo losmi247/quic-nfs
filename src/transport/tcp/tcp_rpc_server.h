@@ -11,6 +11,9 @@
 
 #include "src/transport/tcp/tcp_record_marking.h"
 
+#define TCP_RCVBUF_SIZE 65536
+#define TCP_SNDBUF_SIZE 65536
+
 int run_server_tcp(uint16_t port_number);
 
 /*

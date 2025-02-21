@@ -79,7 +79,7 @@ void *blocking_read(void *arg) {
 
         if(readres->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
             printf("cat: Permission denied\n");
-            
+
             nfs__read_res__free_unpacked(readres, NULL);
             free(read_data);
 
@@ -114,9 +114,9 @@ void *blocking_read(void *arg) {
         nfs__read_res__free_unpacked(readres, NULL);
     } while(read_data->bytes_read < read_data->bytes_to_read && read_data->offset + read_data->bytes_read < file_size);
 
-	pthread_mutex_unlock(&nfs_mutex);
+    pthread_mutex_unlock(&nfs_mutex);
 
-	free(file_fhandle->nfs_filehandle);
+    free(file_fhandle->nfs_filehandle);
     free(file_fhandle);
 
     callback_data->error_code = 0;

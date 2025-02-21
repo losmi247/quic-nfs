@@ -1,8 +1,0 @@
-[read_test]
-directory=/home/milos/Desktop/mountpoint
-rw=read
-ioengine=sync
-direct=1
-bs=4k
-size=50k
-numjobs=1

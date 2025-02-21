@@ -66,5 +66,14 @@ mkdir deps
 mv tquic ./deps                 # move TQUIC to 'dependencies' directory
 cd ./deps/tquic
 cargo build --release -F ffi
+cd ../..
 
 echo "Verifying installation..."
+
+# Install FIO from source (for benchmarks)
+git clone https://github.com/axboe/fio.git
+mv fio ./deps
+cd ./deps/fio
+./configure
+make
+make install

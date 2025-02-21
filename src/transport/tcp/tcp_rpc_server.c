@@ -4,6 +4,8 @@
 
 #include "src/nfs/server/nfs_server_threads.h"
 
+#include <netinet/tcp.h>
+
 /*
 *  Define TCP Nfs+Mount server state.
 */
@@ -343,6 +345,15 @@ int run_server_tcp(uint16_t port_number) {
         fprintf(stderr, "run_server_tcp: socket creation failed\n");
         return 1;
     }
+
+    // disable Nagle's algorithm - send TCP segments as soon as they are available
+    int flag = 1;
+    setsockopt(rpc_server_socket_fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(int));
+
+    int sndbuf_size = TCP_SNDBUF_SIZE;
+    setsockopt(rpc_server_socket_fd, SOL_SOCKET, SO_RCVBUF, &sndbuf_size, sizeof(sndbuf_size));
+    int rcvbuf_size = TCP_RCVBUF_SIZE;
+    setsockopt(rpc_server_socket_fd, SOL_SOCKET, SO_SNDBUF, &rcvbuf_size, sizeof(rcvbuf_size));
 
     struct sockaddr_in rpc_server_addr;
     rpc_server_addr.sin_family = AF_INET; 
