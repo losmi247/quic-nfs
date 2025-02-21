@@ -1,0 +1,8 @@
+[1_mb_read_tcp]
+directory=/home/milos/Desktop/mountpoint_tcp
+rw=read
+ioengine=sync
+direct=1
+bs=4k
+size=1M
+numjobs=1

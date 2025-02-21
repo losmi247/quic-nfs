@@ -138,41 +138,53 @@ To run the tests:
 
 [**FIO**](https://github.com/axboe/fio) was used for benchmarking the performances of different versions of NFSv2. The *benchmarks* folder contains *.fio* benchmark files and their respective logs.
 
-To run a benchmark file: ```fio <benchmark file> --output=<output file>```
+In order to run a FIO benchmark file we write:
 
-The main scenarios tested were the following:
-
-- 1 client reads a 10MB file (1C-10MB)
-- 16 concurrent clients read a 500MB file (16C-500MB)
-
-## Local benchmarks
-
-These set of benchmarks were carried out by running the server and the FUSE client on the same machine, with the RPCs being sent over the localhost loopback.
-
-| **Benchmark** | **TCP** | **QUIC** |
-| 1C-10MB |
-| 16C-500MB |
+```fio <.fio benchmark file> --output=<output file>```
 
 ## Physical Link Benchmarks (With Simulated Latency and Packet Loss)
 
 These benchmarks were set up so that the NFS client was a Raspberry PI with its ethernet port at static address 192.168.1.1, connected 
-by a physical link to a laptop's ethernet port at static address 192.168.1.2 which was running the NFS server at port 3000.
+by a physical link to a laptop's ethernet port at static address 192.168.1.2. The laptop is running a TCP NFS server at port 3000 and
+a QUIC NFS server at port 3001.
 
-The directory exported from the server was mounted on the PI as a FUSE file system, and the performance benchmarked using FIO.
+The directories exported from the two servers were mounted on the PI as a FUSE file system:
 
-Some benchmarks were rerun in a different environment where **simulated latency and packet loss** were applied on the PI's network interface, 
-using ```tc``` as ```sudo tc qdisc add dev eth0 root netem delay 30ms loss 1%``` for instance.
+```./build/fuse_fs 192.168.1.2 3000 --proto=tcp /home/milos/Desktop/nfs_share ~/Desktop/mountpoint_tcp```
+```./build/fuse_fs 192.168.1.2 3001 --proto=quic /home/milos/Desktop/nfs_share ~/Desktop/mountpoint_quic```
 
-| **Benchmark** | **TCP** | **QUIC** |
-| 1C-10MB |	| 	|
-| 1C-10MB + random 25-30ms latency, 1% packet loss | 	|	|
-| 1C-10MB + random 40-50ms latency, 2% packet loss |	| 	|
-| 1C-10MB + random 90-100ms latency, 5% packet loss |	| 	|
-| 1C-10MB + random 180-200ms latency, 10% packet loss |	| 	|
-| 16C-500MB |	| 	|
-| 16C-500MB + random 25-30ms latency, 1% packet loss |	|	|
-| 16C-500MB + random 40-50ms latency, 2% packet loss |	| 	|
-| 16C-500MB + random 90-100ms latency, 5% packet loss |	| 	|
-| 16C-500MB + random 180-200ms latency, 10% packet loss |	| 	|
+The FIO benchmarks were rerun in different environment where **simulated latency and packet loss** were applied on the
+PI's network interface ```eth0```,  using ```tc``` as:
+
+```sudo tc qdisc add dev eth0 root netem delay 30ms loss random 1%``` (add a 30ms delay, and a 1% probability of a packet being dropped)
+```sudo tc qdisc del dev eth0 root``` (remove any quality of service settings).
+
+The ```./benchmarks/run_benchmark.py``` script can be used as:
+
+```
+python3 ./benchmarks/run_benchmark.py 
+    --benchmark_name <benchmark name>  
+    --fio_file_path <path to the .fio file>
+    --traffic_setting_unit <ms (milliseconds delay) or % (packet loss)> 
+    --traffic_setting <loss or latency>
+    --traffic_setting_values <space-separated list of integers>
+```
+
+to run a given FIO benchmark over TCP and QUIC, trying out values of the specified traffic setting values (using ```tc```),
+and save the plot of the average IOPS (IO operations per second) and bandwidth (in KiB/s) over 10 runs (at a fixed traffic setting value)
+in the ```./benchmarks/graphs/<benchmark name>``` directory. For example:
+
+```
+python3 ./benchmarks/run_benchmark.py 
+    --benchmark_name delay_benchmark  
+    --fio_file_path ./benchmarks/1_mb_read_tcp.fio 
+    --traffic_setting_unit ms 
+    --traffic_setting latency 
+    --traffic_setting_values 0 1 2 5 10
+```
+ 
+### Packet loss
+
+### Latency
 
 

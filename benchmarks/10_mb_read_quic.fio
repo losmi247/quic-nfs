@@ -1,0 +1,8 @@
+[10_mb_read_quic]
+directory=/home/milos/Desktop/mountpoint_quic
+rw=read
+ioengine=sync
+direct=1
+bs=4k
+size=10M
+numjobs=1
