@@ -1,14 +1,14 @@
 #include "tests/test_common.h"
 
 /*
-* NFSPROC_STATFS (17) tests
-*/
+ * NFSPROC_STATFS (17) tests
+ */
 
 TestSuite(nfs_statfs_test_suite);
 
 Test(nfs_statfs_test_suite, statfs_ok, .description = "NFSPROC_STATFS ok") {
     RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
-    if(rpc_connection_context == NULL) {
+    if (rpc_connection_context == NULL) {
         cr_fatal("statfs_ok: Failed to connect to the server\n");
     }
 
@@ -27,9 +27,10 @@ Test(nfs_statfs_test_suite, statfs_ok, .description = "NFSPROC_STATFS ok") {
     free_rpc_connection_context(rpc_connection_context);
 }
 
-Test(nfs_statfs_test_suite, statfs_no_such_file_or_directory, .description = "NFSPROC_STATFS no such file or directory") {
+Test(nfs_statfs_test_suite, statfs_no_such_file_or_directory,
+     .description = "NFSPROC_STATFS no such file or directory") {
     RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
-    if(rpc_connection_context == NULL) {
+    if (rpc_connection_context == NULL) {
         cr_fatal("statfs_ok: Failed to connect to the server\n");
     }
 
@@ -49,4 +50,3 @@ Test(nfs_statfs_test_suite, statfs_no_such_file_or_directory, .description = "NF
 
     free_rpc_connection_context(rpc_connection_context);
 }
-

@@ -41,7 +41,9 @@ TCP_RPC_PROGRAM_CLIENT_SRCS = ./src/transport/tcp/tcp_record_marking.c \
 QUIC_RPC_PROGRAM_SERVER_SRCS =  ./src/transport/quic/quic_record_marking.c \
 	./src/transport/quic/quic_rpc_server.c
 QUIC_RPC_PROGRAM_CLIENT_SRCS = ./src/transport/quic/quic_record_marking.c \
-	./src/transport/quic/quic_rpc_client.c
+	./src/transport/quic/quic_rpc_client.c \
+	./src/transport/quic/streams.c \
+	./src/transport/quic/client_stream_context.c
 
 CLIENTS_SRCS = ./src/nfs/clients/mount_client.c ./src/nfs/clients/nfs_client.c
 

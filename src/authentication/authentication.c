@@ -1,11 +1,11 @@
 #include "authentication.h"
 
 /*
-* Creates a OpaqueAuth with AUTH_NONE flavor and returns it.
-*
-* The user of this function takes the responsibility to deallocate the
-* constructed OpaqueAuth using free_opaque_auth function.
-*/
+ * Creates a OpaqueAuth with AUTH_NONE flavor and returns it.
+ *
+ * The user of this function takes the responsibility to deallocate the
+ * constructed OpaqueAuth using free_opaque_auth function.
+ */
 Rpc__OpaqueAuth *create_auth_none_opaque_auth(void) {
     Rpc__OpaqueAuth *opaque_auth = malloc(sizeof(Rpc__OpaqueAuth));
     rpc__opaque_auth__init(opaque_auth);
@@ -21,13 +21,14 @@ Rpc__OpaqueAuth *create_auth_none_opaque_auth(void) {
 }
 
 /*
-* Creates a OpaqueAuth with AUTH_SYS flavor and the given machine name, uid,
-* gid, and collection of gids.
-*
-* The user of this function takes the responsibility to deallocate the
-* constructed OpaqueAuth using free_opaque_auth function.
-*/
-Rpc__OpaqueAuth *create_auth_sys_opaque_auth(char *machine_name, uint32_t uid, uint32_t gid, uint32_t number_of_gids, uint32_t *gids) {
+ * Creates a OpaqueAuth with AUTH_SYS flavor and the given machine name, uid,
+ * gid, and collection of gids.
+ *
+ * The user of this function takes the responsibility to deallocate the
+ * constructed OpaqueAuth using free_opaque_auth function.
+ */
+Rpc__OpaqueAuth *create_auth_sys_opaque_auth(char *machine_name, uint32_t uid, uint32_t gid, uint32_t number_of_gids,
+                                             uint32_t *gids) {
     Rpc__OpaqueAuth *opaque_auth = malloc(sizeof(Rpc__OpaqueAuth));
     rpc__opaque_auth__init(opaque_auth);
 
@@ -38,15 +39,14 @@ Rpc__OpaqueAuth *create_auth_sys_opaque_auth(char *machine_name, uint32_t uid, u
     rpc__auth_sys_params__init(authsysparams);
     authsysparams->timestamp = time(NULL);
 
-    if(strlen(machine_name) <= MAX_MACHINENAME_LEN) {
+    if (strlen(machine_name) <= MAX_MACHINENAME_LEN) {
         authsysparams->machinename = strdup(machine_name);
-    }
-    else {
+    } else {
         // truncate the name down to MAX_MACHINENAME_LEN characters
         char name[MAX_MACHINENAME_LEN + 1];
         memcpy(name, machine_name, MAX_MACHINENAME_LEN);
         name[MAX_MACHINENAME_LEN] = '\0';
-        
+
         authsysparams->machinename = strdup(name);
     }
 
@@ -55,7 +55,7 @@ Rpc__OpaqueAuth *create_auth_sys_opaque_auth(char *machine_name, uint32_t uid, u
 
     authsysparams->n_gids = number_of_gids <= MAX_N_GIDS ? number_of_gids : MAX_N_GIDS;
     authsysparams->gids = malloc(sizeof(uint32_t) * authsysparams->n_gids);
-    for(int offset = 0; offset < authsysparams->n_gids; offset++) {
+    for (int offset = 0; offset < authsysparams->n_gids; offset++) {
         authsysparams->gids[offset] = gids[offset];
     }
 
@@ -65,23 +65,22 @@ Rpc__OpaqueAuth *create_auth_sys_opaque_auth(char *machine_name, uint32_t uid, u
 }
 
 /*
-* Deallocates all heap-allocated fields of the given OpaqueAuth and
-* the OpaqueAuth itself.
-* Works only for OpaqueAuth's with AUTH_NONE or AUTH_SYS flavor.
-*
-* Does nothing if the opaque_auth is NULL.
-*/
+ * Deallocates all heap-allocated fields of the given OpaqueAuth and
+ * the OpaqueAuth itself.
+ * Works only for OpaqueAuth's with AUTH_NONE or AUTH_SYS flavor.
+ *
+ * Does nothing if the opaque_auth is NULL.
+ */
 void free_opaque_auth(Rpc__OpaqueAuth *opaque_auth) {
-    if(opaque_auth == NULL) {
+    if (opaque_auth == NULL) {
         return;
     }
 
-    if(opaque_auth->flavor == RPC__AUTH_FLAVOR__AUTH_NONE) {
+    if (opaque_auth->flavor == RPC__AUTH_FLAVOR__AUTH_NONE) {
         free(opaque_auth->empty);
         free(opaque_auth);
-    }
-    else if(opaque_auth->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
-        if(opaque_auth->auth_sys == NULL) {
+    } else if (opaque_auth->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        if (opaque_auth->auth_sys == NULL) {
             free(opaque_auth);
             return;
         }

@@ -1,9 +1,9 @@
 #ifndef inode_cache__header__INCLUDED
 #define inode_cache__header__INCLUDED
 
-#include <sys/types.h> 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
 #include "src/serialization/nfs_fh/nfs_fh.pb-c.h"
 

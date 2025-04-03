@@ -3,7 +3,10 @@
 
 #include "quic_record_marking.h"
 
-typedef struct QuicClientConnectionContext {
+#include "client_stream_context.h"
+#include "streams.h"
+
+typedef struct QuicClient {
     struct quic_endpoint_t *quic_endpoint;
 
     // underlying UDP socket
@@ -15,28 +18,39 @@ typedef struct QuicClientConnectionContext {
     struct quic_tls_config_t *tls_config;
     struct quic_conn_t *quic_connection;
 
-    uint64_t main_stream_id;
-    bool attempted_to_create_main_stream;
-    bool main_stream_created_successfully;
-} QuicClientConnectionContext;
-
-typedef struct QuicClient {
-    QuicClientConnectionContext *quic_client_connection_context;
-
     struct ev_loop *event_loop;
+    pthread_t event_loop_thread;
+    bool successfully_created_event_loop_thread;
     ev_timer timer;
 
-    // the RPC message to be sent by the client
-    size_t call_rpc_msg_size;
-    uint8_t *call_rpc_msg_buffer;
+    pthread_mutex_t connection_established_lock;
+    pthread_cond_t connection_established_condition_variable;
+    bool connection_established;
 
-    // the RPC message being received as a Record Marking record
-    RecordMarkingReceivingContext *rm_receiving_context;
+    ev_async process_connections_async_watcher;
 
-    bool resend_attempted;
-    bool attempted_call_rpc_msg_send, call_rpc_msg_successfully_sent;
-    bool reply_rpc_msg_successfully_received;
-    bool finished;
+    bool use_auxilliary_stream;
+    ev_async stream_allocator_async_watcher;
+    Stream *allocated_stream;
+    bool stream_allocation_finished;
+    bool successfully_allocated_stream;
+    pthread_mutex_t stream_allocator_lock;
+    pthread_cond_t stream_allocator_condition_variable;
+
+    ev_async connection_closing_async_watcher;
+    pthread_mutex_t connection_closed_lock;
+    pthread_cond_t connection_closed_condition_variable;
+    bool connection_closed;
+
+    ev_async event_loop_shutdown_async_watcher;
+
+    Stream *main_stream;
+    StreamsList *auxilliary_streams_list_head;
+    pthread_mutex_t auxilliary_streams_list_lock;
+
+    QuicClientStreamContextsList *stream_contexts;
+    pthread_mutex_t stream_contexts_list_lock;
+    pthread_cond_t stream_contexts_condition_variable;
 } QuicClient;
 
 #endif

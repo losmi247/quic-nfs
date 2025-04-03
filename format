@@ -1,0 +1,4 @@
+#!/bin/bash
+
+FILES=$(find . \( -iname '*.h' -o -iname '*.c' \))
+clang-format --style=file:./.clang-format -i $FILES

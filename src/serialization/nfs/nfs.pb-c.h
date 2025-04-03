@@ -47,1340 +47,942 @@ typedef struct Nfs__ReadDirRes Nfs__ReadDirRes;
 typedef struct Nfs__FsInfo Nfs__FsInfo;
 typedef struct Nfs__StatFsRes Nfs__StatFsRes;
 
-
 /* --- enums --- */
 
 typedef enum _Nfs__Stat {
-  NFS__STAT__NFS_OK = 0,
-  /*
-   * not owner - caller doesn't have correct ownership to perform requested operation
-   */
-  NFS__STAT__NFSERR_PERM = 1,
-  /*
-   * no such file or directory
-   */
-  NFS__STAT__NFSERR_NOENT = 2,
-  /*
-   * hard error e.g. disk error
-   */
-  NFS__STAT__NFSERR_IO = 5,
-  /*
-   * no such device or address
-   */
-  NFS__STAT__NFSERR_NXIO = 6,
-  /*
-   * permission denied - caller doesn't have correct permission to perform requested operation
-   */
-  NFS__STAT__NFSERR_ACCES = 13,
-  /*
-   * file already exists
-   */
-  NFS__STAT__NFSERR_EXIST = 17,
-  /*
-   * no such device
-   */
-  NFS__STAT__NFSERR_NODEV = 19,
-  /*
-   * not a directory - caller specified a non-directory in a directory operation 
-   */
-  NFS__STAT__NFSERR_NOTDIR = 20,
-  /*
-   * is a directory - caller specified a directory in a non-directory operation
-   */
-  NFS__STAT__NFSERR_ISDIR = 21,
-  /*
-   * file too large - operation caused a file to grow beyond server's limit
-   */
-  NFS__STAT__NFSERR_FBIG = 27,
-  /*
-   * no space left on device
-   */
-  NFS__STAT__NFSERR_NOSPC = 28,
-  /*
-   * write attempted on a read-only file system 
-   */
-  NFS__STAT__NFSERR_ROFS = 30,
-  /*
-   * file name too long
-   */
-  NFS__STAT__NFSERR_NAMETOOLONG = 63,
-  /*
-   * attempted to remove a directory that was not empty
-   */
-  NFS__STAT__NFSERR_NOTEMPTY = 66,
-  /*
-   * disk quota exceeded
-   */
-  NFS__STAT__NFSERR_DQUOT = 69,
-  /*
-   * the 'fhandle' given in arguments was invalid - either referred to file that no longer exists, or expired
-   */
-  NFS__STAT__NFSERR_STALE = 70,
-  /*
-   * server's writecache used in WRITECACHE call got flushed to disk
-   */
-  NFS__STAT__NFSERR_WFLUSH = 99
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__STAT)
+    NFS__STAT__NFS_OK = 0,
+    /*
+     * not owner - caller doesn't have correct ownership to perform requested operation
+     */
+    NFS__STAT__NFSERR_PERM = 1,
+    /*
+     * no such file or directory
+     */
+    NFS__STAT__NFSERR_NOENT = 2,
+    /*
+     * hard error e.g. disk error
+     */
+    NFS__STAT__NFSERR_IO = 5,
+    /*
+     * no such device or address
+     */
+    NFS__STAT__NFSERR_NXIO = 6,
+    /*
+     * permission denied - caller doesn't have correct permission to perform requested operation
+     */
+    NFS__STAT__NFSERR_ACCES = 13,
+    /*
+     * file already exists
+     */
+    NFS__STAT__NFSERR_EXIST = 17,
+    /*
+     * no such device
+     */
+    NFS__STAT__NFSERR_NODEV = 19,
+    /*
+     * not a directory - caller specified a non-directory in a directory operation
+     */
+    NFS__STAT__NFSERR_NOTDIR = 20,
+    /*
+     * is a directory - caller specified a directory in a non-directory operation
+     */
+    NFS__STAT__NFSERR_ISDIR = 21,
+    /*
+     * file too large - operation caused a file to grow beyond server's limit
+     */
+    NFS__STAT__NFSERR_FBIG = 27,
+    /*
+     * no space left on device
+     */
+    NFS__STAT__NFSERR_NOSPC = 28,
+    /*
+     * write attempted on a read-only file system
+     */
+    NFS__STAT__NFSERR_ROFS = 30,
+    /*
+     * file name too long
+     */
+    NFS__STAT__NFSERR_NAMETOOLONG = 63,
+    /*
+     * attempted to remove a directory that was not empty
+     */
+    NFS__STAT__NFSERR_NOTEMPTY = 66,
+    /*
+     * disk quota exceeded
+     */
+    NFS__STAT__NFSERR_DQUOT = 69,
+    /*
+     * the 'fhandle' given in arguments was invalid - either referred to file that no longer exists, or expired
+     */
+    NFS__STAT__NFSERR_STALE = 70,
+    /*
+     * server's writecache used in WRITECACHE call got flushed to disk
+     */
+    NFS__STAT__NFSERR_WFLUSH = 99 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__STAT)
 } Nfs__Stat;
 typedef enum _Nfs__FType {
-  /*
-   * non-file
-   */
-  NFS__FTYPE__NFNON = 0,
-  /*
-   * regular file
-   */
-  NFS__FTYPE__NFREG = 1,
-  /*
-   * directory
-   */
-  NFS__FTYPE__NFDIR = 2,
-  /*
-   * block-special device
-   */
-  NFS__FTYPE__NFBLK = 3,
-  /*
-   * character-special device
-   */
-  NFS__FTYPE__NFCHR = 4,
-  /*
-   * symbolic link
-   */
-  NFS__FTYPE__NFLNK = 5
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__FTYPE)
+    /*
+     * non-file
+     */
+    NFS__FTYPE__NFNON = 0,
+    /*
+     * regular file
+     */
+    NFS__FTYPE__NFREG = 1,
+    /*
+     * directory
+     */
+    NFS__FTYPE__NFDIR = 2,
+    /*
+     * block-special device
+     */
+    NFS__FTYPE__NFBLK = 3,
+    /*
+     * character-special device
+     */
+    NFS__FTYPE__NFCHR = 4,
+    /*
+     * symbolic link
+     */
+    NFS__FTYPE__NFLNK = 5 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__FTYPE)
 } Nfs__FType;
 
 /* --- messages --- */
 
-struct  Nfs__NfsStat
-{
-  ProtobufCMessage base;
-  Nfs__Stat stat;
+struct Nfs__NfsStat {
+    ProtobufCMessage base;
+    Nfs__Stat stat;
 };
-#define NFS__NFS_STAT__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__nfs_stat__descriptor) \
-    , NFS__STAT__NFS_OK }
+#define NFS__NFS_STAT__INIT                                                                                            \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__nfs_stat__descriptor)                                                            \
+        , NFS__STAT__NFS_OK                                                                                            \
+    }
 
-
-struct  Nfs__NfsFType
-{
-  ProtobufCMessage base;
-  Nfs__FType ftype;
+struct Nfs__NfsFType {
+    ProtobufCMessage base;
+    Nfs__FType ftype;
 };
-#define NFS__NFS_FTYPE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__nfs_ftype__descriptor) \
-    , NFS__FTYPE__NFNON }
-
+#define NFS__NFS_FTYPE__INIT                                                                                           \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__nfs_ftype__descriptor)                                                           \
+        , NFS__FTYPE__NFNON                                                                                            \
+    }
 
 /*
  * File Handle
  */
-struct  Nfs__FHandle
-{
-  ProtobufCMessage base;
-  NfsFh__NfsFileHandle *nfs_filehandle;
+struct Nfs__FHandle {
+    ProtobufCMessage base;
+    NfsFh__NfsFileHandle *nfs_filehandle;
 };
-#define NFS__FHANDLE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__fhandle__descriptor) \
-    , NULL }
-
+#define NFS__FHANDLE__INIT                                                                                             \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__fhandle__descriptor)                                                             \
+        , NULL                                                                                                         \
+    }
 
 /*
  * Structure for Unix timestamp
  */
-struct  Nfs__TimeVal
-{
-  ProtobufCMessage base;
-  /*
-   * seconds
-   */
-  uint64_t seconds;
-  /*
-   * nanoseconds
-   */
-  uint64_t useconds;
+struct Nfs__TimeVal {
+    ProtobufCMessage base;
+    /*
+     * seconds
+     */
+    uint64_t seconds;
+    /*
+     * nanoseconds
+     */
+    uint64_t useconds;
 };
-#define NFS__TIME_VAL__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__time_val__descriptor) \
-    , 0, 0 }
-
+#define NFS__TIME_VAL__INIT                                                                                            \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__time_val__descriptor)                                                            \
+        , 0, 0                                                                                                         \
+    }
 
 /*
  * File attributes
  */
-struct  Nfs__FAttr
-{
-  ProtobufCMessage base;
-  Nfs__NfsFType *nfs_ftype;
-  /*
-   * contains file type + lowest 12 bits are setuid,setgid,sticky,owner,group,other permissions
-   */
-  uint32_t mode;
-  /*
-   * number of hard links to the file
-   */
-  uint64_t nlink;
-  /*
-   * user ID of the owner of this file
-   */
-  uint32_t uid;
-  /*
-   * group ID of the group this file belongs to
-   */
-  uint32_t gid;
-  /*
-   * size in bytes of the file
-   */
-  uint64_t size;
-  /*
-   * size in bytes of a block of the file
-   */
-  uint64_t blocksize;
-  /*
-   * device number of the file if it is type NFCHR or NFBLK
-   */
-  uint64_t rdev;
-  /*
-   * number of blocks the file takes up on disk
-   */
-  uint64_t blocks;
-  /*
-   * file system identifier
-   */
-  uint64_t fsid;
-  /*
-   * uniquely identifies the file in its file system
-   */
-  uint64_t fileid;
-  /*
-   * time of last access
-   */
-  Nfs__TimeVal *atime;
-  /*
-   * time of last modification (write)
-   */
-  Nfs__TimeVal *mtime;
-  /*
-   * time of last change of file's status (write changes ctime if file size was changed)
-   */
-  Nfs__TimeVal *ctime;
+struct Nfs__FAttr {
+    ProtobufCMessage base;
+    Nfs__NfsFType *nfs_ftype;
+    /*
+     * contains file type + lowest 12 bits are setuid,setgid,sticky,owner,group,other permissions
+     */
+    uint32_t mode;
+    /*
+     * number of hard links to the file
+     */
+    uint64_t nlink;
+    /*
+     * user ID of the owner of this file
+     */
+    uint32_t uid;
+    /*
+     * group ID of the group this file belongs to
+     */
+    uint32_t gid;
+    /*
+     * size in bytes of the file
+     */
+    uint64_t size;
+    /*
+     * size in bytes of a block of the file
+     */
+    uint64_t blocksize;
+    /*
+     * device number of the file if it is type NFCHR or NFBLK
+     */
+    uint64_t rdev;
+    /*
+     * number of blocks the file takes up on disk
+     */
+    uint64_t blocks;
+    /*
+     * file system identifier
+     */
+    uint64_t fsid;
+    /*
+     * uniquely identifies the file in its file system
+     */
+    uint64_t fileid;
+    /*
+     * time of last access
+     */
+    Nfs__TimeVal *atime;
+    /*
+     * time of last modification (write)
+     */
+    Nfs__TimeVal *mtime;
+    /*
+     * time of last change of file's status (write changes ctime if file size was changed)
+     */
+    Nfs__TimeVal *ctime;
 };
-#define NFS__FATTR__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__fattr__descriptor) \
-    , NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL }
-
+#define NFS__FATTR__INIT                                                                                               \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__fattr__descriptor)                                                               \
+        , NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL                                                         \
+    }
 
 /*
- * File attributes (from FAttr) that can be set from client - if a field is -1, it's ignored (i.e. value of that attribute is not modified)
+ * File attributes (from FAttr) that can be set from client - if a field is -1, it's ignored (i.e. value of that
+ * attribute is not modified)
  */
-struct  Nfs__SAttr
-{
-  ProtobufCMessage base;
-  uint32_t mode;
-  uint32_t uid;
-  uint32_t gid;
-  /*
-   * size = 0 means truncate the file
-   */
-  uint64_t size;
-  Nfs__TimeVal *atime;
-  Nfs__TimeVal *mtime;
+struct Nfs__SAttr {
+    ProtobufCMessage base;
+    uint32_t mode;
+    uint32_t uid;
+    uint32_t gid;
+    /*
+     * size = 0 means truncate the file
+     */
+    uint64_t size;
+    Nfs__TimeVal *atime;
+    Nfs__TimeVal *mtime;
 };
-#define NFS__SATTR__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__sattr__descriptor) \
-    , 0, 0, 0, 0, NULL, NULL }
-
+#define NFS__SATTR__INIT                                                                                               \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__sattr__descriptor)                                                               \
+        , 0, 0, 0, 0, NULL, NULL                                                                                       \
+    }
 
 /*
  * A string used for passing file names or pathnames
  */
-struct  Nfs__FileName
-{
-  ProtobufCMessage base;
-  /*
-   * max len - MAXNAMLEN
-   */
-  char *filename;
+struct Nfs__FileName {
+    ProtobufCMessage base;
+    /*
+     * max len - MAXNAMLEN
+     */
+    char *filename;
 };
-#define NFS__FILE_NAME__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__file_name__descriptor) \
-    , (char *)protobuf_c_empty_string }
-
+#define NFS__FILE_NAME__INIT                                                                                           \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__file_name__descriptor)                                                           \
+        , (char *)protobuf_c_empty_string                                                                              \
+    }
 
 /*
  * A pathname
  */
-struct  Nfs__Path
-{
-  ProtobufCMessage base;
-  /*
-   * max len - MAXPATHLEN
-   */
-  char *path;
+struct Nfs__Path {
+    ProtobufCMessage base;
+    /*
+     * max len - MAXPATHLEN
+     */
+    char *path;
 };
-#define NFS__PATH__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__path__descriptor) \
-    , (char *)protobuf_c_empty_string }
-
+#define NFS__PATH__INIT                                                                                                \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__path__descriptor)                                                                \
+        , (char *)protobuf_c_empty_string                                                                              \
+    }
 
 typedef enum {
-  NFS__ATTR_STAT__BODY__NOT_SET = 0,
-  NFS__ATTR_STAT__BODY_ATTRIBUTES = 2,
-  NFS__ATTR_STAT__BODY_DEFAULT_CASE = 3
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__ATTR_STAT__BODY__CASE)
+    NFS__ATTR_STAT__BODY__NOT_SET = 0,
+    NFS__ATTR_STAT__BODY_ATTRIBUTES = 2,
+    NFS__ATTR_STAT__BODY_DEFAULT_CASE = 3 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__ATTR_STAT__BODY__CASE)
 } Nfs__AttrStat__BodyCase;
 
 /*
  * A common procedure result that contains file attributes on successful call
  */
-struct  Nfs__AttrStat
-{
-  ProtobufCMessage base;
-  Nfs__NfsStat *nfs_status;
-  Nfs__AttrStat__BodyCase body_case;
-  union {
-    /*
-     * case NFS_OK
-     */
-    Nfs__FAttr *attributes;
-    /*
-     * default case
-     */
-    Google__Protobuf__Empty *default_case;
-  };
+struct Nfs__AttrStat {
+    ProtobufCMessage base;
+    Nfs__NfsStat *nfs_status;
+    Nfs__AttrStat__BodyCase body_case;
+    union {
+        /*
+         * case NFS_OK
+         */
+        Nfs__FAttr *attributes;
+        /*
+         * default case
+         */
+        Google__Protobuf__Empty *default_case;
+    };
 };
-#define NFS__ATTR_STAT__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__attr_stat__descriptor) \
-    , NULL, NFS__ATTR_STAT__BODY__NOT_SET, {0} }
-
+#define NFS__ATTR_STAT__INIT                                                                                           \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__attr_stat__descriptor)                                                           \
+        , NULL, NFS__ATTR_STAT__BODY__NOT_SET, {                                                                       \
+            0                                                                                                          \
+        }                                                                                                              \
+    }
 
 /*
  * Structure used in directory operations, identifies a file in a directory
  */
-struct  Nfs__DirOpArgs
-{
-  ProtobufCMessage base;
-  Nfs__FHandle *dir;
-  Nfs__FileName *name;
+struct Nfs__DirOpArgs {
+    ProtobufCMessage base;
+    Nfs__FHandle *dir;
+    Nfs__FileName *name;
 };
-#define NFS__DIR_OP_ARGS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__dir_op_args__descriptor) \
-    , NULL, NULL }
-
+#define NFS__DIR_OP_ARGS__INIT                                                                                         \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__dir_op_args__descriptor)                                                         \
+        , NULL, NULL                                                                                                   \
+    }
 
 /*
  * Structure for directory operation results - a new file handle 'file' and 'attributes' associated with it
  */
-struct  Nfs__DirOpOk
-{
-  ProtobufCMessage base;
-  Nfs__FHandle *file;
-  Nfs__FAttr *attributes;
+struct Nfs__DirOpOk {
+    ProtobufCMessage base;
+    Nfs__FHandle *file;
+    Nfs__FAttr *attributes;
 };
-#define NFS__DIR_OP_OK__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__dir_op_ok__descriptor) \
-    , NULL, NULL }
-
+#define NFS__DIR_OP_OK__INIT                                                                                           \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__dir_op_ok__descriptor)                                                           \
+        , NULL, NULL                                                                                                   \
+    }
 
 typedef enum {
-  NFS__DIR_OP_RES__BODY__NOT_SET = 0,
-  NFS__DIR_OP_RES__BODY_DIROPOK = 2,
-  NFS__DIR_OP_RES__BODY_DEFAULT_CASE = 3
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__DIR_OP_RES__BODY__CASE)
+    NFS__DIR_OP_RES__BODY__NOT_SET = 0,
+    NFS__DIR_OP_RES__BODY_DIROPOK = 2,
+    NFS__DIR_OP_RES__BODY_DEFAULT_CASE = 3 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__DIR_OP_RES__BODY__CASE)
 } Nfs__DirOpRes__BodyCase;
 
 /*
  * Structure for returning results of directory operations
  */
-struct  Nfs__DirOpRes
-{
-  ProtobufCMessage base;
-  Nfs__NfsStat *nfs_status;
-  Nfs__DirOpRes__BodyCase body_case;
-  union {
-    /*
-     * case NFS_OK
-     */
-    Nfs__DirOpOk *diropok;
-    /*
-     * default case
-     */
-    Google__Protobuf__Empty *default_case;
-  };
+struct Nfs__DirOpRes {
+    ProtobufCMessage base;
+    Nfs__NfsStat *nfs_status;
+    Nfs__DirOpRes__BodyCase body_case;
+    union {
+        /*
+         * case NFS_OK
+         */
+        Nfs__DirOpOk *diropok;
+        /*
+         * default case
+         */
+        Google__Protobuf__Empty *default_case;
+    };
 };
-#define NFS__DIR_OP_RES__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__dir_op_res__descriptor) \
-    , NULL, NFS__DIR_OP_RES__BODY__NOT_SET, {0} }
-
+#define NFS__DIR_OP_RES__INIT                                                                                          \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__dir_op_res__descriptor)                                                          \
+        , NULL, NFS__DIR_OP_RES__BODY__NOT_SET, {                                                                      \
+            0                                                                                                          \
+        }                                                                                                              \
+    }
 
 /*
  * Used for NFSPROC_SETATTR arguments for updating file attributes
  */
-struct  Nfs__SAttrArgs
-{
-  ProtobufCMessage base;
-  Nfs__FHandle *file;
-  Nfs__SAttr *attributes;
+struct Nfs__SAttrArgs {
+    ProtobufCMessage base;
+    Nfs__FHandle *file;
+    Nfs__SAttr *attributes;
 };
-#define NFS__SATTR_ARGS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__sattr_args__descriptor) \
-    , NULL, NULL }
-
+#define NFS__SATTR_ARGS__INIT                                                                                          \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__sattr_args__descriptor)                                                          \
+        , NULL, NULL                                                                                                   \
+    }
 
 typedef enum {
-  NFS__READ_LINK_RES__BODY__NOT_SET = 0,
-  NFS__READ_LINK_RES__BODY_DATA = 2,
-  NFS__READ_LINK_RES__BODY_DEFAULT_CASE = 3
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__READ_LINK_RES__BODY__CASE)
+    NFS__READ_LINK_RES__BODY__NOT_SET = 0,
+    NFS__READ_LINK_RES__BODY_DATA = 2,
+    NFS__READ_LINK_RES__BODY_DEFAULT_CASE = 3 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__READ_LINK_RES__BODY__CASE)
 } Nfs__ReadLinkRes__BodyCase;
 
 /*
  * Used for NFSPROC_READLINK results, to return the path of the file that this symbolic link refers to
  */
-struct  Nfs__ReadLinkRes
-{
-  ProtobufCMessage base;
-  Nfs__NfsStat *nfs_status;
-  Nfs__ReadLinkRes__BodyCase body_case;
-  union {
-    /*
-     * case NFS_OK
-     */
-    Nfs__Path *data;
-    /*
-     * default case
-     */
-    Google__Protobuf__Empty *default_case;
-  };
+struct Nfs__ReadLinkRes {
+    ProtobufCMessage base;
+    Nfs__NfsStat *nfs_status;
+    Nfs__ReadLinkRes__BodyCase body_case;
+    union {
+        /*
+         * case NFS_OK
+         */
+        Nfs__Path *data;
+        /*
+         * default case
+         */
+        Google__Protobuf__Empty *default_case;
+    };
 };
-#define NFS__READ_LINK_RES__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__read_link_res__descriptor) \
-    , NULL, NFS__READ_LINK_RES__BODY__NOT_SET, {0} }
-
+#define NFS__READ_LINK_RES__INIT                                                                                       \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__read_link_res__descriptor)                                                       \
+        , NULL, NFS__READ_LINK_RES__BODY__NOT_SET, {                                                                   \
+            0                                                                                                          \
+        }                                                                                                              \
+    }
 
 /*
  * Used for NFSPROC_READ arguments, 'totalcount' is unused
  */
-struct  Nfs__ReadArgs
-{
-  ProtobufCMessage base;
-  Nfs__FHandle *file;
-  uint32_t offset;
-  uint32_t count;
-  /*
-   * unused
-   */
-  uint32_t totalcount;
+struct Nfs__ReadArgs {
+    ProtobufCMessage base;
+    Nfs__FHandle *file;
+    uint32_t offset;
+    uint32_t count;
+    /*
+     * unused
+     */
+    uint32_t totalcount;
 };
-#define NFS__READ_ARGS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__read_args__descriptor) \
-    , NULL, 0, 0, 0 }
-
+#define NFS__READ_ARGS__INIT                                                                                           \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__read_args__descriptor)                                                           \
+        , NULL, 0, 0, 0                                                                                                \
+    }
 
 /*
  * Data read from a file, and file's attributes
  */
-struct  Nfs__ReadResBody
-{
-  ProtobufCMessage base;
-  Nfs__FAttr *attributes;
-  ProtobufCBinaryData nfsdata;
+struct Nfs__ReadResBody {
+    ProtobufCMessage base;
+    Nfs__FAttr *attributes;
+    ProtobufCBinaryData nfsdata;
 };
-#define NFS__READ_RES_BODY__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__read_res_body__descriptor) \
-    , NULL, {0,NULL} }
-
+#define NFS__READ_RES_BODY__INIT                                                                                       \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__read_res_body__descriptor)                                                       \
+        , NULL, {                                                                                                      \
+            0, NULL                                                                                                    \
+        }                                                                                                              \
+    }
 
 typedef enum {
-  NFS__READ_RES__BODY__NOT_SET = 0,
-  NFS__READ_RES__BODY_READRESBODY = 2,
-  NFS__READ_RES__BODY_DEFAULT_CASE = 3
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__READ_RES__BODY__CASE)
+    NFS__READ_RES__BODY__NOT_SET = 0,
+    NFS__READ_RES__BODY_READRESBODY = 2,
+    NFS__READ_RES__BODY_DEFAULT_CASE = 3 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__READ_RES__BODY__CASE)
 } Nfs__ReadRes__BodyCase;
 
 /*
  * Used for NFSPROC_READ results, to return the read data in case of NFS_OK
  */
-struct  Nfs__ReadRes
-{
-  ProtobufCMessage base;
-  Nfs__NfsStat *nfs_status;
-  Nfs__ReadRes__BodyCase body_case;
-  union {
+struct Nfs__ReadRes {
+    ProtobufCMessage base;
+    Nfs__NfsStat *nfs_status;
+    Nfs__ReadRes__BodyCase body_case;
+    union {
+        /*
+         * case NFS_OK
+         */
+        Nfs__ReadResBody *readresbody;
+        /*
+         * default case
+         */
+        Google__Protobuf__Empty *default_case;
+    };
+};
+#define NFS__READ_RES__INIT                                                                                            \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__read_res__descriptor)                                                            \
+        , NULL, NFS__READ_RES__BODY__NOT_SET, {                                                                        \
+            0                                                                                                          \
+        }                                                                                                              \
+    }
+
+struct Nfs__WriteArgs {
+    ProtobufCMessage base;
+    Nfs__FHandle *file;
     /*
-     * case NFS_OK
+     * unused
      */
-    Nfs__ReadResBody *readresbody;
+    uint32_t beginoffset;
+    uint32_t offset;
     /*
-     * default case
+     * unused
      */
-    Google__Protobuf__Empty *default_case;
-  };
+    uint32_t totalcount;
+    ProtobufCBinaryData nfsdata;
 };
-#define NFS__READ_RES__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__read_res__descriptor) \
-    , NULL, NFS__READ_RES__BODY__NOT_SET, {0} }
+#define NFS__WRITE_ARGS__INIT                                                                                          \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__write_args__descriptor)                                                          \
+        , NULL, 0, 0, 0, {                                                                                             \
+            0, NULL                                                                                                    \
+        }                                                                                                              \
+    }
 
-
-struct  Nfs__WriteArgs
-{
-  ProtobufCMessage base;
-  Nfs__FHandle *file;
-  /*
-   * unused
-   */
-  uint32_t beginoffset;
-  uint32_t offset;
-  /*
-   * unused
-   */
-  uint32_t totalcount;
-  ProtobufCBinaryData nfsdata;
+struct Nfs__CreateArgs {
+    ProtobufCMessage base;
+    Nfs__DirOpArgs *where;
+    Nfs__SAttr *attributes;
 };
-#define NFS__WRITE_ARGS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__write_args__descriptor) \
-    , NULL, 0, 0, 0, {0,NULL} }
+#define NFS__CREATE_ARGS__INIT                                                                                         \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__create_args__descriptor)                                                         \
+        , NULL, NULL                                                                                                   \
+    }
 
-
-struct  Nfs__CreateArgs
-{
-  ProtobufCMessage base;
-  Nfs__DirOpArgs *where;
-  Nfs__SAttr *attributes;
+struct Nfs__RenameArgs {
+    ProtobufCMessage base;
+    Nfs__DirOpArgs *from;
+    Nfs__DirOpArgs *to;
 };
-#define NFS__CREATE_ARGS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__create_args__descriptor) \
-    , NULL, NULL }
+#define NFS__RENAME_ARGS__INIT                                                                                         \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__rename_args__descriptor)                                                         \
+        , NULL, NULL                                                                                                   \
+    }
 
-
-struct  Nfs__RenameArgs
-{
-  ProtobufCMessage base;
-  Nfs__DirOpArgs *from;
-  Nfs__DirOpArgs *to;
+struct Nfs__LinkArgs {
+    ProtobufCMessage base;
+    Nfs__FHandle *from;
+    Nfs__DirOpArgs *to;
 };
-#define NFS__RENAME_ARGS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__rename_args__descriptor) \
-    , NULL, NULL }
+#define NFS__LINK_ARGS__INIT                                                                                           \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__link_args__descriptor)                                                           \
+        , NULL, NULL                                                                                                   \
+    }
 
-
-struct  Nfs__LinkArgs
-{
-  ProtobufCMessage base;
-  Nfs__FHandle *from;
-  Nfs__DirOpArgs *to;
+struct Nfs__SymLinkArgs {
+    ProtobufCMessage base;
+    Nfs__DirOpArgs *from;
+    Nfs__Path *to;
+    /*
+     * Unix-like NFS servers never use these 'attributes' as symlinks always have mode 0777
+     */
+    Nfs__SAttr *attributes;
 };
-#define NFS__LINK_ARGS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__link_args__descriptor) \
-    , NULL, NULL }
-
-
-struct  Nfs__SymLinkArgs
-{
-  ProtobufCMessage base;
-  Nfs__DirOpArgs *from;
-  Nfs__Path *to;
-  /*
-   * Unix-like NFS servers never use these 'attributes' as symlinks always have mode 0777
-   */
-  Nfs__SAttr *attributes;
-};
-#define NFS__SYM_LINK_ARGS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__sym_link_args__descriptor) \
-    , NULL, NULL, NULL }
-
+#define NFS__SYM_LINK_ARGS__INIT                                                                                       \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__sym_link_args__descriptor)                                                       \
+        , NULL, NULL, NULL                                                                                             \
+    }
 
 /*
  * Cookie used for positioning in the directory stream
  */
-struct  Nfs__NfsCookie
-{
-  ProtobufCMessage base;
-  uint64_t value;
+struct Nfs__NfsCookie {
+    ProtobufCMessage base;
+    uint64_t value;
 };
-#define NFS__NFS_COOKIE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__nfs_cookie__descriptor) \
-    , 0 }
-
+#define NFS__NFS_COOKIE__INIT                                                                                          \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__nfs_cookie__descriptor)                                                          \
+        , 0                                                                                                            \
+    }
 
 /*
  * Used for NFSPROC_READDIR arguments
  */
-struct  Nfs__ReadDirArgs
-{
-  ProtobufCMessage base;
-  Nfs__FHandle *dir;
-  Nfs__NfsCookie *cookie;
-  uint32_t count;
+struct Nfs__ReadDirArgs {
+    ProtobufCMessage base;
+    Nfs__FHandle *dir;
+    Nfs__NfsCookie *cookie;
+    uint32_t count;
 };
-#define NFS__READ_DIR_ARGS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__read_dir_args__descriptor) \
-    , NULL, NULL, 0 }
+#define NFS__READ_DIR_ARGS__INIT                                                                                       \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__read_dir_args__descriptor)                                                       \
+        , NULL, NULL, 0                                                                                                \
+    }
 
-
-struct  Nfs__DirectoryEntriesList
-{
-  ProtobufCMessage base;
-  /*
-   * fileid here should be same as fileid in FAttr
-   */
-  uint64_t fileid;
-  Nfs__FileName *name;
-  Nfs__NfsCookie *cookie;
-  Nfs__DirectoryEntriesList *nextentry;
+struct Nfs__DirectoryEntriesList {
+    ProtobufCMessage base;
+    /*
+     * fileid here should be same as fileid in FAttr
+     */
+    uint64_t fileid;
+    Nfs__FileName *name;
+    Nfs__NfsCookie *cookie;
+    Nfs__DirectoryEntriesList *nextentry;
 };
-#define NFS__DIRECTORY_ENTRIES_LIST__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__directory_entries_list__descriptor) \
-    , 0, NULL, NULL, NULL }
+#define NFS__DIRECTORY_ENTRIES_LIST__INIT                                                                              \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__directory_entries_list__descriptor)                                              \
+        , 0, NULL, NULL, NULL                                                                                          \
+    }
 
-
-struct  Nfs__ReadDirOk
-{
-  ProtobufCMessage base;
-  Nfs__DirectoryEntriesList *entries;
-  protobuf_c_boolean eof;
+struct Nfs__ReadDirOk {
+    ProtobufCMessage base;
+    Nfs__DirectoryEntriesList *entries;
+    protobuf_c_boolean eof;
 };
-#define NFS__READ_DIR_OK__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__read_dir_ok__descriptor) \
-    , NULL, 0 }
-
+#define NFS__READ_DIR_OK__INIT                                                                                         \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__read_dir_ok__descriptor)                                                         \
+        , NULL, 0                                                                                                      \
+    }
 
 typedef enum {
-  NFS__READ_DIR_RES__BODY__NOT_SET = 0,
-  NFS__READ_DIR_RES__BODY_READDIROK = 2,
-  NFS__READ_DIR_RES__BODY_DEFAULT_CASE = 3
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__READ_DIR_RES__BODY__CASE)
+    NFS__READ_DIR_RES__BODY__NOT_SET = 0,
+    NFS__READ_DIR_RES__BODY_READDIROK = 2,
+    NFS__READ_DIR_RES__BODY_DEFAULT_CASE = 3 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__READ_DIR_RES__BODY__CASE)
 } Nfs__ReadDirRes__BodyCase;
 
-struct  Nfs__ReadDirRes
-{
-  ProtobufCMessage base;
-  Nfs__NfsStat *nfs_status;
-  Nfs__ReadDirRes__BodyCase body_case;
-  union {
-    /*
-     * case NFS_OK
-     */
-    Nfs__ReadDirOk *readdirok;
-    /*
-     * default case
-     */
-    Google__Protobuf__Empty *default_case;
-  };
+struct Nfs__ReadDirRes {
+    ProtobufCMessage base;
+    Nfs__NfsStat *nfs_status;
+    Nfs__ReadDirRes__BodyCase body_case;
+    union {
+        /*
+         * case NFS_OK
+         */
+        Nfs__ReadDirOk *readdirok;
+        /*
+         * default case
+         */
+        Google__Protobuf__Empty *default_case;
+    };
 };
-#define NFS__READ_DIR_RES__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__read_dir_res__descriptor) \
-    , NULL, NFS__READ_DIR_RES__BODY__NOT_SET, {0} }
+#define NFS__READ_DIR_RES__INIT                                                                                        \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__read_dir_res__descriptor)                                                        \
+        , NULL, NFS__READ_DIR_RES__BODY__NOT_SET, {                                                                    \
+            0                                                                                                          \
+        }                                                                                                              \
+    }
 
-
-struct  Nfs__FsInfo
-{
-  ProtobufCMessage base;
-  /*
-   * optimum transfer size of the server in bytes
-   */
-  uint32_t tsize;
-  /*
-   * block size in bytes of the filesystem
-   */
-  uint64_t bsize;
-  /*
-   * total number of 'bsize' blocks on the filesystem
-   */
-  uint64_t blocks;
-  /*
-   * number of free 'bsize' blocks on the filesystem
-   */
-  uint64_t bfree;
-  /*
-   * number of 'bsize' blocks available to non-privileged users
-   */
-  uint64_t bavail;
+struct Nfs__FsInfo {
+    ProtobufCMessage base;
+    /*
+     * optimum transfer size of the server in bytes
+     */
+    uint32_t tsize;
+    /*
+     * block size in bytes of the filesystem
+     */
+    uint64_t bsize;
+    /*
+     * total number of 'bsize' blocks on the filesystem
+     */
+    uint64_t blocks;
+    /*
+     * number of free 'bsize' blocks on the filesystem
+     */
+    uint64_t bfree;
+    /*
+     * number of 'bsize' blocks available to non-privileged users
+     */
+    uint64_t bavail;
 };
-#define NFS__FS_INFO__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__fs_info__descriptor) \
-    , 0, 0, 0, 0, 0 }
-
+#define NFS__FS_INFO__INIT                                                                                             \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__fs_info__descriptor)                                                             \
+        , 0, 0, 0, 0, 0                                                                                                \
+    }
 
 typedef enum {
-  NFS__STAT_FS_RES__BODY__NOT_SET = 0,
-  NFS__STAT_FS_RES__BODY_FS_INFO = 2,
-  NFS__STAT_FS_RES__BODY_DEFAULT_CASE = 3
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__STAT_FS_RES__BODY__CASE)
+    NFS__STAT_FS_RES__BODY__NOT_SET = 0,
+    NFS__STAT_FS_RES__BODY_FS_INFO = 2,
+    NFS__STAT_FS_RES__BODY_DEFAULT_CASE = 3 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(NFS__STAT_FS_RES__BODY__CASE)
 } Nfs__StatFsRes__BodyCase;
 
 /*
  * Used for NFSPROC_STATFS results
  */
-struct  Nfs__StatFsRes
-{
-  ProtobufCMessage base;
-  Nfs__NfsStat *nfs_status;
-  Nfs__StatFsRes__BodyCase body_case;
-  union {
-    /*
-     * case NFS_OK
-     */
-    Nfs__FsInfo *fs_info;
-    /*
-     * default case
-     */
-    Google__Protobuf__Empty *default_case;
-  };
+struct Nfs__StatFsRes {
+    ProtobufCMessage base;
+    Nfs__NfsStat *nfs_status;
+    Nfs__StatFsRes__BodyCase body_case;
+    union {
+        /*
+         * case NFS_OK
+         */
+        Nfs__FsInfo *fs_info;
+        /*
+         * default case
+         */
+        Google__Protobuf__Empty *default_case;
+    };
 };
-#define NFS__STAT_FS_RES__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&nfs__stat_fs_res__descriptor) \
-    , NULL, NFS__STAT_FS_RES__BODY__NOT_SET, {0} }
-
+#define NFS__STAT_FS_RES__INIT                                                                                         \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&nfs__stat_fs_res__descriptor)                                                         \
+        , NULL, NFS__STAT_FS_RES__BODY__NOT_SET, {                                                                     \
+            0                                                                                                          \
+        }                                                                                                              \
+    }
 
 /* Nfs__NfsStat methods */
-void   nfs__nfs_stat__init
-                     (Nfs__NfsStat         *message);
-size_t nfs__nfs_stat__get_packed_size
-                     (const Nfs__NfsStat   *message);
-size_t nfs__nfs_stat__pack
-                     (const Nfs__NfsStat   *message,
-                      uint8_t             *out);
-size_t nfs__nfs_stat__pack_to_buffer
-                     (const Nfs__NfsStat   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__NfsStat *
-       nfs__nfs_stat__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__nfs_stat__free_unpacked
-                     (Nfs__NfsStat *message,
-                      ProtobufCAllocator *allocator);
+void nfs__nfs_stat__init(Nfs__NfsStat *message);
+size_t nfs__nfs_stat__get_packed_size(const Nfs__NfsStat *message);
+size_t nfs__nfs_stat__pack(const Nfs__NfsStat *message, uint8_t *out);
+size_t nfs__nfs_stat__pack_to_buffer(const Nfs__NfsStat *message, ProtobufCBuffer *buffer);
+Nfs__NfsStat *nfs__nfs_stat__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__nfs_stat__free_unpacked(Nfs__NfsStat *message, ProtobufCAllocator *allocator);
 /* Nfs__NfsFType methods */
-void   nfs__nfs_ftype__init
-                     (Nfs__NfsFType         *message);
-size_t nfs__nfs_ftype__get_packed_size
-                     (const Nfs__NfsFType   *message);
-size_t nfs__nfs_ftype__pack
-                     (const Nfs__NfsFType   *message,
-                      uint8_t             *out);
-size_t nfs__nfs_ftype__pack_to_buffer
-                     (const Nfs__NfsFType   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__NfsFType *
-       nfs__nfs_ftype__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__nfs_ftype__free_unpacked
-                     (Nfs__NfsFType *message,
-                      ProtobufCAllocator *allocator);
+void nfs__nfs_ftype__init(Nfs__NfsFType *message);
+size_t nfs__nfs_ftype__get_packed_size(const Nfs__NfsFType *message);
+size_t nfs__nfs_ftype__pack(const Nfs__NfsFType *message, uint8_t *out);
+size_t nfs__nfs_ftype__pack_to_buffer(const Nfs__NfsFType *message, ProtobufCBuffer *buffer);
+Nfs__NfsFType *nfs__nfs_ftype__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__nfs_ftype__free_unpacked(Nfs__NfsFType *message, ProtobufCAllocator *allocator);
 /* Nfs__FHandle methods */
-void   nfs__fhandle__init
-                     (Nfs__FHandle         *message);
-size_t nfs__fhandle__get_packed_size
-                     (const Nfs__FHandle   *message);
-size_t nfs__fhandle__pack
-                     (const Nfs__FHandle   *message,
-                      uint8_t             *out);
-size_t nfs__fhandle__pack_to_buffer
-                     (const Nfs__FHandle   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__FHandle *
-       nfs__fhandle__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__fhandle__free_unpacked
-                     (Nfs__FHandle *message,
-                      ProtobufCAllocator *allocator);
+void nfs__fhandle__init(Nfs__FHandle *message);
+size_t nfs__fhandle__get_packed_size(const Nfs__FHandle *message);
+size_t nfs__fhandle__pack(const Nfs__FHandle *message, uint8_t *out);
+size_t nfs__fhandle__pack_to_buffer(const Nfs__FHandle *message, ProtobufCBuffer *buffer);
+Nfs__FHandle *nfs__fhandle__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__fhandle__free_unpacked(Nfs__FHandle *message, ProtobufCAllocator *allocator);
 /* Nfs__TimeVal methods */
-void   nfs__time_val__init
-                     (Nfs__TimeVal         *message);
-size_t nfs__time_val__get_packed_size
-                     (const Nfs__TimeVal   *message);
-size_t nfs__time_val__pack
-                     (const Nfs__TimeVal   *message,
-                      uint8_t             *out);
-size_t nfs__time_val__pack_to_buffer
-                     (const Nfs__TimeVal   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__TimeVal *
-       nfs__time_val__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__time_val__free_unpacked
-                     (Nfs__TimeVal *message,
-                      ProtobufCAllocator *allocator);
+void nfs__time_val__init(Nfs__TimeVal *message);
+size_t nfs__time_val__get_packed_size(const Nfs__TimeVal *message);
+size_t nfs__time_val__pack(const Nfs__TimeVal *message, uint8_t *out);
+size_t nfs__time_val__pack_to_buffer(const Nfs__TimeVal *message, ProtobufCBuffer *buffer);
+Nfs__TimeVal *nfs__time_val__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__time_val__free_unpacked(Nfs__TimeVal *message, ProtobufCAllocator *allocator);
 /* Nfs__FAttr methods */
-void   nfs__fattr__init
-                     (Nfs__FAttr         *message);
-size_t nfs__fattr__get_packed_size
-                     (const Nfs__FAttr   *message);
-size_t nfs__fattr__pack
-                     (const Nfs__FAttr   *message,
-                      uint8_t             *out);
-size_t nfs__fattr__pack_to_buffer
-                     (const Nfs__FAttr   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__FAttr *
-       nfs__fattr__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__fattr__free_unpacked
-                     (Nfs__FAttr *message,
-                      ProtobufCAllocator *allocator);
+void nfs__fattr__init(Nfs__FAttr *message);
+size_t nfs__fattr__get_packed_size(const Nfs__FAttr *message);
+size_t nfs__fattr__pack(const Nfs__FAttr *message, uint8_t *out);
+size_t nfs__fattr__pack_to_buffer(const Nfs__FAttr *message, ProtobufCBuffer *buffer);
+Nfs__FAttr *nfs__fattr__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__fattr__free_unpacked(Nfs__FAttr *message, ProtobufCAllocator *allocator);
 /* Nfs__SAttr methods */
-void   nfs__sattr__init
-                     (Nfs__SAttr         *message);
-size_t nfs__sattr__get_packed_size
-                     (const Nfs__SAttr   *message);
-size_t nfs__sattr__pack
-                     (const Nfs__SAttr   *message,
-                      uint8_t             *out);
-size_t nfs__sattr__pack_to_buffer
-                     (const Nfs__SAttr   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__SAttr *
-       nfs__sattr__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__sattr__free_unpacked
-                     (Nfs__SAttr *message,
-                      ProtobufCAllocator *allocator);
+void nfs__sattr__init(Nfs__SAttr *message);
+size_t nfs__sattr__get_packed_size(const Nfs__SAttr *message);
+size_t nfs__sattr__pack(const Nfs__SAttr *message, uint8_t *out);
+size_t nfs__sattr__pack_to_buffer(const Nfs__SAttr *message, ProtobufCBuffer *buffer);
+Nfs__SAttr *nfs__sattr__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__sattr__free_unpacked(Nfs__SAttr *message, ProtobufCAllocator *allocator);
 /* Nfs__FileName methods */
-void   nfs__file_name__init
-                     (Nfs__FileName         *message);
-size_t nfs__file_name__get_packed_size
-                     (const Nfs__FileName   *message);
-size_t nfs__file_name__pack
-                     (const Nfs__FileName   *message,
-                      uint8_t             *out);
-size_t nfs__file_name__pack_to_buffer
-                     (const Nfs__FileName   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__FileName *
-       nfs__file_name__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__file_name__free_unpacked
-                     (Nfs__FileName *message,
-                      ProtobufCAllocator *allocator);
+void nfs__file_name__init(Nfs__FileName *message);
+size_t nfs__file_name__get_packed_size(const Nfs__FileName *message);
+size_t nfs__file_name__pack(const Nfs__FileName *message, uint8_t *out);
+size_t nfs__file_name__pack_to_buffer(const Nfs__FileName *message, ProtobufCBuffer *buffer);
+Nfs__FileName *nfs__file_name__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__file_name__free_unpacked(Nfs__FileName *message, ProtobufCAllocator *allocator);
 /* Nfs__Path methods */
-void   nfs__path__init
-                     (Nfs__Path         *message);
-size_t nfs__path__get_packed_size
-                     (const Nfs__Path   *message);
-size_t nfs__path__pack
-                     (const Nfs__Path   *message,
-                      uint8_t             *out);
-size_t nfs__path__pack_to_buffer
-                     (const Nfs__Path   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__Path *
-       nfs__path__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__path__free_unpacked
-                     (Nfs__Path *message,
-                      ProtobufCAllocator *allocator);
+void nfs__path__init(Nfs__Path *message);
+size_t nfs__path__get_packed_size(const Nfs__Path *message);
+size_t nfs__path__pack(const Nfs__Path *message, uint8_t *out);
+size_t nfs__path__pack_to_buffer(const Nfs__Path *message, ProtobufCBuffer *buffer);
+Nfs__Path *nfs__path__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__path__free_unpacked(Nfs__Path *message, ProtobufCAllocator *allocator);
 /* Nfs__AttrStat methods */
-void   nfs__attr_stat__init
-                     (Nfs__AttrStat         *message);
-size_t nfs__attr_stat__get_packed_size
-                     (const Nfs__AttrStat   *message);
-size_t nfs__attr_stat__pack
-                     (const Nfs__AttrStat   *message,
-                      uint8_t             *out);
-size_t nfs__attr_stat__pack_to_buffer
-                     (const Nfs__AttrStat   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__AttrStat *
-       nfs__attr_stat__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__attr_stat__free_unpacked
-                     (Nfs__AttrStat *message,
-                      ProtobufCAllocator *allocator);
+void nfs__attr_stat__init(Nfs__AttrStat *message);
+size_t nfs__attr_stat__get_packed_size(const Nfs__AttrStat *message);
+size_t nfs__attr_stat__pack(const Nfs__AttrStat *message, uint8_t *out);
+size_t nfs__attr_stat__pack_to_buffer(const Nfs__AttrStat *message, ProtobufCBuffer *buffer);
+Nfs__AttrStat *nfs__attr_stat__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__attr_stat__free_unpacked(Nfs__AttrStat *message, ProtobufCAllocator *allocator);
 /* Nfs__DirOpArgs methods */
-void   nfs__dir_op_args__init
-                     (Nfs__DirOpArgs         *message);
-size_t nfs__dir_op_args__get_packed_size
-                     (const Nfs__DirOpArgs   *message);
-size_t nfs__dir_op_args__pack
-                     (const Nfs__DirOpArgs   *message,
-                      uint8_t             *out);
-size_t nfs__dir_op_args__pack_to_buffer
-                     (const Nfs__DirOpArgs   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__DirOpArgs *
-       nfs__dir_op_args__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__dir_op_args__free_unpacked
-                     (Nfs__DirOpArgs *message,
-                      ProtobufCAllocator *allocator);
+void nfs__dir_op_args__init(Nfs__DirOpArgs *message);
+size_t nfs__dir_op_args__get_packed_size(const Nfs__DirOpArgs *message);
+size_t nfs__dir_op_args__pack(const Nfs__DirOpArgs *message, uint8_t *out);
+size_t nfs__dir_op_args__pack_to_buffer(const Nfs__DirOpArgs *message, ProtobufCBuffer *buffer);
+Nfs__DirOpArgs *nfs__dir_op_args__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__dir_op_args__free_unpacked(Nfs__DirOpArgs *message, ProtobufCAllocator *allocator);
 /* Nfs__DirOpOk methods */
-void   nfs__dir_op_ok__init
-                     (Nfs__DirOpOk         *message);
-size_t nfs__dir_op_ok__get_packed_size
-                     (const Nfs__DirOpOk   *message);
-size_t nfs__dir_op_ok__pack
-                     (const Nfs__DirOpOk   *message,
-                      uint8_t             *out);
-size_t nfs__dir_op_ok__pack_to_buffer
-                     (const Nfs__DirOpOk   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__DirOpOk *
-       nfs__dir_op_ok__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__dir_op_ok__free_unpacked
-                     (Nfs__DirOpOk *message,
-                      ProtobufCAllocator *allocator);
+void nfs__dir_op_ok__init(Nfs__DirOpOk *message);
+size_t nfs__dir_op_ok__get_packed_size(const Nfs__DirOpOk *message);
+size_t nfs__dir_op_ok__pack(const Nfs__DirOpOk *message, uint8_t *out);
+size_t nfs__dir_op_ok__pack_to_buffer(const Nfs__DirOpOk *message, ProtobufCBuffer *buffer);
+Nfs__DirOpOk *nfs__dir_op_ok__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__dir_op_ok__free_unpacked(Nfs__DirOpOk *message, ProtobufCAllocator *allocator);
 /* Nfs__DirOpRes methods */
-void   nfs__dir_op_res__init
-                     (Nfs__DirOpRes         *message);
-size_t nfs__dir_op_res__get_packed_size
-                     (const Nfs__DirOpRes   *message);
-size_t nfs__dir_op_res__pack
-                     (const Nfs__DirOpRes   *message,
-                      uint8_t             *out);
-size_t nfs__dir_op_res__pack_to_buffer
-                     (const Nfs__DirOpRes   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__DirOpRes *
-       nfs__dir_op_res__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__dir_op_res__free_unpacked
-                     (Nfs__DirOpRes *message,
-                      ProtobufCAllocator *allocator);
+void nfs__dir_op_res__init(Nfs__DirOpRes *message);
+size_t nfs__dir_op_res__get_packed_size(const Nfs__DirOpRes *message);
+size_t nfs__dir_op_res__pack(const Nfs__DirOpRes *message, uint8_t *out);
+size_t nfs__dir_op_res__pack_to_buffer(const Nfs__DirOpRes *message, ProtobufCBuffer *buffer);
+Nfs__DirOpRes *nfs__dir_op_res__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__dir_op_res__free_unpacked(Nfs__DirOpRes *message, ProtobufCAllocator *allocator);
 /* Nfs__SAttrArgs methods */
-void   nfs__sattr_args__init
-                     (Nfs__SAttrArgs         *message);
-size_t nfs__sattr_args__get_packed_size
-                     (const Nfs__SAttrArgs   *message);
-size_t nfs__sattr_args__pack
-                     (const Nfs__SAttrArgs   *message,
-                      uint8_t             *out);
-size_t nfs__sattr_args__pack_to_buffer
-                     (const Nfs__SAttrArgs   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__SAttrArgs *
-       nfs__sattr_args__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__sattr_args__free_unpacked
-                     (Nfs__SAttrArgs *message,
-                      ProtobufCAllocator *allocator);
+void nfs__sattr_args__init(Nfs__SAttrArgs *message);
+size_t nfs__sattr_args__get_packed_size(const Nfs__SAttrArgs *message);
+size_t nfs__sattr_args__pack(const Nfs__SAttrArgs *message, uint8_t *out);
+size_t nfs__sattr_args__pack_to_buffer(const Nfs__SAttrArgs *message, ProtobufCBuffer *buffer);
+Nfs__SAttrArgs *nfs__sattr_args__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__sattr_args__free_unpacked(Nfs__SAttrArgs *message, ProtobufCAllocator *allocator);
 /* Nfs__ReadLinkRes methods */
-void   nfs__read_link_res__init
-                     (Nfs__ReadLinkRes         *message);
-size_t nfs__read_link_res__get_packed_size
-                     (const Nfs__ReadLinkRes   *message);
-size_t nfs__read_link_res__pack
-                     (const Nfs__ReadLinkRes   *message,
-                      uint8_t             *out);
-size_t nfs__read_link_res__pack_to_buffer
-                     (const Nfs__ReadLinkRes   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__ReadLinkRes *
-       nfs__read_link_res__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__read_link_res__free_unpacked
-                     (Nfs__ReadLinkRes *message,
-                      ProtobufCAllocator *allocator);
+void nfs__read_link_res__init(Nfs__ReadLinkRes *message);
+size_t nfs__read_link_res__get_packed_size(const Nfs__ReadLinkRes *message);
+size_t nfs__read_link_res__pack(const Nfs__ReadLinkRes *message, uint8_t *out);
+size_t nfs__read_link_res__pack_to_buffer(const Nfs__ReadLinkRes *message, ProtobufCBuffer *buffer);
+Nfs__ReadLinkRes *nfs__read_link_res__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__read_link_res__free_unpacked(Nfs__ReadLinkRes *message, ProtobufCAllocator *allocator);
 /* Nfs__ReadArgs methods */
-void   nfs__read_args__init
-                     (Nfs__ReadArgs         *message);
-size_t nfs__read_args__get_packed_size
-                     (const Nfs__ReadArgs   *message);
-size_t nfs__read_args__pack
-                     (const Nfs__ReadArgs   *message,
-                      uint8_t             *out);
-size_t nfs__read_args__pack_to_buffer
-                     (const Nfs__ReadArgs   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__ReadArgs *
-       nfs__read_args__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__read_args__free_unpacked
-                     (Nfs__ReadArgs *message,
-                      ProtobufCAllocator *allocator);
+void nfs__read_args__init(Nfs__ReadArgs *message);
+size_t nfs__read_args__get_packed_size(const Nfs__ReadArgs *message);
+size_t nfs__read_args__pack(const Nfs__ReadArgs *message, uint8_t *out);
+size_t nfs__read_args__pack_to_buffer(const Nfs__ReadArgs *message, ProtobufCBuffer *buffer);
+Nfs__ReadArgs *nfs__read_args__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__read_args__free_unpacked(Nfs__ReadArgs *message, ProtobufCAllocator *allocator);
 /* Nfs__ReadResBody methods */
-void   nfs__read_res_body__init
-                     (Nfs__ReadResBody         *message);
-size_t nfs__read_res_body__get_packed_size
-                     (const Nfs__ReadResBody   *message);
-size_t nfs__read_res_body__pack
-                     (const Nfs__ReadResBody   *message,
-                      uint8_t             *out);
-size_t nfs__read_res_body__pack_to_buffer
-                     (const Nfs__ReadResBody   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__ReadResBody *
-       nfs__read_res_body__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__read_res_body__free_unpacked
-                     (Nfs__ReadResBody *message,
-                      ProtobufCAllocator *allocator);
+void nfs__read_res_body__init(Nfs__ReadResBody *message);
+size_t nfs__read_res_body__get_packed_size(const Nfs__ReadResBody *message);
+size_t nfs__read_res_body__pack(const Nfs__ReadResBody *message, uint8_t *out);
+size_t nfs__read_res_body__pack_to_buffer(const Nfs__ReadResBody *message, ProtobufCBuffer *buffer);
+Nfs__ReadResBody *nfs__read_res_body__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__read_res_body__free_unpacked(Nfs__ReadResBody *message, ProtobufCAllocator *allocator);
 /* Nfs__ReadRes methods */
-void   nfs__read_res__init
-                     (Nfs__ReadRes         *message);
-size_t nfs__read_res__get_packed_size
-                     (const Nfs__ReadRes   *message);
-size_t nfs__read_res__pack
-                     (const Nfs__ReadRes   *message,
-                      uint8_t             *out);
-size_t nfs__read_res__pack_to_buffer
-                     (const Nfs__ReadRes   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__ReadRes *
-       nfs__read_res__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__read_res__free_unpacked
-                     (Nfs__ReadRes *message,
-                      ProtobufCAllocator *allocator);
+void nfs__read_res__init(Nfs__ReadRes *message);
+size_t nfs__read_res__get_packed_size(const Nfs__ReadRes *message);
+size_t nfs__read_res__pack(const Nfs__ReadRes *message, uint8_t *out);
+size_t nfs__read_res__pack_to_buffer(const Nfs__ReadRes *message, ProtobufCBuffer *buffer);
+Nfs__ReadRes *nfs__read_res__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__read_res__free_unpacked(Nfs__ReadRes *message, ProtobufCAllocator *allocator);
 /* Nfs__WriteArgs methods */
-void   nfs__write_args__init
-                     (Nfs__WriteArgs         *message);
-size_t nfs__write_args__get_packed_size
-                     (const Nfs__WriteArgs   *message);
-size_t nfs__write_args__pack
-                     (const Nfs__WriteArgs   *message,
-                      uint8_t             *out);
-size_t nfs__write_args__pack_to_buffer
-                     (const Nfs__WriteArgs   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__WriteArgs *
-       nfs__write_args__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__write_args__free_unpacked
-                     (Nfs__WriteArgs *message,
-                      ProtobufCAllocator *allocator);
+void nfs__write_args__init(Nfs__WriteArgs *message);
+size_t nfs__write_args__get_packed_size(const Nfs__WriteArgs *message);
+size_t nfs__write_args__pack(const Nfs__WriteArgs *message, uint8_t *out);
+size_t nfs__write_args__pack_to_buffer(const Nfs__WriteArgs *message, ProtobufCBuffer *buffer);
+Nfs__WriteArgs *nfs__write_args__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__write_args__free_unpacked(Nfs__WriteArgs *message, ProtobufCAllocator *allocator);
 /* Nfs__CreateArgs methods */
-void   nfs__create_args__init
-                     (Nfs__CreateArgs         *message);
-size_t nfs__create_args__get_packed_size
-                     (const Nfs__CreateArgs   *message);
-size_t nfs__create_args__pack
-                     (const Nfs__CreateArgs   *message,
-                      uint8_t             *out);
-size_t nfs__create_args__pack_to_buffer
-                     (const Nfs__CreateArgs   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__CreateArgs *
-       nfs__create_args__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__create_args__free_unpacked
-                     (Nfs__CreateArgs *message,
-                      ProtobufCAllocator *allocator);
+void nfs__create_args__init(Nfs__CreateArgs *message);
+size_t nfs__create_args__get_packed_size(const Nfs__CreateArgs *message);
+size_t nfs__create_args__pack(const Nfs__CreateArgs *message, uint8_t *out);
+size_t nfs__create_args__pack_to_buffer(const Nfs__CreateArgs *message, ProtobufCBuffer *buffer);
+Nfs__CreateArgs *nfs__create_args__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__create_args__free_unpacked(Nfs__CreateArgs *message, ProtobufCAllocator *allocator);
 /* Nfs__RenameArgs methods */
-void   nfs__rename_args__init
-                     (Nfs__RenameArgs         *message);
-size_t nfs__rename_args__get_packed_size
-                     (const Nfs__RenameArgs   *message);
-size_t nfs__rename_args__pack
-                     (const Nfs__RenameArgs   *message,
-                      uint8_t             *out);
-size_t nfs__rename_args__pack_to_buffer
-                     (const Nfs__RenameArgs   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__RenameArgs *
-       nfs__rename_args__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__rename_args__free_unpacked
-                     (Nfs__RenameArgs *message,
-                      ProtobufCAllocator *allocator);
+void nfs__rename_args__init(Nfs__RenameArgs *message);
+size_t nfs__rename_args__get_packed_size(const Nfs__RenameArgs *message);
+size_t nfs__rename_args__pack(const Nfs__RenameArgs *message, uint8_t *out);
+size_t nfs__rename_args__pack_to_buffer(const Nfs__RenameArgs *message, ProtobufCBuffer *buffer);
+Nfs__RenameArgs *nfs__rename_args__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__rename_args__free_unpacked(Nfs__RenameArgs *message, ProtobufCAllocator *allocator);
 /* Nfs__LinkArgs methods */
-void   nfs__link_args__init
-                     (Nfs__LinkArgs         *message);
-size_t nfs__link_args__get_packed_size
-                     (const Nfs__LinkArgs   *message);
-size_t nfs__link_args__pack
-                     (const Nfs__LinkArgs   *message,
-                      uint8_t             *out);
-size_t nfs__link_args__pack_to_buffer
-                     (const Nfs__LinkArgs   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__LinkArgs *
-       nfs__link_args__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__link_args__free_unpacked
-                     (Nfs__LinkArgs *message,
-                      ProtobufCAllocator *allocator);
+void nfs__link_args__init(Nfs__LinkArgs *message);
+size_t nfs__link_args__get_packed_size(const Nfs__LinkArgs *message);
+size_t nfs__link_args__pack(const Nfs__LinkArgs *message, uint8_t *out);
+size_t nfs__link_args__pack_to_buffer(const Nfs__LinkArgs *message, ProtobufCBuffer *buffer);
+Nfs__LinkArgs *nfs__link_args__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__link_args__free_unpacked(Nfs__LinkArgs *message, ProtobufCAllocator *allocator);
 /* Nfs__SymLinkArgs methods */
-void   nfs__sym_link_args__init
-                     (Nfs__SymLinkArgs         *message);
-size_t nfs__sym_link_args__get_packed_size
-                     (const Nfs__SymLinkArgs   *message);
-size_t nfs__sym_link_args__pack
-                     (const Nfs__SymLinkArgs   *message,
-                      uint8_t             *out);
-size_t nfs__sym_link_args__pack_to_buffer
-                     (const Nfs__SymLinkArgs   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__SymLinkArgs *
-       nfs__sym_link_args__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__sym_link_args__free_unpacked
-                     (Nfs__SymLinkArgs *message,
-                      ProtobufCAllocator *allocator);
+void nfs__sym_link_args__init(Nfs__SymLinkArgs *message);
+size_t nfs__sym_link_args__get_packed_size(const Nfs__SymLinkArgs *message);
+size_t nfs__sym_link_args__pack(const Nfs__SymLinkArgs *message, uint8_t *out);
+size_t nfs__sym_link_args__pack_to_buffer(const Nfs__SymLinkArgs *message, ProtobufCBuffer *buffer);
+Nfs__SymLinkArgs *nfs__sym_link_args__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__sym_link_args__free_unpacked(Nfs__SymLinkArgs *message, ProtobufCAllocator *allocator);
 /* Nfs__NfsCookie methods */
-void   nfs__nfs_cookie__init
-                     (Nfs__NfsCookie         *message);
-size_t nfs__nfs_cookie__get_packed_size
-                     (const Nfs__NfsCookie   *message);
-size_t nfs__nfs_cookie__pack
-                     (const Nfs__NfsCookie   *message,
-                      uint8_t             *out);
-size_t nfs__nfs_cookie__pack_to_buffer
-                     (const Nfs__NfsCookie   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__NfsCookie *
-       nfs__nfs_cookie__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__nfs_cookie__free_unpacked
-                     (Nfs__NfsCookie *message,
-                      ProtobufCAllocator *allocator);
+void nfs__nfs_cookie__init(Nfs__NfsCookie *message);
+size_t nfs__nfs_cookie__get_packed_size(const Nfs__NfsCookie *message);
+size_t nfs__nfs_cookie__pack(const Nfs__NfsCookie *message, uint8_t *out);
+size_t nfs__nfs_cookie__pack_to_buffer(const Nfs__NfsCookie *message, ProtobufCBuffer *buffer);
+Nfs__NfsCookie *nfs__nfs_cookie__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__nfs_cookie__free_unpacked(Nfs__NfsCookie *message, ProtobufCAllocator *allocator);
 /* Nfs__ReadDirArgs methods */
-void   nfs__read_dir_args__init
-                     (Nfs__ReadDirArgs         *message);
-size_t nfs__read_dir_args__get_packed_size
-                     (const Nfs__ReadDirArgs   *message);
-size_t nfs__read_dir_args__pack
-                     (const Nfs__ReadDirArgs   *message,
-                      uint8_t             *out);
-size_t nfs__read_dir_args__pack_to_buffer
-                     (const Nfs__ReadDirArgs   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__ReadDirArgs *
-       nfs__read_dir_args__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__read_dir_args__free_unpacked
-                     (Nfs__ReadDirArgs *message,
-                      ProtobufCAllocator *allocator);
+void nfs__read_dir_args__init(Nfs__ReadDirArgs *message);
+size_t nfs__read_dir_args__get_packed_size(const Nfs__ReadDirArgs *message);
+size_t nfs__read_dir_args__pack(const Nfs__ReadDirArgs *message, uint8_t *out);
+size_t nfs__read_dir_args__pack_to_buffer(const Nfs__ReadDirArgs *message, ProtobufCBuffer *buffer);
+Nfs__ReadDirArgs *nfs__read_dir_args__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__read_dir_args__free_unpacked(Nfs__ReadDirArgs *message, ProtobufCAllocator *allocator);
 /* Nfs__DirectoryEntriesList methods */
-void   nfs__directory_entries_list__init
-                     (Nfs__DirectoryEntriesList         *message);
-size_t nfs__directory_entries_list__get_packed_size
-                     (const Nfs__DirectoryEntriesList   *message);
-size_t nfs__directory_entries_list__pack
-                     (const Nfs__DirectoryEntriesList   *message,
-                      uint8_t             *out);
-size_t nfs__directory_entries_list__pack_to_buffer
-                     (const Nfs__DirectoryEntriesList   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__DirectoryEntriesList *
-       nfs__directory_entries_list__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__directory_entries_list__free_unpacked
-                     (Nfs__DirectoryEntriesList *message,
-                      ProtobufCAllocator *allocator);
+void nfs__directory_entries_list__init(Nfs__DirectoryEntriesList *message);
+size_t nfs__directory_entries_list__get_packed_size(const Nfs__DirectoryEntriesList *message);
+size_t nfs__directory_entries_list__pack(const Nfs__DirectoryEntriesList *message, uint8_t *out);
+size_t nfs__directory_entries_list__pack_to_buffer(const Nfs__DirectoryEntriesList *message, ProtobufCBuffer *buffer);
+Nfs__DirectoryEntriesList *nfs__directory_entries_list__unpack(ProtobufCAllocator *allocator, size_t len,
+                                                               const uint8_t *data);
+void nfs__directory_entries_list__free_unpacked(Nfs__DirectoryEntriesList *message, ProtobufCAllocator *allocator);
 /* Nfs__ReadDirOk methods */
-void   nfs__read_dir_ok__init
-                     (Nfs__ReadDirOk         *message);
-size_t nfs__read_dir_ok__get_packed_size
-                     (const Nfs__ReadDirOk   *message);
-size_t nfs__read_dir_ok__pack
-                     (const Nfs__ReadDirOk   *message,
-                      uint8_t             *out);
-size_t nfs__read_dir_ok__pack_to_buffer
-                     (const Nfs__ReadDirOk   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__ReadDirOk *
-       nfs__read_dir_ok__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__read_dir_ok__free_unpacked
-                     (Nfs__ReadDirOk *message,
-                      ProtobufCAllocator *allocator);
+void nfs__read_dir_ok__init(Nfs__ReadDirOk *message);
+size_t nfs__read_dir_ok__get_packed_size(const Nfs__ReadDirOk *message);
+size_t nfs__read_dir_ok__pack(const Nfs__ReadDirOk *message, uint8_t *out);
+size_t nfs__read_dir_ok__pack_to_buffer(const Nfs__ReadDirOk *message, ProtobufCBuffer *buffer);
+Nfs__ReadDirOk *nfs__read_dir_ok__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__read_dir_ok__free_unpacked(Nfs__ReadDirOk *message, ProtobufCAllocator *allocator);
 /* Nfs__ReadDirRes methods */
-void   nfs__read_dir_res__init
-                     (Nfs__ReadDirRes         *message);
-size_t nfs__read_dir_res__get_packed_size
-                     (const Nfs__ReadDirRes   *message);
-size_t nfs__read_dir_res__pack
-                     (const Nfs__ReadDirRes   *message,
-                      uint8_t             *out);
-size_t nfs__read_dir_res__pack_to_buffer
-                     (const Nfs__ReadDirRes   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__ReadDirRes *
-       nfs__read_dir_res__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__read_dir_res__free_unpacked
-                     (Nfs__ReadDirRes *message,
-                      ProtobufCAllocator *allocator);
+void nfs__read_dir_res__init(Nfs__ReadDirRes *message);
+size_t nfs__read_dir_res__get_packed_size(const Nfs__ReadDirRes *message);
+size_t nfs__read_dir_res__pack(const Nfs__ReadDirRes *message, uint8_t *out);
+size_t nfs__read_dir_res__pack_to_buffer(const Nfs__ReadDirRes *message, ProtobufCBuffer *buffer);
+Nfs__ReadDirRes *nfs__read_dir_res__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__read_dir_res__free_unpacked(Nfs__ReadDirRes *message, ProtobufCAllocator *allocator);
 /* Nfs__FsInfo methods */
-void   nfs__fs_info__init
-                     (Nfs__FsInfo         *message);
-size_t nfs__fs_info__get_packed_size
-                     (const Nfs__FsInfo   *message);
-size_t nfs__fs_info__pack
-                     (const Nfs__FsInfo   *message,
-                      uint8_t             *out);
-size_t nfs__fs_info__pack_to_buffer
-                     (const Nfs__FsInfo   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__FsInfo *
-       nfs__fs_info__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__fs_info__free_unpacked
-                     (Nfs__FsInfo *message,
-                      ProtobufCAllocator *allocator);
+void nfs__fs_info__init(Nfs__FsInfo *message);
+size_t nfs__fs_info__get_packed_size(const Nfs__FsInfo *message);
+size_t nfs__fs_info__pack(const Nfs__FsInfo *message, uint8_t *out);
+size_t nfs__fs_info__pack_to_buffer(const Nfs__FsInfo *message, ProtobufCBuffer *buffer);
+Nfs__FsInfo *nfs__fs_info__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__fs_info__free_unpacked(Nfs__FsInfo *message, ProtobufCAllocator *allocator);
 /* Nfs__StatFsRes methods */
-void   nfs__stat_fs_res__init
-                     (Nfs__StatFsRes         *message);
-size_t nfs__stat_fs_res__get_packed_size
-                     (const Nfs__StatFsRes   *message);
-size_t nfs__stat_fs_res__pack
-                     (const Nfs__StatFsRes   *message,
-                      uint8_t             *out);
-size_t nfs__stat_fs_res__pack_to_buffer
-                     (const Nfs__StatFsRes   *message,
-                      ProtobufCBuffer     *buffer);
-Nfs__StatFsRes *
-       nfs__stat_fs_res__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   nfs__stat_fs_res__free_unpacked
-                     (Nfs__StatFsRes *message,
-                      ProtobufCAllocator *allocator);
+void nfs__stat_fs_res__init(Nfs__StatFsRes *message);
+size_t nfs__stat_fs_res__get_packed_size(const Nfs__StatFsRes *message);
+size_t nfs__stat_fs_res__pack(const Nfs__StatFsRes *message, uint8_t *out);
+size_t nfs__stat_fs_res__pack_to_buffer(const Nfs__StatFsRes *message, ProtobufCBuffer *buffer);
+Nfs__StatFsRes *nfs__stat_fs_res__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void nfs__stat_fs_res__free_unpacked(Nfs__StatFsRes *message, ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
-typedef void (*Nfs__NfsStat_Closure)
-                 (const Nfs__NfsStat *message,
-                  void *closure_data);
-typedef void (*Nfs__NfsFType_Closure)
-                 (const Nfs__NfsFType *message,
-                  void *closure_data);
-typedef void (*Nfs__FHandle_Closure)
-                 (const Nfs__FHandle *message,
-                  void *closure_data);
-typedef void (*Nfs__TimeVal_Closure)
-                 (const Nfs__TimeVal *message,
-                  void *closure_data);
-typedef void (*Nfs__FAttr_Closure)
-                 (const Nfs__FAttr *message,
-                  void *closure_data);
-typedef void (*Nfs__SAttr_Closure)
-                 (const Nfs__SAttr *message,
-                  void *closure_data);
-typedef void (*Nfs__FileName_Closure)
-                 (const Nfs__FileName *message,
-                  void *closure_data);
-typedef void (*Nfs__Path_Closure)
-                 (const Nfs__Path *message,
-                  void *closure_data);
-typedef void (*Nfs__AttrStat_Closure)
-                 (const Nfs__AttrStat *message,
-                  void *closure_data);
-typedef void (*Nfs__DirOpArgs_Closure)
-                 (const Nfs__DirOpArgs *message,
-                  void *closure_data);
-typedef void (*Nfs__DirOpOk_Closure)
-                 (const Nfs__DirOpOk *message,
-                  void *closure_data);
-typedef void (*Nfs__DirOpRes_Closure)
-                 (const Nfs__DirOpRes *message,
-                  void *closure_data);
-typedef void (*Nfs__SAttrArgs_Closure)
-                 (const Nfs__SAttrArgs *message,
-                  void *closure_data);
-typedef void (*Nfs__ReadLinkRes_Closure)
-                 (const Nfs__ReadLinkRes *message,
-                  void *closure_data);
-typedef void (*Nfs__ReadArgs_Closure)
-                 (const Nfs__ReadArgs *message,
-                  void *closure_data);
-typedef void (*Nfs__ReadResBody_Closure)
-                 (const Nfs__ReadResBody *message,
-                  void *closure_data);
-typedef void (*Nfs__ReadRes_Closure)
-                 (const Nfs__ReadRes *message,
-                  void *closure_data);
-typedef void (*Nfs__WriteArgs_Closure)
-                 (const Nfs__WriteArgs *message,
-                  void *closure_data);
-typedef void (*Nfs__CreateArgs_Closure)
-                 (const Nfs__CreateArgs *message,
-                  void *closure_data);
-typedef void (*Nfs__RenameArgs_Closure)
-                 (const Nfs__RenameArgs *message,
-                  void *closure_data);
-typedef void (*Nfs__LinkArgs_Closure)
-                 (const Nfs__LinkArgs *message,
-                  void *closure_data);
-typedef void (*Nfs__SymLinkArgs_Closure)
-                 (const Nfs__SymLinkArgs *message,
-                  void *closure_data);
-typedef void (*Nfs__NfsCookie_Closure)
-                 (const Nfs__NfsCookie *message,
-                  void *closure_data);
-typedef void (*Nfs__ReadDirArgs_Closure)
-                 (const Nfs__ReadDirArgs *message,
-                  void *closure_data);
-typedef void (*Nfs__DirectoryEntriesList_Closure)
-                 (const Nfs__DirectoryEntriesList *message,
-                  void *closure_data);
-typedef void (*Nfs__ReadDirOk_Closure)
-                 (const Nfs__ReadDirOk *message,
-                  void *closure_data);
-typedef void (*Nfs__ReadDirRes_Closure)
-                 (const Nfs__ReadDirRes *message,
-                  void *closure_data);
-typedef void (*Nfs__FsInfo_Closure)
-                 (const Nfs__FsInfo *message,
-                  void *closure_data);
-typedef void (*Nfs__StatFsRes_Closure)
-                 (const Nfs__StatFsRes *message,
-                  void *closure_data);
+typedef void (*Nfs__NfsStat_Closure)(const Nfs__NfsStat *message, void *closure_data);
+typedef void (*Nfs__NfsFType_Closure)(const Nfs__NfsFType *message, void *closure_data);
+typedef void (*Nfs__FHandle_Closure)(const Nfs__FHandle *message, void *closure_data);
+typedef void (*Nfs__TimeVal_Closure)(const Nfs__TimeVal *message, void *closure_data);
+typedef void (*Nfs__FAttr_Closure)(const Nfs__FAttr *message, void *closure_data);
+typedef void (*Nfs__SAttr_Closure)(const Nfs__SAttr *message, void *closure_data);
+typedef void (*Nfs__FileName_Closure)(const Nfs__FileName *message, void *closure_data);
+typedef void (*Nfs__Path_Closure)(const Nfs__Path *message, void *closure_data);
+typedef void (*Nfs__AttrStat_Closure)(const Nfs__AttrStat *message, void *closure_data);
+typedef void (*Nfs__DirOpArgs_Closure)(const Nfs__DirOpArgs *message, void *closure_data);
+typedef void (*Nfs__DirOpOk_Closure)(const Nfs__DirOpOk *message, void *closure_data);
+typedef void (*Nfs__DirOpRes_Closure)(const Nfs__DirOpRes *message, void *closure_data);
+typedef void (*Nfs__SAttrArgs_Closure)(const Nfs__SAttrArgs *message, void *closure_data);
+typedef void (*Nfs__ReadLinkRes_Closure)(const Nfs__ReadLinkRes *message, void *closure_data);
+typedef void (*Nfs__ReadArgs_Closure)(const Nfs__ReadArgs *message, void *closure_data);
+typedef void (*Nfs__ReadResBody_Closure)(const Nfs__ReadResBody *message, void *closure_data);
+typedef void (*Nfs__ReadRes_Closure)(const Nfs__ReadRes *message, void *closure_data);
+typedef void (*Nfs__WriteArgs_Closure)(const Nfs__WriteArgs *message, void *closure_data);
+typedef void (*Nfs__CreateArgs_Closure)(const Nfs__CreateArgs *message, void *closure_data);
+typedef void (*Nfs__RenameArgs_Closure)(const Nfs__RenameArgs *message, void *closure_data);
+typedef void (*Nfs__LinkArgs_Closure)(const Nfs__LinkArgs *message, void *closure_data);
+typedef void (*Nfs__SymLinkArgs_Closure)(const Nfs__SymLinkArgs *message, void *closure_data);
+typedef void (*Nfs__NfsCookie_Closure)(const Nfs__NfsCookie *message, void *closure_data);
+typedef void (*Nfs__ReadDirArgs_Closure)(const Nfs__ReadDirArgs *message, void *closure_data);
+typedef void (*Nfs__DirectoryEntriesList_Closure)(const Nfs__DirectoryEntriesList *message, void *closure_data);
+typedef void (*Nfs__ReadDirOk_Closure)(const Nfs__ReadDirOk *message, void *closure_data);
+typedef void (*Nfs__ReadDirRes_Closure)(const Nfs__ReadDirRes *message, void *closure_data);
+typedef void (*Nfs__FsInfo_Closure)(const Nfs__FsInfo *message, void *closure_data);
+typedef void (*Nfs__StatFsRes_Closure)(const Nfs__StatFsRes *message, void *closure_data);
 
 /* --- services --- */
 
-
 /* --- descriptors --- */
 
-extern const ProtobufCEnumDescriptor    nfs__stat__descriptor;
-extern const ProtobufCEnumDescriptor    nfs__ftype__descriptor;
+extern const ProtobufCEnumDescriptor nfs__stat__descriptor;
+extern const ProtobufCEnumDescriptor nfs__ftype__descriptor;
 extern const ProtobufCMessageDescriptor nfs__nfs_stat__descriptor;
 extern const ProtobufCMessageDescriptor nfs__nfs_ftype__descriptor;
 extern const ProtobufCMessageDescriptor nfs__fhandle__descriptor;
@@ -1413,5 +1015,4 @@ extern const ProtobufCMessageDescriptor nfs__stat_fs_res__descriptor;
 
 PROTOBUF_C__END_DECLS
 
-
-#endif  /* PROTOBUF_C_src_2fserialization_2fnfs_2fnfs_2eproto__INCLUDED */
+#endif /* PROTOBUF_C_src_2fserialization_2fnfs_2fnfs_2eproto__INCLUDED */

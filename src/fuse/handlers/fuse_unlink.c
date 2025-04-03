@@ -6,20 +6,18 @@ typedef struct UnlinkData {
 } UnlinkData;
 
 void *blocking_unlink(void *arg) {
-    CallbackData *callback_data = (CallbackData *) arg;
-    UnlinkData *unlink_data = (UnlinkData *) callback_data->return_data;
-
-    pthread_mutex_lock(&nfs_mutex);
+    CallbackData *callback_data = (CallbackData *)arg;
+    UnlinkData *unlink_data = (UnlinkData *)callback_data->return_data;
 
     Nfs__FType file_type;
     int error_code;
-    Nfs__FHandle *containing_directory_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, unlink_data->containing_directory_path, &file_type, &error_code);
-    if(containing_directory_fhandle == NULL) {
+    Nfs__FHandle *containing_directory_fhandle =
+        resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, unlink_data->containing_directory_path,
+                              &file_type, &error_code);
+    if (containing_directory_fhandle == NULL) {
         printf("nfs_unlink: failed to resolve the path %s to a file\n", unlink_data->containing_directory_path);
 
         callback_data->error_code = -error_code;
-
-        pthread_mutex_unlock(&nfs_mutex);
 
         goto signal;
     }
@@ -33,40 +31,35 @@ void *blocking_unlink(void *arg) {
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
     int status = nfs_procedure_10_remove_file(rpc_connection_context, diropargs, nfsstat);
-    if(status != 0) {
+    if (status != 0) {
         printf("Error: Invalid RPC reply received from the server with status %d\n", status);
 
         free(nfsstat);
 
         callback_data->error_code = -EIO;
 
-        pthread_mutex_unlock(&nfs_mutex);
-
         goto signal;
     }
 
-    pthread_mutex_unlock(&nfs_mutex);
-
-    if(validate_nfs_nfs_stat(nfsstat) > 0) {
+    if (validate_nfs_nfs_stat(nfsstat) > 0) {
         printf("Error: Invalid NFS procedure result received from the server\n");
 
         nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 
         callback_data->error_code = -EIO;
-        
+
         goto signal;
     }
 
-    if(nfsstat->stat == NFS__STAT__NFSERR_ACCES) {
+    if (nfsstat->stat == NFS__STAT__NFSERR_ACCES) {
         printf("Error: Permission denied\n");
-        
+
         nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 
         callback_data->error_code = -EACCES;
-        
+
         goto signal;
-    }
-    else if(nfsstat->stat != NFS__STAT__NFS_OK) {
+    } else if (nfsstat->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(nfsstat->stat);
         printf("Error: Failed to remove directory with status %s\n", string_status);
         free(string_status);
@@ -74,7 +67,7 @@ void *blocking_unlink(void *arg) {
         nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 
         callback_data->error_code = map_nfs_error(nfsstat->stat);
-        
+
         goto signal;
     }
 
@@ -94,10 +87,10 @@ signal:
 }
 
 /*
-* Handles the FUSE call to remove a file.
-*
-* Returns 0 on success and the appropriate negative error code on failure.
-*/
+ * Handles the FUSE call to remove a file.
+ *
+ * Returns 0 on success and the appropriate negative error code on failure.
+ */
 int nfs_unlink(const char *path) {
     CallbackData callback_data;
     memset(&callback_data, 0, sizeof(CallbackData));
@@ -108,8 +101,9 @@ int nfs_unlink(const char *path) {
     char *path_copy = strdup(path);
 
     UnlinkData unlink_data;
-    char *directory_path = dirname(dir_copy);   // returns "." if there are no '/'s in the path (i.e. just file name 'file')
-    unlink_data.containing_directory_path = strcmp(directory_path,".") == 0 ? "/" : directory_path;
+    char *directory_path =
+        dirname(dir_copy); // returns "." if there are no '/'s in the path (i.e. just file name 'file')
+    unlink_data.containing_directory_path = strcmp(directory_path, ".") == 0 ? "/" : directory_path;
     unlink_data.file_name = basename(path_copy);
 
     callback_data.return_data = &unlink_data;
@@ -118,7 +112,7 @@ int nfs_unlink(const char *path) {
     pthread_cond_init(&callback_data.cond, NULL);
 
     pthread_t blocking_thread;
-    if(pthread_create(&blocking_thread, NULL, blocking_unlink, &callback_data) != 0) {
+    if (pthread_create(&blocking_thread, NULL, blocking_unlink, &callback_data) != 0) {
         return -EIO;
     }
 

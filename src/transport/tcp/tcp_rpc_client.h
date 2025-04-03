@@ -1,12 +1,12 @@
 #ifndef tcp_client__header__INCLUDED
 #define tcp_client__header__INCLUDED
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
 #include <arpa/inet.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "src/serialization/rpc/rpc.pb-c.h"
 
@@ -15,6 +15,8 @@
 
 #include "tcp_record_marking.h"
 
-Rpc__RpcMsg *invoke_rpc_remote_tcp(RpcConnectionContext *rpc_connection_context, uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any parameters);
+Rpc__RpcMsg *invoke_rpc_remote_tcp(RpcConnectionContext *rpc_connection_context, uint32_t program_number,
+                                   uint32_t program_version, uint32_t procedure_number,
+                                   Google__Protobuf__Any parameters);
 
 #endif /* tcp_client__header__INCLUDED */

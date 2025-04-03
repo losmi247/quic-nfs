@@ -19,7 +19,8 @@ apt-get update && \
         pkg-config \
         cmake \
         openssl \
-        libncurses-dev
+        libncurses-dev \
+        clang-format
 
 # Install Criterion library for tests
 apt-get install -y \

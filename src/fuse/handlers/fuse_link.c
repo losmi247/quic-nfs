@@ -8,32 +8,29 @@ typedef struct LinkData {
 } LinkData;
 
 void *blocking_link(void *arg) {
-    CallbackData *callback_data = (CallbackData *) arg;
-    LinkData *link_data = (LinkData *) callback_data->return_data;
-
-    pthread_mutex_lock(&nfs_mutex);
+    CallbackData *callback_data = (CallbackData *)arg;
+    LinkData *link_data = (LinkData *)callback_data->return_data;
 
     Nfs__FType containing_directory_type;
     int error_code;
-    Nfs__FHandle *containing_directory_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, link_data->containing_directory_path, &containing_directory_type, &error_code);
-    if(containing_directory_fhandle == NULL) {
+    Nfs__FHandle *containing_directory_fhandle =
+        resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, link_data->containing_directory_path,
+                              &containing_directory_type, &error_code);
+    if (containing_directory_fhandle == NULL) {
         printf("nfs_link: failed to resolve the path %s to a file\n", link_data->containing_directory_path);
 
         callback_data->error_code = -error_code;
-
-        pthread_mutex_unlock(&nfs_mutex);
 
         goto signal;
     }
 
     Nfs__FType target_file_ftype;
-    Nfs__FHandle *target_file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, link_data->target_path, &target_file_ftype, &error_code);
-    if(target_file_fhandle == NULL) {
+    Nfs__FHandle *target_file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle,
+                                                              link_data->target_path, &target_file_ftype, &error_code);
+    if (target_file_fhandle == NULL) {
         printf("nfs_link: failed to resolve the path %s to a file\n", link_data->target_path);
 
         callback_data->error_code = -error_code;
-
-        pthread_mutex_unlock(&nfs_mutex);
 
         goto signal;
     }
@@ -52,40 +49,35 @@ void *blocking_link(void *arg) {
 
     Nfs__NfsStat *nfsstat = malloc(sizeof(Nfs__NfsStat));
     int status = nfs_procedure_12_create_link_to_file(rpc_connection_context, linkargs, nfsstat);
-    if(status != 0) {
+    if (status != 0) {
         printf("Error: Invalid RPC reply received from the server with status %d\n", status);
 
         free(nfsstat);
 
         callback_data->error_code = -EIO;
 
-        pthread_mutex_unlock(&nfs_mutex);
-
         goto signal;
     }
 
-    pthread_mutex_unlock(&nfs_mutex);
-
-    if(validate_nfs_nfs_stat(nfsstat) > 0) {
+    if (validate_nfs_nfs_stat(nfsstat) > 0) {
         printf("Error: Invalid NFS procedure result received from the server\n");
 
         nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 
         callback_data->error_code = -EIO;
-        
+
         goto signal;
     }
 
-    if(nfsstat->stat == NFS__STAT__NFSERR_ACCES) {
+    if (nfsstat->stat == NFS__STAT__NFSERR_ACCES) {
         printf("Error: Permission denied\n");
-        
+
         nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 
         callback_data->error_code = -EACCES;
-        
+
         goto signal;
-    }
-    else if(nfsstat->stat != NFS__STAT__NFS_OK) {
+    } else if (nfsstat->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(nfsstat->stat);
         printf("Error: Failed to create symbolic link with status %s\n", string_status);
         free(string_status);
@@ -93,7 +85,7 @@ void *blocking_link(void *arg) {
         nfs__nfs_stat__free_unpacked(nfsstat, NULL);
 
         callback_data->error_code = map_nfs_error(nfsstat->stat);
-        
+
         goto signal;
     }
 
@@ -113,10 +105,10 @@ signal:
 }
 
 /*
-* Handles the FUSE call to create a hard link.
-*
-* Returns 0 on success and an appropriate negative error code on failure.
-*/
+ * Handles the FUSE call to create a hard link.
+ *
+ * Returns 0 on success and an appropriate negative error code on failure.
+ */
 int nfs_link(const char *target_path, const char *link_path) {
     CallbackData callback_data;
     memset(&callback_data, 0, sizeof(CallbackData));
@@ -129,8 +121,9 @@ int nfs_link(const char *target_path, const char *link_path) {
 
     LinkData link_data;
     link_data.target_path = discard_const(target_path);
-    char *directory_path = dirname(to_dir_copy);   // returns "." if there are no '/'s in the path (i.e. just file name 'file')
-    link_data.containing_directory_path = strcmp(directory_path,".") == 0 ? "/" : directory_path;
+    char *directory_path =
+        dirname(to_dir_copy); // returns "." if there are no '/'s in the path (i.e. just file name 'file')
+    link_data.containing_directory_path = strcmp(directory_path, ".") == 0 ? "/" : directory_path;
     link_data.link_name = basename(to_path_copy);
 
     callback_data.return_data = &link_data;

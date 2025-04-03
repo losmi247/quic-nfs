@@ -1,17 +1,17 @@
 #include "tests/test_common.h"
 #include <stdio.h>
 /*
-* NFSPROC_GETATTR (1) tests
-*/
+ * NFSPROC_GETATTR (1) tests
+ */
 
 TestSuite(nfs_getattr_test_suite);
 
 Test(nfs_getattr_test_suite, getattr_ok, .description = "NFSPROC_GETATTR ok") {
     RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
-    if(rpc_connection_context == NULL) {
+    if (rpc_connection_context == NULL) {
         cr_fatal("getattr_ok: Failed to connect to the server\n");
     }
-    
+
     Mount__FhStatus *fhstatus = mount_directory_success(rpc_connection_context, "/nfs_share");
 
     // now get file attributes for the /nfs_share directory
@@ -27,9 +27,10 @@ Test(nfs_getattr_test_suite, getattr_ok, .description = "NFSPROC_GETATTR ok") {
     free_rpc_connection_context(rpc_connection_context);
 }
 
-Test(nfs_getattr_test_suite, getattr_no_such_file_or_directory, .description = "NFSPROC_GETATTR no such file or directory") {
+Test(nfs_getattr_test_suite, getattr_no_such_file_or_directory,
+     .description = "NFSPROC_GETATTR no such file or directory") {
     RpcConnectionContext *rpc_connection_context = create_test_rpc_connection_context(TEST_TRANSPORT_PROTOCOL);
-    if(rpc_connection_context == NULL) {
+    if (rpc_connection_context == NULL) {
         cr_fatal("getattr_no_such_file_or_directory: Failed to connect to the server\n");
     }
 
@@ -49,4 +50,3 @@ Test(nfs_getattr_test_suite, getattr_no_such_file_or_directory, .description = "
 
     free_rpc_connection_context(rpc_connection_context);
 }
-

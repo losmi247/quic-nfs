@@ -3,32 +3,34 @@
 #include "sys/statvfs.h"
 
 /*
-* Runs the NFSPROC_STATFS procedure (17).
-*
-* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
-* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
-* flavor) before being passed here.
-* This procedure must not be given AUTH_NONE credential+verifier pair.
-*
-* The user of this function takes the responsibility to deallocate the received AcceptedReply
-* using the 'free_accepted_reply()' function.
-*/
-Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
+ * Runs the NFSPROC_STATFS procedure (17).
+ *
+ * Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+ * credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported
+ * authentication flavor) before being passed here. This procedure must not be given AUTH_NONE credential+verifier pair.
+ *
+ * The user of this function takes the responsibility to deallocate the received AcceptedReply
+ * using the 'free_accepted_reply()' function.
+ */
+Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Rpc__OpaqueAuth *credential,
+                                                                     Rpc__OpaqueAuth *verifier,
+                                                                     Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
-    if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/FHandle") != 0) {
-        fprintf(stderr, "serve_nfs_procedure_17_get_filesystem_attributes: expected nfs/FHandle but received %s\n", parameters->type_url);
-        
+    if (parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/FHandle") != 0) {
+        fprintf(stderr, "serve_nfs_procedure_17_get_filesystem_attributes: expected nfs/FHandle but received %s\n",
+                parameters->type_url);
+
         return create_garbage_args_accepted_reply();
     }
 
     // deserialize parameters
     Nfs__FHandle *fhandle = nfs__fhandle__unpack(NULL, parameters->value.len, parameters->value.data);
-    if(fhandle == NULL) {
+    if (fhandle == NULL) {
         fprintf(stderr, "serve_nfs_procedure_17_get_filesystem_attributes: failed to unpack FHandle\n");
-        
+
         return create_garbage_args_accepted_reply();
     }
-    if(fhandle->nfs_filehandle == NULL) {
+    if (fhandle->nfs_filehandle == NULL) {
         fprintf(stderr, "serve_nfs_procedure_17_get_filesystem_attributes: FHandle->nfs_filehandle is null\n");
 
         nfs__fhandle__free_unpacked(fhandle, NULL);
@@ -40,9 +42,13 @@ Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Rpc__Opaque
     ino_t inode_number = nfs_filehandle->inode_number;
 
     char *file_absolute_path = get_absolute_path_from_inode_number(inode_number, inode_cache);
-    if(file_absolute_path == NULL) {
-        // we couldn't decode the inode number back to a file/directory - we assume the client gave us a wrong NFS filehandle, i.e. no such file or directory
-        fprintf(stdout, "serve_nfs_procedure_17_get_filesystem_attributes: failed to decode inode number %ld back to a file/directory\n", inode_number);
+    if (file_absolute_path == NULL) {
+        // we couldn't decode the inode number back to a file/directory - we assume the client gave us a wrong NFS
+        // filehandle, i.e. no such file or directory
+        fprintf(stdout,
+                "serve_nfs_procedure_17_get_filesystem_attributes: failed to decode inode number %ld back to a "
+                "file/directory\n",
+                inode_number);
 
         // build the procedure results
         Nfs__StatFsRes *statfsres = create_default_case_stat_fs_res(NFS__STAT__NFSERR_NOENT);
@@ -51,7 +57,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Rpc__Opaque
         size_t statfsres_size = nfs__stat_fs_res__get_packed_size(statfsres);
         uint8_t *statfsres_buffer = malloc(statfsres_size);
         nfs__stat_fs_res__pack(statfsres, statfsres_buffer);
-    
+
         nfs__fhandle__free_unpacked(fhandle, NULL);
         free(statfsres->nfs_status);
         free(statfsres->default_case);
@@ -61,10 +67,14 @@ Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Rpc__Opaque
     }
 
     // check permissions
-    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
-        int stat = check_statfs_proc_permissions(file_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
-        if(stat < 0) {
-            fprintf(stderr, "serve_nfs_procedure_17_get_filesystem_attributes: failed checking STATFS permissions for getting attributes of the file system which contains the file '%s' with error code %d\n", file_absolute_path, stat);
+    if (credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat =
+            check_statfs_proc_permissions(file_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
+        if (stat < 0) {
+            fprintf(stderr,
+                    "serve_nfs_procedure_17_get_filesystem_attributes: failed checking STATFS permissions for getting "
+                    "attributes of the file system which contains the file '%s' with error code %d\n",
+                    file_absolute_path, stat);
 
             nfs__fhandle__free_unpacked(fhandle, NULL);
 
@@ -72,30 +82,32 @@ Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Rpc__Opaque
         }
 
         // client does not have correct permission to get attributes of this file system
-        if(stat == 1) {
-             // build the procedure results
+        if (stat == 1) {
+            // build the procedure results
             Nfs__StatFsRes *statfsres = create_default_case_stat_fs_res(NFS__STAT__NFSERR_ACCES);
 
             // serialize the procedure results
             size_t statfsres_size = nfs__stat_fs_res__get_packed_size(statfsres);
             uint8_t *statfsres_buffer = malloc(statfsres_size);
             nfs__stat_fs_res__pack(statfsres, statfsres_buffer);
-        
+
             nfs__fhandle__free_unpacked(fhandle, NULL);
             free(statfsres->nfs_status);
             free(statfsres->default_case);
             free(statfsres);
 
-            return wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer, "nfs/StatFsRes");
+            return wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer,
+                                                                       "nfs/StatFsRes");
         }
     }
-    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with
+    // supported authentication flavor)
 
     // get file system attributes for the filesystem this file is on
     struct statvfs fs_stat;
     int error_code = statvfs(file_absolute_path, &fs_stat);
-    if(error_code < 0) {
-        if(errno == EIO) {
+    if (error_code < 0) {
+        if (errno == EIO) {
             // build the procedure results
             Nfs__StatFsRes *statfsres = create_default_case_stat_fs_res(NFS__STAT__NFSERR_IO);
 
@@ -103,20 +115,22 @@ Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Rpc__Opaque
             size_t statfsres_size = nfs__stat_fs_res__get_packed_size(statfsres);
             uint8_t *statfsres_buffer = malloc(statfsres_size);
             nfs__stat_fs_res__pack(statfsres, statfsres_buffer);
-        
+
             nfs__fhandle__free_unpacked(fhandle, NULL);
             free(statfsres->nfs_status);
             free(statfsres->default_case);
             free(statfsres);
 
-            return wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer, "nfs/StatFsRes");
-        }
-        else {
-            perror_msg("serve_nfs_procedure_17_get_filesystem_attributes: failed getting attributes of the filesystem\n");
+            return wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer,
+                                                                       "nfs/StatFsRes");
+        } else {
+            perror_msg(
+                "serve_nfs_procedure_17_get_filesystem_attributes: failed getting attributes of the filesystem\n");
 
             nfs__fhandle__free_unpacked(fhandle, NULL);
 
-            // we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a file
+            // we return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded inode number to a
+            // file
             return create_system_error_accepted_reply();
         }
     }
@@ -144,7 +158,8 @@ Rpc__AcceptedReply *serve_nfs_procedure_17_get_filesystem_attributes(Rpc__Opaque
     uint8_t *statfsres_buffer = malloc(statfsres_size);
     nfs__stat_fs_res__pack(&statfsres, statfsres_buffer);
 
-    Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer, "nfs/StatFsRes");
+    Rpc__AcceptedReply *accepted_reply =
+        wrap_procedure_results_in_successful_accepted_reply(statfsres_size, statfsres_buffer, "nfs/StatFsRes");
 
     nfs__fhandle__free_unpacked(fhandle, NULL);
 

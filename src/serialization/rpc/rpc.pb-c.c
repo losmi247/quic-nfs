@@ -7,1187 +7,759 @@
 #endif
 
 #include "src/serialization/rpc/rpc.pb-c.h"
-void   rpc__auth_sys_params__init
-                     (Rpc__AuthSysParams         *message)
-{
-  static const Rpc__AuthSysParams init_value = RPC__AUTH_SYS_PARAMS__INIT;
-  *message = init_value;
+void rpc__auth_sys_params__init(Rpc__AuthSysParams *message) {
+    static const Rpc__AuthSysParams init_value = RPC__AUTH_SYS_PARAMS__INIT;
+    *message = init_value;
 }
-size_t rpc__auth_sys_params__get_packed_size
-                     (const Rpc__AuthSysParams *message)
-{
-  assert(message->base.descriptor == &rpc__auth_sys_params__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+size_t rpc__auth_sys_params__get_packed_size(const Rpc__AuthSysParams *message) {
+    assert(message->base.descriptor == &rpc__auth_sys_params__descriptor);
+    return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t rpc__auth_sys_params__pack
-                     (const Rpc__AuthSysParams *message,
-                      uint8_t       *out)
-{
-  assert(message->base.descriptor == &rpc__auth_sys_params__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+size_t rpc__auth_sys_params__pack(const Rpc__AuthSysParams *message, uint8_t *out) {
+    assert(message->base.descriptor == &rpc__auth_sys_params__descriptor);
+    return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t rpc__auth_sys_params__pack_to_buffer
-                     (const Rpc__AuthSysParams *message,
-                      ProtobufCBuffer *buffer)
-{
-  assert(message->base.descriptor == &rpc__auth_sys_params__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+size_t rpc__auth_sys_params__pack_to_buffer(const Rpc__AuthSysParams *message, ProtobufCBuffer *buffer) {
+    assert(message->base.descriptor == &rpc__auth_sys_params__descriptor);
+    return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
-Rpc__AuthSysParams *
-       rpc__auth_sys_params__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
-{
-  return (Rpc__AuthSysParams *)
-     protobuf_c_message_unpack (&rpc__auth_sys_params__descriptor,
-                                allocator, len, data);
+Rpc__AuthSysParams *rpc__auth_sys_params__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data) {
+    return (Rpc__AuthSysParams *)protobuf_c_message_unpack(&rpc__auth_sys_params__descriptor, allocator, len, data);
 }
-void   rpc__auth_sys_params__free_unpacked
-                     (Rpc__AuthSysParams *message,
-                      ProtobufCAllocator *allocator)
-{
-  if(!message)
-    return;
-  assert(message->base.descriptor == &rpc__auth_sys_params__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+void rpc__auth_sys_params__free_unpacked(Rpc__AuthSysParams *message, ProtobufCAllocator *allocator) {
+    if (!message)
+        return;
+    assert(message->base.descriptor == &rpc__auth_sys_params__descriptor);
+    protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   rpc__opaque_auth__init
-                     (Rpc__OpaqueAuth         *message)
-{
-  static const Rpc__OpaqueAuth init_value = RPC__OPAQUE_AUTH__INIT;
-  *message = init_value;
+void rpc__opaque_auth__init(Rpc__OpaqueAuth *message) {
+    static const Rpc__OpaqueAuth init_value = RPC__OPAQUE_AUTH__INIT;
+    *message = init_value;
 }
-size_t rpc__opaque_auth__get_packed_size
-                     (const Rpc__OpaqueAuth *message)
-{
-  assert(message->base.descriptor == &rpc__opaque_auth__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+size_t rpc__opaque_auth__get_packed_size(const Rpc__OpaqueAuth *message) {
+    assert(message->base.descriptor == &rpc__opaque_auth__descriptor);
+    return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t rpc__opaque_auth__pack
-                     (const Rpc__OpaqueAuth *message,
-                      uint8_t       *out)
-{
-  assert(message->base.descriptor == &rpc__opaque_auth__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+size_t rpc__opaque_auth__pack(const Rpc__OpaqueAuth *message, uint8_t *out) {
+    assert(message->base.descriptor == &rpc__opaque_auth__descriptor);
+    return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t rpc__opaque_auth__pack_to_buffer
-                     (const Rpc__OpaqueAuth *message,
-                      ProtobufCBuffer *buffer)
-{
-  assert(message->base.descriptor == &rpc__opaque_auth__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+size_t rpc__opaque_auth__pack_to_buffer(const Rpc__OpaqueAuth *message, ProtobufCBuffer *buffer) {
+    assert(message->base.descriptor == &rpc__opaque_auth__descriptor);
+    return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
-Rpc__OpaqueAuth *
-       rpc__opaque_auth__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
-{
-  return (Rpc__OpaqueAuth *)
-     protobuf_c_message_unpack (&rpc__opaque_auth__descriptor,
-                                allocator, len, data);
+Rpc__OpaqueAuth *rpc__opaque_auth__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data) {
+    return (Rpc__OpaqueAuth *)protobuf_c_message_unpack(&rpc__opaque_auth__descriptor, allocator, len, data);
 }
-void   rpc__opaque_auth__free_unpacked
-                     (Rpc__OpaqueAuth *message,
-                      ProtobufCAllocator *allocator)
-{
-  if(!message)
-    return;
-  assert(message->base.descriptor == &rpc__opaque_auth__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+void rpc__opaque_auth__free_unpacked(Rpc__OpaqueAuth *message, ProtobufCAllocator *allocator) {
+    if (!message)
+        return;
+    assert(message->base.descriptor == &rpc__opaque_auth__descriptor);
+    protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   rpc__call_body__init
-                     (Rpc__CallBody         *message)
-{
-  static const Rpc__CallBody init_value = RPC__CALL_BODY__INIT;
-  *message = init_value;
+void rpc__call_body__init(Rpc__CallBody *message) {
+    static const Rpc__CallBody init_value = RPC__CALL_BODY__INIT;
+    *message = init_value;
 }
-size_t rpc__call_body__get_packed_size
-                     (const Rpc__CallBody *message)
-{
-  assert(message->base.descriptor == &rpc__call_body__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+size_t rpc__call_body__get_packed_size(const Rpc__CallBody *message) {
+    assert(message->base.descriptor == &rpc__call_body__descriptor);
+    return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t rpc__call_body__pack
-                     (const Rpc__CallBody *message,
-                      uint8_t       *out)
-{
-  assert(message->base.descriptor == &rpc__call_body__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+size_t rpc__call_body__pack(const Rpc__CallBody *message, uint8_t *out) {
+    assert(message->base.descriptor == &rpc__call_body__descriptor);
+    return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t rpc__call_body__pack_to_buffer
-                     (const Rpc__CallBody *message,
-                      ProtobufCBuffer *buffer)
-{
-  assert(message->base.descriptor == &rpc__call_body__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+size_t rpc__call_body__pack_to_buffer(const Rpc__CallBody *message, ProtobufCBuffer *buffer) {
+    assert(message->base.descriptor == &rpc__call_body__descriptor);
+    return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
-Rpc__CallBody *
-       rpc__call_body__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
-{
-  return (Rpc__CallBody *)
-     protobuf_c_message_unpack (&rpc__call_body__descriptor,
-                                allocator, len, data);
+Rpc__CallBody *rpc__call_body__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data) {
+    return (Rpc__CallBody *)protobuf_c_message_unpack(&rpc__call_body__descriptor, allocator, len, data);
 }
-void   rpc__call_body__free_unpacked
-                     (Rpc__CallBody *message,
-                      ProtobufCAllocator *allocator)
-{
-  if(!message)
-    return;
-  assert(message->base.descriptor == &rpc__call_body__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+void rpc__call_body__free_unpacked(Rpc__CallBody *message, ProtobufCAllocator *allocator) {
+    if (!message)
+        return;
+    assert(message->base.descriptor == &rpc__call_body__descriptor);
+    protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   rpc__mismatch_info__init
-                     (Rpc__MismatchInfo         *message)
-{
-  static const Rpc__MismatchInfo init_value = RPC__MISMATCH_INFO__INIT;
-  *message = init_value;
+void rpc__mismatch_info__init(Rpc__MismatchInfo *message) {
+    static const Rpc__MismatchInfo init_value = RPC__MISMATCH_INFO__INIT;
+    *message = init_value;
 }
-size_t rpc__mismatch_info__get_packed_size
-                     (const Rpc__MismatchInfo *message)
-{
-  assert(message->base.descriptor == &rpc__mismatch_info__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+size_t rpc__mismatch_info__get_packed_size(const Rpc__MismatchInfo *message) {
+    assert(message->base.descriptor == &rpc__mismatch_info__descriptor);
+    return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t rpc__mismatch_info__pack
-                     (const Rpc__MismatchInfo *message,
-                      uint8_t       *out)
-{
-  assert(message->base.descriptor == &rpc__mismatch_info__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+size_t rpc__mismatch_info__pack(const Rpc__MismatchInfo *message, uint8_t *out) {
+    assert(message->base.descriptor == &rpc__mismatch_info__descriptor);
+    return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t rpc__mismatch_info__pack_to_buffer
-                     (const Rpc__MismatchInfo *message,
-                      ProtobufCBuffer *buffer)
-{
-  assert(message->base.descriptor == &rpc__mismatch_info__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+size_t rpc__mismatch_info__pack_to_buffer(const Rpc__MismatchInfo *message, ProtobufCBuffer *buffer) {
+    assert(message->base.descriptor == &rpc__mismatch_info__descriptor);
+    return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
-Rpc__MismatchInfo *
-       rpc__mismatch_info__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
-{
-  return (Rpc__MismatchInfo *)
-     protobuf_c_message_unpack (&rpc__mismatch_info__descriptor,
-                                allocator, len, data);
+Rpc__MismatchInfo *rpc__mismatch_info__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data) {
+    return (Rpc__MismatchInfo *)protobuf_c_message_unpack(&rpc__mismatch_info__descriptor, allocator, len, data);
 }
-void   rpc__mismatch_info__free_unpacked
-                     (Rpc__MismatchInfo *message,
-                      ProtobufCAllocator *allocator)
-{
-  if(!message)
-    return;
-  assert(message->base.descriptor == &rpc__mismatch_info__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+void rpc__mismatch_info__free_unpacked(Rpc__MismatchInfo *message, ProtobufCAllocator *allocator) {
+    if (!message)
+        return;
+    assert(message->base.descriptor == &rpc__mismatch_info__descriptor);
+    protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   rpc__accepted_reply__init
-                     (Rpc__AcceptedReply         *message)
-{
-  static const Rpc__AcceptedReply init_value = RPC__ACCEPTED_REPLY__INIT;
-  *message = init_value;
+void rpc__accepted_reply__init(Rpc__AcceptedReply *message) {
+    static const Rpc__AcceptedReply init_value = RPC__ACCEPTED_REPLY__INIT;
+    *message = init_value;
 }
-size_t rpc__accepted_reply__get_packed_size
-                     (const Rpc__AcceptedReply *message)
-{
-  assert(message->base.descriptor == &rpc__accepted_reply__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+size_t rpc__accepted_reply__get_packed_size(const Rpc__AcceptedReply *message) {
+    assert(message->base.descriptor == &rpc__accepted_reply__descriptor);
+    return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t rpc__accepted_reply__pack
-                     (const Rpc__AcceptedReply *message,
-                      uint8_t       *out)
-{
-  assert(message->base.descriptor == &rpc__accepted_reply__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+size_t rpc__accepted_reply__pack(const Rpc__AcceptedReply *message, uint8_t *out) {
+    assert(message->base.descriptor == &rpc__accepted_reply__descriptor);
+    return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t rpc__accepted_reply__pack_to_buffer
-                     (const Rpc__AcceptedReply *message,
-                      ProtobufCBuffer *buffer)
-{
-  assert(message->base.descriptor == &rpc__accepted_reply__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+size_t rpc__accepted_reply__pack_to_buffer(const Rpc__AcceptedReply *message, ProtobufCBuffer *buffer) {
+    assert(message->base.descriptor == &rpc__accepted_reply__descriptor);
+    return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
-Rpc__AcceptedReply *
-       rpc__accepted_reply__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
-{
-  return (Rpc__AcceptedReply *)
-     protobuf_c_message_unpack (&rpc__accepted_reply__descriptor,
-                                allocator, len, data);
+Rpc__AcceptedReply *rpc__accepted_reply__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data) {
+    return (Rpc__AcceptedReply *)protobuf_c_message_unpack(&rpc__accepted_reply__descriptor, allocator, len, data);
 }
-void   rpc__accepted_reply__free_unpacked
-                     (Rpc__AcceptedReply *message,
-                      ProtobufCAllocator *allocator)
-{
-  if(!message)
-    return;
-  assert(message->base.descriptor == &rpc__accepted_reply__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+void rpc__accepted_reply__free_unpacked(Rpc__AcceptedReply *message, ProtobufCAllocator *allocator) {
+    if (!message)
+        return;
+    assert(message->base.descriptor == &rpc__accepted_reply__descriptor);
+    protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   rpc__rejected_reply__init
-                     (Rpc__RejectedReply         *message)
-{
-  static const Rpc__RejectedReply init_value = RPC__REJECTED_REPLY__INIT;
-  *message = init_value;
+void rpc__rejected_reply__init(Rpc__RejectedReply *message) {
+    static const Rpc__RejectedReply init_value = RPC__REJECTED_REPLY__INIT;
+    *message = init_value;
 }
-size_t rpc__rejected_reply__get_packed_size
-                     (const Rpc__RejectedReply *message)
-{
-  assert(message->base.descriptor == &rpc__rejected_reply__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+size_t rpc__rejected_reply__get_packed_size(const Rpc__RejectedReply *message) {
+    assert(message->base.descriptor == &rpc__rejected_reply__descriptor);
+    return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t rpc__rejected_reply__pack
-                     (const Rpc__RejectedReply *message,
-                      uint8_t       *out)
-{
-  assert(message->base.descriptor == &rpc__rejected_reply__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+size_t rpc__rejected_reply__pack(const Rpc__RejectedReply *message, uint8_t *out) {
+    assert(message->base.descriptor == &rpc__rejected_reply__descriptor);
+    return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t rpc__rejected_reply__pack_to_buffer
-                     (const Rpc__RejectedReply *message,
-                      ProtobufCBuffer *buffer)
-{
-  assert(message->base.descriptor == &rpc__rejected_reply__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+size_t rpc__rejected_reply__pack_to_buffer(const Rpc__RejectedReply *message, ProtobufCBuffer *buffer) {
+    assert(message->base.descriptor == &rpc__rejected_reply__descriptor);
+    return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
-Rpc__RejectedReply *
-       rpc__rejected_reply__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
-{
-  return (Rpc__RejectedReply *)
-     protobuf_c_message_unpack (&rpc__rejected_reply__descriptor,
-                                allocator, len, data);
+Rpc__RejectedReply *rpc__rejected_reply__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data) {
+    return (Rpc__RejectedReply *)protobuf_c_message_unpack(&rpc__rejected_reply__descriptor, allocator, len, data);
 }
-void   rpc__rejected_reply__free_unpacked
-                     (Rpc__RejectedReply *message,
-                      ProtobufCAllocator *allocator)
-{
-  if(!message)
-    return;
-  assert(message->base.descriptor == &rpc__rejected_reply__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+void rpc__rejected_reply__free_unpacked(Rpc__RejectedReply *message, ProtobufCAllocator *allocator) {
+    if (!message)
+        return;
+    assert(message->base.descriptor == &rpc__rejected_reply__descriptor);
+    protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   rpc__reply_body__init
-                     (Rpc__ReplyBody         *message)
-{
-  static const Rpc__ReplyBody init_value = RPC__REPLY_BODY__INIT;
-  *message = init_value;
+void rpc__reply_body__init(Rpc__ReplyBody *message) {
+    static const Rpc__ReplyBody init_value = RPC__REPLY_BODY__INIT;
+    *message = init_value;
 }
-size_t rpc__reply_body__get_packed_size
-                     (const Rpc__ReplyBody *message)
-{
-  assert(message->base.descriptor == &rpc__reply_body__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+size_t rpc__reply_body__get_packed_size(const Rpc__ReplyBody *message) {
+    assert(message->base.descriptor == &rpc__reply_body__descriptor);
+    return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t rpc__reply_body__pack
-                     (const Rpc__ReplyBody *message,
-                      uint8_t       *out)
-{
-  assert(message->base.descriptor == &rpc__reply_body__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+size_t rpc__reply_body__pack(const Rpc__ReplyBody *message, uint8_t *out) {
+    assert(message->base.descriptor == &rpc__reply_body__descriptor);
+    return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t rpc__reply_body__pack_to_buffer
-                     (const Rpc__ReplyBody *message,
-                      ProtobufCBuffer *buffer)
-{
-  assert(message->base.descriptor == &rpc__reply_body__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+size_t rpc__reply_body__pack_to_buffer(const Rpc__ReplyBody *message, ProtobufCBuffer *buffer) {
+    assert(message->base.descriptor == &rpc__reply_body__descriptor);
+    return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
-Rpc__ReplyBody *
-       rpc__reply_body__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
-{
-  return (Rpc__ReplyBody *)
-     protobuf_c_message_unpack (&rpc__reply_body__descriptor,
-                                allocator, len, data);
+Rpc__ReplyBody *rpc__reply_body__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data) {
+    return (Rpc__ReplyBody *)protobuf_c_message_unpack(&rpc__reply_body__descriptor, allocator, len, data);
 }
-void   rpc__reply_body__free_unpacked
-                     (Rpc__ReplyBody *message,
-                      ProtobufCAllocator *allocator)
-{
-  if(!message)
-    return;
-  assert(message->base.descriptor == &rpc__reply_body__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+void rpc__reply_body__free_unpacked(Rpc__ReplyBody *message, ProtobufCAllocator *allocator) {
+    if (!message)
+        return;
+    assert(message->base.descriptor == &rpc__reply_body__descriptor);
+    protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   rpc__rpc_msg__init
-                     (Rpc__RpcMsg         *message)
-{
-  static const Rpc__RpcMsg init_value = RPC__RPC_MSG__INIT;
-  *message = init_value;
+void rpc__rpc_msg__init(Rpc__RpcMsg *message) {
+    static const Rpc__RpcMsg init_value = RPC__RPC_MSG__INIT;
+    *message = init_value;
 }
-size_t rpc__rpc_msg__get_packed_size
-                     (const Rpc__RpcMsg *message)
-{
-  assert(message->base.descriptor == &rpc__rpc_msg__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+size_t rpc__rpc_msg__get_packed_size(const Rpc__RpcMsg *message) {
+    assert(message->base.descriptor == &rpc__rpc_msg__descriptor);
+    return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t rpc__rpc_msg__pack
-                     (const Rpc__RpcMsg *message,
-                      uint8_t       *out)
-{
-  assert(message->base.descriptor == &rpc__rpc_msg__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+size_t rpc__rpc_msg__pack(const Rpc__RpcMsg *message, uint8_t *out) {
+    assert(message->base.descriptor == &rpc__rpc_msg__descriptor);
+    return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t rpc__rpc_msg__pack_to_buffer
-                     (const Rpc__RpcMsg *message,
-                      ProtobufCBuffer *buffer)
-{
-  assert(message->base.descriptor == &rpc__rpc_msg__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+size_t rpc__rpc_msg__pack_to_buffer(const Rpc__RpcMsg *message, ProtobufCBuffer *buffer) {
+    assert(message->base.descriptor == &rpc__rpc_msg__descriptor);
+    return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
-Rpc__RpcMsg *
-       rpc__rpc_msg__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
-{
-  return (Rpc__RpcMsg *)
-     protobuf_c_message_unpack (&rpc__rpc_msg__descriptor,
-                                allocator, len, data);
+Rpc__RpcMsg *rpc__rpc_msg__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data) {
+    return (Rpc__RpcMsg *)protobuf_c_message_unpack(&rpc__rpc_msg__descriptor, allocator, len, data);
 }
-void   rpc__rpc_msg__free_unpacked
-                     (Rpc__RpcMsg *message,
-                      ProtobufCAllocator *allocator)
-{
-  if(!message)
-    return;
-  assert(message->base.descriptor == &rpc__rpc_msg__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+void rpc__rpc_msg__free_unpacked(Rpc__RpcMsg *message, ProtobufCAllocator *allocator) {
+    if (!message)
+        return;
+    assert(message->base.descriptor == &rpc__rpc_msg__descriptor);
+    protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-static const ProtobufCFieldDescriptor rpc__auth_sys_params__field_descriptors[5] =
-{
-  {
-    "timestamp",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT64,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__AuthSysParams, timestamp),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "machinename",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__AuthSysParams, machinename),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "uid",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__AuthSysParams, uid),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "gid",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__AuthSysParams, gid),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "gids",
-    5,
-    PROTOBUF_C_LABEL_REPEATED,
-    PROTOBUF_C_TYPE_UINT32,
-    offsetof(Rpc__AuthSysParams, n_gids),
-    offsetof(Rpc__AuthSysParams, gids),
-    NULL,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+static const ProtobufCFieldDescriptor rpc__auth_sys_params__field_descriptors[5] = {
+    {
+        "timestamp", 1, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT64, 0, /* quantifier_offset */
+        offsetof(Rpc__AuthSysParams, timestamp), NULL, NULL, 0,           /* flags */
+        0, NULL, NULL                                                     /* reserved1,reserved2, etc */
+    },
+    {
+        "machinename", 2, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_STRING, 0,           /* quantifier_offset */
+        offsetof(Rpc__AuthSysParams, machinename), NULL, &protobuf_c_empty_string, 0, /* flags */
+        0, NULL, NULL                                                                 /* reserved1,reserved2, etc */
+    },
+    {
+        "uid", 3, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT32, 0, /* quantifier_offset */
+        offsetof(Rpc__AuthSysParams, uid), NULL, NULL, 0,           /* flags */
+        0, NULL, NULL                                               /* reserved1,reserved2, etc */
+    },
+    {
+        "gid", 4, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT32, 0, /* quantifier_offset */
+        offsetof(Rpc__AuthSysParams, gid), NULL, NULL, 0,           /* flags */
+        0, NULL, NULL                                               /* reserved1,reserved2, etc */
+    },
+    {
+        "gids", 5, PROTOBUF_C_LABEL_REPEATED, PROTOBUF_C_TYPE_UINT32, offsetof(Rpc__AuthSysParams, n_gids),
+        offsetof(Rpc__AuthSysParams, gids), NULL, NULL, 0 | PROTOBUF_C_FIELD_FLAG_PACKED, /* flags */
+        0, NULL, NULL                                                                     /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned rpc__auth_sys_params__field_indices_by_name[] = {
-  3,   /* field[3] = gid */
-  4,   /* field[4] = gids */
-  1,   /* field[1] = machinename */
-  0,   /* field[0] = timestamp */
-  2,   /* field[2] = uid */
+    3, /* field[3] = gid */
+    4, /* field[4] = gids */
+    1, /* field[1] = machinename */
+    0, /* field[0] = timestamp */
+    2, /* field[2] = uid */
 };
-static const ProtobufCIntRange rpc__auth_sys_params__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 5 }
-};
-const ProtobufCMessageDescriptor rpc__auth_sys_params__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "rpc.AuthSysParams",
-  "AuthSysParams",
-  "Rpc__AuthSysParams",
-  "rpc",
-  sizeof(Rpc__AuthSysParams),
-  5,
-  rpc__auth_sys_params__field_descriptors,
-  rpc__auth_sys_params__field_indices_by_name,
-  1,  rpc__auth_sys_params__number_ranges,
-  (ProtobufCMessageInit) rpc__auth_sys_params__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor rpc__opaque_auth__field_descriptors[3] =
-{
-  {
-    "flavor",
+static const ProtobufCIntRange rpc__auth_sys_params__number_ranges[1 + 1] = {{1, 0}, {0, 5}};
+const ProtobufCMessageDescriptor rpc__auth_sys_params__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "rpc.AuthSysParams",
+    "AuthSysParams",
+    "Rpc__AuthSysParams",
+    "rpc",
+    sizeof(Rpc__AuthSysParams),
+    5,
+    rpc__auth_sys_params__field_descriptors,
+    rpc__auth_sys_params__field_indices_by_name,
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__OpaqueAuth, flavor),
-    &rpc__auth_flavor__descriptor,
+    rpc__auth_sys_params__number_ranges,
+    (ProtobufCMessageInit)rpc__auth_sys_params__init,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "empty",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__OpaqueAuth, body_case),
-    offsetof(Rpc__OpaqueAuth, empty),
-    &google__protobuf__empty__descriptor,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "auth_sys",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__OpaqueAuth, body_case),
-    offsetof(Rpc__OpaqueAuth, auth_sys),
-    &rpc__auth_sys_params__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rpc__opaque_auth__field_descriptors[3] = {
+    {
+        "flavor", 1, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_ENUM, 0,               /* quantifier_offset */
+        offsetof(Rpc__OpaqueAuth, flavor), &rpc__auth_flavor__descriptor, NULL, 0, /* flags */
+        0, NULL, NULL                                                              /* reserved1,reserved2, etc */
+    },
+    {
+        "empty", 2, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, offsetof(Rpc__OpaqueAuth, body_case),
+        offsetof(Rpc__OpaqueAuth, empty), &google__protobuf__empty__descriptor, NULL,
+        0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL                    /* reserved1,reserved2, etc */
+    },
+    {
+        "auth_sys", 3, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, offsetof(Rpc__OpaqueAuth, body_case),
+        offsetof(Rpc__OpaqueAuth, auth_sys), &rpc__auth_sys_params__descriptor, NULL,
+        0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL                    /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned rpc__opaque_auth__field_indices_by_name[] = {
-  2,   /* field[2] = auth_sys */
-  1,   /* field[1] = empty */
-  0,   /* field[0] = flavor */
+    2, /* field[2] = auth_sys */
+    1, /* field[1] = empty */
+    0, /* field[0] = flavor */
 };
-static const ProtobufCIntRange rpc__opaque_auth__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 3 }
-};
-const ProtobufCMessageDescriptor rpc__opaque_auth__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "rpc.OpaqueAuth",
-  "OpaqueAuth",
-  "Rpc__OpaqueAuth",
-  "rpc",
-  sizeof(Rpc__OpaqueAuth),
-  3,
-  rpc__opaque_auth__field_descriptors,
-  rpc__opaque_auth__field_indices_by_name,
-  1,  rpc__opaque_auth__number_ranges,
-  (ProtobufCMessageInit) rpc__opaque_auth__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor rpc__call_body__field_descriptors[7] =
-{
-  {
-    "rpcvers",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__CallBody, rpcvers),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "prog",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__CallBody, prog),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "vers",
+static const ProtobufCIntRange rpc__opaque_auth__number_ranges[1 + 1] = {{1, 0}, {0, 3}};
+const ProtobufCMessageDescriptor rpc__opaque_auth__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "rpc.OpaqueAuth",
+    "OpaqueAuth",
+    "Rpc__OpaqueAuth",
+    "rpc",
+    sizeof(Rpc__OpaqueAuth),
     3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__CallBody, vers),
+    rpc__opaque_auth__field_descriptors,
+    rpc__opaque_auth__field_indices_by_name,
+    1,
+    rpc__opaque_auth__number_ranges,
+    (ProtobufCMessageInit)rpc__opaque_auth__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "proc",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__CallBody, proc),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "credential",
-    5,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__CallBody, credential),
-    &rpc__opaque_auth__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "verifier",
-    6,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__CallBody, verifier),
-    &rpc__opaque_auth__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "params",
-    7,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__CallBody, params),
-    &google__protobuf__any__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rpc__call_body__field_descriptors[7] = {
+    {
+        "rpcvers", 1, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT32, 0, /* quantifier_offset */
+        offsetof(Rpc__CallBody, rpcvers), NULL, NULL, 0,                /* flags */
+        0, NULL, NULL                                                   /* reserved1,reserved2, etc */
+    },
+    {
+        "prog", 2, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT32, 0, /* quantifier_offset */
+        offsetof(Rpc__CallBody, prog), NULL, NULL, 0,                /* flags */
+        0, NULL, NULL                                                /* reserved1,reserved2, etc */
+    },
+    {
+        "vers", 3, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT32, 0, /* quantifier_offset */
+        offsetof(Rpc__CallBody, vers), NULL, NULL, 0,                /* flags */
+        0, NULL, NULL                                                /* reserved1,reserved2, etc */
+    },
+    {
+        "proc", 4, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT32, 0, /* quantifier_offset */
+        offsetof(Rpc__CallBody, proc), NULL, NULL, 0,                /* flags */
+        0, NULL, NULL                                                /* reserved1,reserved2, etc */
+    },
+    {
+        "credential", 5, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, 0,          /* quantifier_offset */
+        offsetof(Rpc__CallBody, credential), &rpc__opaque_auth__descriptor, NULL, 0, /* flags */
+        0, NULL, NULL                                                                /* reserved1,reserved2, etc */
+    },
+    {
+        "verifier", 6, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, 0,          /* quantifier_offset */
+        offsetof(Rpc__CallBody, verifier), &rpc__opaque_auth__descriptor, NULL, 0, /* flags */
+        0, NULL, NULL                                                              /* reserved1,reserved2, etc */
+    },
+    {
+        "params", 7, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, 0,               /* quantifier_offset */
+        offsetof(Rpc__CallBody, params), &google__protobuf__any__descriptor, NULL, 0, /* flags */
+        0, NULL, NULL                                                                 /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned rpc__call_body__field_indices_by_name[] = {
-  4,   /* field[4] = credential */
-  6,   /* field[6] = params */
-  3,   /* field[3] = proc */
-  1,   /* field[1] = prog */
-  0,   /* field[0] = rpcvers */
-  5,   /* field[5] = verifier */
-  2,   /* field[2] = vers */
+    4, /* field[4] = credential */
+    6, /* field[6] = params */
+    3, /* field[3] = proc */
+    1, /* field[1] = prog */
+    0, /* field[0] = rpcvers */
+    5, /* field[5] = verifier */
+    2, /* field[2] = vers */
 };
-static const ProtobufCIntRange rpc__call_body__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 7 }
-};
-const ProtobufCMessageDescriptor rpc__call_body__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "rpc.CallBody",
-  "CallBody",
-  "Rpc__CallBody",
-  "rpc",
-  sizeof(Rpc__CallBody),
-  7,
-  rpc__call_body__field_descriptors,
-  rpc__call_body__field_indices_by_name,
-  1,  rpc__call_body__number_ranges,
-  (ProtobufCMessageInit) rpc__call_body__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor rpc__mismatch_info__field_descriptors[2] =
-{
-  {
-    "low",
+static const ProtobufCIntRange rpc__call_body__number_ranges[1 + 1] = {{1, 0}, {0, 7}};
+const ProtobufCMessageDescriptor rpc__call_body__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "rpc.CallBody",
+    "CallBody",
+    "Rpc__CallBody",
+    "rpc",
+    sizeof(Rpc__CallBody),
+    7,
+    rpc__call_body__field_descriptors,
+    rpc__call_body__field_indices_by_name,
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__MismatchInfo, low),
+    rpc__call_body__number_ranges,
+    (ProtobufCMessageInit)rpc__call_body__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "high",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__MismatchInfo, high),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rpc__mismatch_info__field_descriptors[2] = {
+    {
+        "low", 1, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT32, 0, /* quantifier_offset */
+        offsetof(Rpc__MismatchInfo, low), NULL, NULL, 0,            /* flags */
+        0, NULL, NULL                                               /* reserved1,reserved2, etc */
+    },
+    {
+        "high", 2, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT32, 0, /* quantifier_offset */
+        offsetof(Rpc__MismatchInfo, high), NULL, NULL, 0,            /* flags */
+        0, NULL, NULL                                                /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned rpc__mismatch_info__field_indices_by_name[] = {
-  1,   /* field[1] = high */
-  0,   /* field[0] = low */
+    1, /* field[1] = high */
+    0, /* field[0] = low */
 };
-static const ProtobufCIntRange rpc__mismatch_info__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 2 }
-};
-const ProtobufCMessageDescriptor rpc__mismatch_info__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "rpc.MismatchInfo",
-  "MismatchInfo",
-  "Rpc__MismatchInfo",
-  "rpc",
-  sizeof(Rpc__MismatchInfo),
-  2,
-  rpc__mismatch_info__field_descriptors,
-  rpc__mismatch_info__field_indices_by_name,
-  1,  rpc__mismatch_info__number_ranges,
-  (ProtobufCMessageInit) rpc__mismatch_info__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor rpc__accepted_reply__field_descriptors[5] =
-{
-  {
-    "verifier",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__AcceptedReply, verifier),
-    &rpc__opaque_auth__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "stat",
+static const ProtobufCIntRange rpc__mismatch_info__number_ranges[1 + 1] = {{1, 0}, {0, 2}};
+const ProtobufCMessageDescriptor rpc__mismatch_info__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "rpc.MismatchInfo",
+    "MismatchInfo",
+    "Rpc__MismatchInfo",
+    "rpc",
+    sizeof(Rpc__MismatchInfo),
     2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__AcceptedReply, stat),
-    &rpc__accept_stat__descriptor,
+    rpc__mismatch_info__field_descriptors,
+    rpc__mismatch_info__field_indices_by_name,
+    1,
+    rpc__mismatch_info__number_ranges,
+    (ProtobufCMessageInit)rpc__mismatch_info__init,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "results",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__AcceptedReply, reply_data_case),
-    offsetof(Rpc__AcceptedReply, results),
-    &google__protobuf__any__descriptor,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "mismatch_info",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__AcceptedReply, reply_data_case),
-    offsetof(Rpc__AcceptedReply, mismatch_info),
-    &rpc__mismatch_info__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "default_case",
-    5,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__AcceptedReply, reply_data_case),
-    offsetof(Rpc__AcceptedReply, default_case),
-    &google__protobuf__empty__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rpc__accepted_reply__field_descriptors[5] = {
+    {
+        "verifier", 1, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, 0,               /* quantifier_offset */
+        offsetof(Rpc__AcceptedReply, verifier), &rpc__opaque_auth__descriptor, NULL, 0, /* flags */
+        0, NULL, NULL                                                                   /* reserved1,reserved2, etc */
+    },
+    {
+        "stat", 2, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_ENUM, 0,                  /* quantifier_offset */
+        offsetof(Rpc__AcceptedReply, stat), &rpc__accept_stat__descriptor, NULL, 0, /* flags */
+        0, NULL, NULL                                                               /* reserved1,reserved2, etc */
+    },
+    {
+        "results", 3, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, offsetof(Rpc__AcceptedReply, reply_data_case),
+        offsetof(Rpc__AcceptedReply, results), &google__protobuf__any__descriptor, NULL,
+        0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL                    /* reserved1,reserved2, etc */
+    },
+    {
+        "mismatch_info", 4, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE,
+        offsetof(Rpc__AcceptedReply, reply_data_case), offsetof(Rpc__AcceptedReply, mismatch_info),
+        &rpc__mismatch_info__descriptor, NULL, 0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL                                                           /* reserved1,reserved2, etc */
+    },
+    {
+        "default_case", 5, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE,
+        offsetof(Rpc__AcceptedReply, reply_data_case), offsetof(Rpc__AcceptedReply, default_case),
+        &google__protobuf__empty__descriptor, NULL, 0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL                                                                /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned rpc__accepted_reply__field_indices_by_name[] = {
-  4,   /* field[4] = default_case */
-  3,   /* field[3] = mismatch_info */
-  2,   /* field[2] = results */
-  1,   /* field[1] = stat */
-  0,   /* field[0] = verifier */
+    4, /* field[4] = default_case */
+    3, /* field[3] = mismatch_info */
+    2, /* field[2] = results */
+    1, /* field[1] = stat */
+    0, /* field[0] = verifier */
 };
-static const ProtobufCIntRange rpc__accepted_reply__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 5 }
-};
-const ProtobufCMessageDescriptor rpc__accepted_reply__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "rpc.AcceptedReply",
-  "AcceptedReply",
-  "Rpc__AcceptedReply",
-  "rpc",
-  sizeof(Rpc__AcceptedReply),
-  5,
-  rpc__accepted_reply__field_descriptors,
-  rpc__accepted_reply__field_indices_by_name,
-  1,  rpc__accepted_reply__number_ranges,
-  (ProtobufCMessageInit) rpc__accepted_reply__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor rpc__rejected_reply__field_descriptors[3] =
-{
-  {
-    "stat",
+static const ProtobufCIntRange rpc__accepted_reply__number_ranges[1 + 1] = {{1, 0}, {0, 5}};
+const ProtobufCMessageDescriptor rpc__accepted_reply__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "rpc.AcceptedReply",
+    "AcceptedReply",
+    "Rpc__AcceptedReply",
+    "rpc",
+    sizeof(Rpc__AcceptedReply),
+    5,
+    rpc__accepted_reply__field_descriptors,
+    rpc__accepted_reply__field_indices_by_name,
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__RejectedReply, stat),
-    &rpc__reject_stat__descriptor,
+    rpc__accepted_reply__number_ranges,
+    (ProtobufCMessageInit)rpc__accepted_reply__init,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "mismatch_info",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__RejectedReply, reply_data_case),
-    offsetof(Rpc__RejectedReply, mismatch_info),
-    &rpc__mismatch_info__descriptor,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "auth_stat",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
-    offsetof(Rpc__RejectedReply, reply_data_case),
-    offsetof(Rpc__RejectedReply, auth_stat),
-    &rpc__auth_stat__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rpc__rejected_reply__field_descriptors[3] = {
+    {
+        "stat", 1, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_ENUM, 0,                  /* quantifier_offset */
+        offsetof(Rpc__RejectedReply, stat), &rpc__reject_stat__descriptor, NULL, 0, /* flags */
+        0, NULL, NULL                                                               /* reserved1,reserved2, etc */
+    },
+    {
+        "mismatch_info", 2, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE,
+        offsetof(Rpc__RejectedReply, reply_data_case), offsetof(Rpc__RejectedReply, mismatch_info),
+        &rpc__mismatch_info__descriptor, NULL, 0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL                                                           /* reserved1,reserved2, etc */
+    },
+    {
+        "auth_stat", 3, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_ENUM, offsetof(Rpc__RejectedReply, reply_data_case),
+        offsetof(Rpc__RejectedReply, auth_stat), &rpc__auth_stat__descriptor, NULL,
+        0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL                    /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned rpc__rejected_reply__field_indices_by_name[] = {
-  2,   /* field[2] = auth_stat */
-  1,   /* field[1] = mismatch_info */
-  0,   /* field[0] = stat */
+    2, /* field[2] = auth_stat */
+    1, /* field[1] = mismatch_info */
+    0, /* field[0] = stat */
 };
-static const ProtobufCIntRange rpc__rejected_reply__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 3 }
-};
-const ProtobufCMessageDescriptor rpc__rejected_reply__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "rpc.RejectedReply",
-  "RejectedReply",
-  "Rpc__RejectedReply",
-  "rpc",
-  sizeof(Rpc__RejectedReply),
-  3,
-  rpc__rejected_reply__field_descriptors,
-  rpc__rejected_reply__field_indices_by_name,
-  1,  rpc__rejected_reply__number_ranges,
-  (ProtobufCMessageInit) rpc__rejected_reply__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor rpc__reply_body__field_descriptors[3] =
-{
-  {
-    "stat",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__ReplyBody, stat),
-    &rpc__reply_stat__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "areply",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__ReplyBody, reply_case),
-    offsetof(Rpc__ReplyBody, areply),
-    &rpc__accepted_reply__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "rreply",
+static const ProtobufCIntRange rpc__rejected_reply__number_ranges[1 + 1] = {{1, 0}, {0, 3}};
+const ProtobufCMessageDescriptor rpc__rejected_reply__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "rpc.RejectedReply",
+    "RejectedReply",
+    "Rpc__RejectedReply",
+    "rpc",
+    sizeof(Rpc__RejectedReply),
     3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__ReplyBody, reply_case),
-    offsetof(Rpc__ReplyBody, rreply),
-    &rpc__rejected_reply__descriptor,
+    rpc__rejected_reply__field_descriptors,
+    rpc__rejected_reply__field_indices_by_name,
+    1,
+    rpc__rejected_reply__number_ranges,
+    (ProtobufCMessageInit)rpc__rejected_reply__init,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL,
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rpc__reply_body__field_descriptors[3] = {
+    {
+        "stat", 1, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_ENUM, 0,             /* quantifier_offset */
+        offsetof(Rpc__ReplyBody, stat), &rpc__reply_stat__descriptor, NULL, 0, /* flags */
+        0, NULL, NULL                                                          /* reserved1,reserved2, etc */
+    },
+    {
+        "areply", 2, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, offsetof(Rpc__ReplyBody, reply_case),
+        offsetof(Rpc__ReplyBody, areply), &rpc__accepted_reply__descriptor, NULL,
+        0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL                    /* reserved1,reserved2, etc */
+    },
+    {
+        "rreply", 3, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, offsetof(Rpc__ReplyBody, reply_case),
+        offsetof(Rpc__ReplyBody, rreply), &rpc__rejected_reply__descriptor, NULL,
+        0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL                    /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned rpc__reply_body__field_indices_by_name[] = {
-  1,   /* field[1] = areply */
-  2,   /* field[2] = rreply */
-  0,   /* field[0] = stat */
+    1, /* field[1] = areply */
+    2, /* field[2] = rreply */
+    0, /* field[0] = stat */
 };
-static const ProtobufCIntRange rpc__reply_body__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 3 }
-};
-const ProtobufCMessageDescriptor rpc__reply_body__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "rpc.ReplyBody",
-  "ReplyBody",
-  "Rpc__ReplyBody",
-  "rpc",
-  sizeof(Rpc__ReplyBody),
-  3,
-  rpc__reply_body__field_descriptors,
-  rpc__reply_body__field_indices_by_name,
-  1,  rpc__reply_body__number_ranges,
-  (ProtobufCMessageInit) rpc__reply_body__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor rpc__rpc_msg__field_descriptors[4] =
-{
-  {
-    "xid",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT32,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__RpcMsg, xid),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "mtype",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
-    0,   /* quantifier_offset */
-    offsetof(Rpc__RpcMsg, mtype),
-    &rpc__msg_type__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "cbody",
+static const ProtobufCIntRange rpc__reply_body__number_ranges[1 + 1] = {{1, 0}, {0, 3}};
+const ProtobufCMessageDescriptor rpc__reply_body__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "rpc.ReplyBody",
+    "ReplyBody",
+    "Rpc__ReplyBody",
+    "rpc",
+    sizeof(Rpc__ReplyBody),
     3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__RpcMsg, body_case),
-    offsetof(Rpc__RpcMsg, cbody),
-    &rpc__call_body__descriptor,
+    rpc__reply_body__field_descriptors,
+    rpc__reply_body__field_indices_by_name,
+    1,
+    rpc__reply_body__number_ranges,
+    (ProtobufCMessageInit)rpc__reply_body__init,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "rbody",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Rpc__RpcMsg, body_case),
-    offsetof(Rpc__RpcMsg, rbody),
-    &rpc__reply_body__descriptor,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rpc__rpc_msg__field_descriptors[4] = {
+    {
+        "xid", 1, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_UINT32, 0, /* quantifier_offset */
+        offsetof(Rpc__RpcMsg, xid), NULL, NULL, 0,                  /* flags */
+        0, NULL, NULL                                               /* reserved1,reserved2, etc */
+    },
+    {
+        "mtype", 2, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_ENUM, 0,        /* quantifier_offset */
+        offsetof(Rpc__RpcMsg, mtype), &rpc__msg_type__descriptor, NULL, 0, /* flags */
+        0, NULL, NULL                                                      /* reserved1,reserved2, etc */
+    },
+    {
+        "cbody", 3, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, offsetof(Rpc__RpcMsg, body_case),
+        offsetof(Rpc__RpcMsg, cbody), &rpc__call_body__descriptor, NULL, 0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL /* reserved1,reserved2, etc */
+    },
+    {
+        "rbody", 4, PROTOBUF_C_LABEL_NONE, PROTOBUF_C_TYPE_MESSAGE, offsetof(Rpc__RpcMsg, body_case),
+        offsetof(Rpc__RpcMsg, rbody), &rpc__reply_body__descriptor, NULL, 0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+        0, NULL, NULL /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned rpc__rpc_msg__field_indices_by_name[] = {
-  2,   /* field[2] = cbody */
-  1,   /* field[1] = mtype */
-  3,   /* field[3] = rbody */
-  0,   /* field[0] = xid */
+    2, /* field[2] = cbody */
+    1, /* field[1] = mtype */
+    3, /* field[3] = rbody */
+    0, /* field[0] = xid */
 };
-static const ProtobufCIntRange rpc__rpc_msg__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 4 }
+static const ProtobufCIntRange rpc__rpc_msg__number_ranges[1 + 1] = {{1, 0}, {0, 4}};
+const ProtobufCMessageDescriptor rpc__rpc_msg__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "rpc.RpcMsg",
+    "RpcMsg",
+    "Rpc__RpcMsg",
+    "rpc",
+    sizeof(Rpc__RpcMsg),
+    4,
+    rpc__rpc_msg__field_descriptors,
+    rpc__rpc_msg__field_indices_by_name,
+    1,
+    rpc__rpc_msg__number_ranges,
+    (ProtobufCMessageInit)rpc__rpc_msg__init,
+    NULL,
+    NULL,
+    NULL /* reserved[123] */
 };
-const ProtobufCMessageDescriptor rpc__rpc_msg__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "rpc.RpcMsg",
-  "RpcMsg",
-  "Rpc__RpcMsg",
-  "rpc",
-  sizeof(Rpc__RpcMsg),
-  4,
-  rpc__rpc_msg__field_descriptors,
-  rpc__rpc_msg__field_indices_by_name,
-  1,  rpc__rpc_msg__number_ranges,
-  (ProtobufCMessageInit) rpc__rpc_msg__init,
-  NULL,NULL,NULL    /* reserved[123] */
+static const ProtobufCEnumValue rpc__msg_type__enum_values_by_number[2] = {
+    {"CALL", "RPC__MSG_TYPE__CALL", 0},
+    {"REPLY", "RPC__MSG_TYPE__REPLY", 1},
 };
-static const ProtobufCEnumValue rpc__msg_type__enum_values_by_number[2] =
-{
-  { "CALL", "RPC__MSG_TYPE__CALL", 0 },
-  { "REPLY", "RPC__MSG_TYPE__REPLY", 1 },
+static const ProtobufCIntRange rpc__msg_type__value_ranges[] = {{0, 0}, {0, 2}};
+static const ProtobufCEnumValueIndex rpc__msg_type__enum_values_by_name[2] = {
+    {"CALL", 0},
+    {"REPLY", 1},
 };
-static const ProtobufCIntRange rpc__msg_type__value_ranges[] = {
-{0, 0},{0, 2}
+const ProtobufCEnumDescriptor rpc__msg_type__descriptor = {
+    PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
+    "rpc.MsgType",
+    "MsgType",
+    "Rpc__MsgType",
+    "rpc",
+    2,
+    rpc__msg_type__enum_values_by_number,
+    2,
+    rpc__msg_type__enum_values_by_name,
+    1,
+    rpc__msg_type__value_ranges,
+    NULL,
+    NULL,
+    NULL,
+    NULL /* reserved[1234] */
 };
-static const ProtobufCEnumValueIndex rpc__msg_type__enum_values_by_name[2] =
-{
-  { "CALL", 0 },
-  { "REPLY", 1 },
+static const ProtobufCEnumValue rpc__reply_stat__enum_values_by_number[2] = {
+    {"MSG_ACCEPTED", "RPC__REPLY_STAT__MSG_ACCEPTED", 0},
+    {"MSG_DENIED", "RPC__REPLY_STAT__MSG_DENIED", 1},
 };
-const ProtobufCEnumDescriptor rpc__msg_type__descriptor =
-{
-  PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
-  "rpc.MsgType",
-  "MsgType",
-  "Rpc__MsgType",
-  "rpc",
-  2,
-  rpc__msg_type__enum_values_by_number,
-  2,
-  rpc__msg_type__enum_values_by_name,
-  1,
-  rpc__msg_type__value_ranges,
-  NULL,NULL,NULL,NULL   /* reserved[1234] */
+static const ProtobufCIntRange rpc__reply_stat__value_ranges[] = {{0, 0}, {0, 2}};
+static const ProtobufCEnumValueIndex rpc__reply_stat__enum_values_by_name[2] = {
+    {"MSG_ACCEPTED", 0},
+    {"MSG_DENIED", 1},
 };
-static const ProtobufCEnumValue rpc__reply_stat__enum_values_by_number[2] =
-{
-  { "MSG_ACCEPTED", "RPC__REPLY_STAT__MSG_ACCEPTED", 0 },
-  { "MSG_DENIED", "RPC__REPLY_STAT__MSG_DENIED", 1 },
+const ProtobufCEnumDescriptor rpc__reply_stat__descriptor = {
+    PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
+    "rpc.ReplyStat",
+    "ReplyStat",
+    "Rpc__ReplyStat",
+    "rpc",
+    2,
+    rpc__reply_stat__enum_values_by_number,
+    2,
+    rpc__reply_stat__enum_values_by_name,
+    1,
+    rpc__reply_stat__value_ranges,
+    NULL,
+    NULL,
+    NULL,
+    NULL /* reserved[1234] */
 };
-static const ProtobufCIntRange rpc__reply_stat__value_ranges[] = {
-{0, 0},{0, 2}
+static const ProtobufCEnumValue rpc__accept_stat__enum_values_by_number[6] = {
+    {"SUCCESS", "RPC__ACCEPT_STAT__SUCCESS", 0},
+    {"PROG_UNAVAIL", "RPC__ACCEPT_STAT__PROG_UNAVAIL", 1},
+    {"PROG_MISMATCH", "RPC__ACCEPT_STAT__PROG_MISMATCH", 2},
+    {"PROC_UNAVAIL", "RPC__ACCEPT_STAT__PROC_UNAVAIL", 3},
+    {"GARBAGE_ARGS", "RPC__ACCEPT_STAT__GARBAGE_ARGS", 4},
+    {"SYSTEM_ERR", "RPC__ACCEPT_STAT__SYSTEM_ERR", 5},
 };
-static const ProtobufCEnumValueIndex rpc__reply_stat__enum_values_by_name[2] =
-{
-  { "MSG_ACCEPTED", 0 },
-  { "MSG_DENIED", 1 },
+static const ProtobufCIntRange rpc__accept_stat__value_ranges[] = {{0, 0}, {0, 6}};
+static const ProtobufCEnumValueIndex rpc__accept_stat__enum_values_by_name[6] = {
+    {"GARBAGE_ARGS", 4}, {"PROC_UNAVAIL", 3}, {"PROG_MISMATCH", 2},
+    {"PROG_UNAVAIL", 1}, {"SUCCESS", 0},      {"SYSTEM_ERR", 5},
 };
-const ProtobufCEnumDescriptor rpc__reply_stat__descriptor =
-{
-  PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
-  "rpc.ReplyStat",
-  "ReplyStat",
-  "Rpc__ReplyStat",
-  "rpc",
-  2,
-  rpc__reply_stat__enum_values_by_number,
-  2,
-  rpc__reply_stat__enum_values_by_name,
-  1,
-  rpc__reply_stat__value_ranges,
-  NULL,NULL,NULL,NULL   /* reserved[1234] */
+const ProtobufCEnumDescriptor rpc__accept_stat__descriptor = {
+    PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
+    "rpc.AcceptStat",
+    "AcceptStat",
+    "Rpc__AcceptStat",
+    "rpc",
+    6,
+    rpc__accept_stat__enum_values_by_number,
+    6,
+    rpc__accept_stat__enum_values_by_name,
+    1,
+    rpc__accept_stat__value_ranges,
+    NULL,
+    NULL,
+    NULL,
+    NULL /* reserved[1234] */
 };
-static const ProtobufCEnumValue rpc__accept_stat__enum_values_by_number[6] =
-{
-  { "SUCCESS", "RPC__ACCEPT_STAT__SUCCESS", 0 },
-  { "PROG_UNAVAIL", "RPC__ACCEPT_STAT__PROG_UNAVAIL", 1 },
-  { "PROG_MISMATCH", "RPC__ACCEPT_STAT__PROG_MISMATCH", 2 },
-  { "PROC_UNAVAIL", "RPC__ACCEPT_STAT__PROC_UNAVAIL", 3 },
-  { "GARBAGE_ARGS", "RPC__ACCEPT_STAT__GARBAGE_ARGS", 4 },
-  { "SYSTEM_ERR", "RPC__ACCEPT_STAT__SYSTEM_ERR", 5 },
+static const ProtobufCEnumValue rpc__reject_stat__enum_values_by_number[2] = {
+    {"RPC_MISMATCH", "RPC__REJECT_STAT__RPC_MISMATCH", 0},
+    {"AUTH_ERROR", "RPC__REJECT_STAT__AUTH_ERROR", 1},
 };
-static const ProtobufCIntRange rpc__accept_stat__value_ranges[] = {
-{0, 0},{0, 6}
+static const ProtobufCIntRange rpc__reject_stat__value_ranges[] = {{0, 0}, {0, 2}};
+static const ProtobufCEnumValueIndex rpc__reject_stat__enum_values_by_name[2] = {
+    {"AUTH_ERROR", 1},
+    {"RPC_MISMATCH", 0},
 };
-static const ProtobufCEnumValueIndex rpc__accept_stat__enum_values_by_name[6] =
-{
-  { "GARBAGE_ARGS", 4 },
-  { "PROC_UNAVAIL", 3 },
-  { "PROG_MISMATCH", 2 },
-  { "PROG_UNAVAIL", 1 },
-  { "SUCCESS", 0 },
-  { "SYSTEM_ERR", 5 },
+const ProtobufCEnumDescriptor rpc__reject_stat__descriptor = {
+    PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
+    "rpc.RejectStat",
+    "RejectStat",
+    "Rpc__RejectStat",
+    "rpc",
+    2,
+    rpc__reject_stat__enum_values_by_number,
+    2,
+    rpc__reject_stat__enum_values_by_name,
+    1,
+    rpc__reject_stat__value_ranges,
+    NULL,
+    NULL,
+    NULL,
+    NULL /* reserved[1234] */
 };
-const ProtobufCEnumDescriptor rpc__accept_stat__descriptor =
-{
-  PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
-  "rpc.AcceptStat",
-  "AcceptStat",
-  "Rpc__AcceptStat",
-  "rpc",
-  6,
-  rpc__accept_stat__enum_values_by_number,
-  6,
-  rpc__accept_stat__enum_values_by_name,
-  1,
-  rpc__accept_stat__value_ranges,
-  NULL,NULL,NULL,NULL   /* reserved[1234] */
+static const ProtobufCEnumValue rpc__auth_stat__enum_values_by_number[15] = {
+    {"AUTH_OK", "RPC__AUTH_STAT__AUTH_OK", 0},
+    {"AUTH_BADCRED", "RPC__AUTH_STAT__AUTH_BADCRED", 1},
+    {"AUTH_REJECTEDCRED", "RPC__AUTH_STAT__AUTH_REJECTEDCRED", 2},
+    {"AUTH_BADVERF", "RPC__AUTH_STAT__AUTH_BADVERF", 3},
+    {"AUTH_REJECTEDVERF", "RPC__AUTH_STAT__AUTH_REJECTEDVERF", 4},
+    {"AUTH_TOOWEAK", "RPC__AUTH_STAT__AUTH_TOOWEAK", 5},
+    {"AUTH_INVALIDRESP", "RPC__AUTH_STAT__AUTH_INVALIDRESP", 6},
+    {"AUTH_FAILED", "RPC__AUTH_STAT__AUTH_FAILED", 7},
+    {"AUTH_KERB_GENERIC", "RPC__AUTH_STAT__AUTH_KERB_GENERIC", 8},
+    {"AUTH_TIMEEXPIRE", "RPC__AUTH_STAT__AUTH_TIMEEXPIRE", 9},
+    {"AUTH_TKT_FILE", "RPC__AUTH_STAT__AUTH_TKT_FILE", 10},
+    {"AUTH_DECODE", "RPC__AUTH_STAT__AUTH_DECODE", 11},
+    {"AUTH_NET_ADDR", "RPC__AUTH_STAT__AUTH_NET_ADDR", 12},
+    {"RPCSEC_GSS_CREDPROBLEM", "RPC__AUTH_STAT__RPCSEC_GSS_CREDPROBLEM", 13},
+    {"RPCSEC_GSS_CTXPROBLEM", "RPC__AUTH_STAT__RPCSEC_GSS_CTXPROBLEM", 14},
 };
-static const ProtobufCEnumValue rpc__reject_stat__enum_values_by_number[2] =
-{
-  { "RPC_MISMATCH", "RPC__REJECT_STAT__RPC_MISMATCH", 0 },
-  { "AUTH_ERROR", "RPC__REJECT_STAT__AUTH_ERROR", 1 },
+static const ProtobufCIntRange rpc__auth_stat__value_ranges[] = {{0, 0}, {0, 15}};
+static const ProtobufCEnumValueIndex rpc__auth_stat__enum_values_by_name[15] = {
+    {"AUTH_BADCRED", 1},           {"AUTH_BADVERF", 3},
+    {"AUTH_DECODE", 11},           {"AUTH_FAILED", 7},
+    {"AUTH_INVALIDRESP", 6},       {"AUTH_KERB_GENERIC", 8},
+    {"AUTH_NET_ADDR", 12},         {"AUTH_OK", 0},
+    {"AUTH_REJECTEDCRED", 2},      {"AUTH_REJECTEDVERF", 4},
+    {"AUTH_TIMEEXPIRE", 9},        {"AUTH_TKT_FILE", 10},
+    {"AUTH_TOOWEAK", 5},           {"RPCSEC_GSS_CREDPROBLEM", 13},
+    {"RPCSEC_GSS_CTXPROBLEM", 14},
 };
-static const ProtobufCIntRange rpc__reject_stat__value_ranges[] = {
-{0, 0},{0, 2}
+const ProtobufCEnumDescriptor rpc__auth_stat__descriptor = {
+    PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
+    "rpc.AuthStat",
+    "AuthStat",
+    "Rpc__AuthStat",
+    "rpc",
+    15,
+    rpc__auth_stat__enum_values_by_number,
+    15,
+    rpc__auth_stat__enum_values_by_name,
+    1,
+    rpc__auth_stat__value_ranges,
+    NULL,
+    NULL,
+    NULL,
+    NULL /* reserved[1234] */
 };
-static const ProtobufCEnumValueIndex rpc__reject_stat__enum_values_by_name[2] =
-{
-  { "AUTH_ERROR", 1 },
-  { "RPC_MISMATCH", 0 },
+static const ProtobufCEnumValue rpc__auth_flavor__enum_values_by_number[5] = {
+    {"AUTH_NONE", "RPC__AUTH_FLAVOR__AUTH_NONE", 0},   {"AUTH_SYS", "RPC__AUTH_FLAVOR__AUTH_SYS", 1},
+    {"AUTH_SHORT", "RPC__AUTH_FLAVOR__AUTH_SHORT", 2}, {"AUTH_DH", "RPC__AUTH_FLAVOR__AUTH_DH", 3},
+    {"RPCSEC_GSS", "RPC__AUTH_FLAVOR__RPCSEC_GSS", 6},
 };
-const ProtobufCEnumDescriptor rpc__reject_stat__descriptor =
-{
-  PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
-  "rpc.RejectStat",
-  "RejectStat",
-  "Rpc__RejectStat",
-  "rpc",
-  2,
-  rpc__reject_stat__enum_values_by_number,
-  2,
-  rpc__reject_stat__enum_values_by_name,
-  1,
-  rpc__reject_stat__value_ranges,
-  NULL,NULL,NULL,NULL   /* reserved[1234] */
+static const ProtobufCIntRange rpc__auth_flavor__value_ranges[] = {{0, 0}, {6, 4}, {0, 5}};
+static const ProtobufCEnumValueIndex rpc__auth_flavor__enum_values_by_name[5] = {
+    {"AUTH_DH", 3}, {"AUTH_NONE", 0}, {"AUTH_SHORT", 2}, {"AUTH_SYS", 1}, {"RPCSEC_GSS", 4},
 };
-static const ProtobufCEnumValue rpc__auth_stat__enum_values_by_number[15] =
-{
-  { "AUTH_OK", "RPC__AUTH_STAT__AUTH_OK", 0 },
-  { "AUTH_BADCRED", "RPC__AUTH_STAT__AUTH_BADCRED", 1 },
-  { "AUTH_REJECTEDCRED", "RPC__AUTH_STAT__AUTH_REJECTEDCRED", 2 },
-  { "AUTH_BADVERF", "RPC__AUTH_STAT__AUTH_BADVERF", 3 },
-  { "AUTH_REJECTEDVERF", "RPC__AUTH_STAT__AUTH_REJECTEDVERF", 4 },
-  { "AUTH_TOOWEAK", "RPC__AUTH_STAT__AUTH_TOOWEAK", 5 },
-  { "AUTH_INVALIDRESP", "RPC__AUTH_STAT__AUTH_INVALIDRESP", 6 },
-  { "AUTH_FAILED", "RPC__AUTH_STAT__AUTH_FAILED", 7 },
-  { "AUTH_KERB_GENERIC", "RPC__AUTH_STAT__AUTH_KERB_GENERIC", 8 },
-  { "AUTH_TIMEEXPIRE", "RPC__AUTH_STAT__AUTH_TIMEEXPIRE", 9 },
-  { "AUTH_TKT_FILE", "RPC__AUTH_STAT__AUTH_TKT_FILE", 10 },
-  { "AUTH_DECODE", "RPC__AUTH_STAT__AUTH_DECODE", 11 },
-  { "AUTH_NET_ADDR", "RPC__AUTH_STAT__AUTH_NET_ADDR", 12 },
-  { "RPCSEC_GSS_CREDPROBLEM", "RPC__AUTH_STAT__RPCSEC_GSS_CREDPROBLEM", 13 },
-  { "RPCSEC_GSS_CTXPROBLEM", "RPC__AUTH_STAT__RPCSEC_GSS_CTXPROBLEM", 14 },
-};
-static const ProtobufCIntRange rpc__auth_stat__value_ranges[] = {
-{0, 0},{0, 15}
-};
-static const ProtobufCEnumValueIndex rpc__auth_stat__enum_values_by_name[15] =
-{
-  { "AUTH_BADCRED", 1 },
-  { "AUTH_BADVERF", 3 },
-  { "AUTH_DECODE", 11 },
-  { "AUTH_FAILED", 7 },
-  { "AUTH_INVALIDRESP", 6 },
-  { "AUTH_KERB_GENERIC", 8 },
-  { "AUTH_NET_ADDR", 12 },
-  { "AUTH_OK", 0 },
-  { "AUTH_REJECTEDCRED", 2 },
-  { "AUTH_REJECTEDVERF", 4 },
-  { "AUTH_TIMEEXPIRE", 9 },
-  { "AUTH_TKT_FILE", 10 },
-  { "AUTH_TOOWEAK", 5 },
-  { "RPCSEC_GSS_CREDPROBLEM", 13 },
-  { "RPCSEC_GSS_CTXPROBLEM", 14 },
-};
-const ProtobufCEnumDescriptor rpc__auth_stat__descriptor =
-{
-  PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
-  "rpc.AuthStat",
-  "AuthStat",
-  "Rpc__AuthStat",
-  "rpc",
-  15,
-  rpc__auth_stat__enum_values_by_number,
-  15,
-  rpc__auth_stat__enum_values_by_name,
-  1,
-  rpc__auth_stat__value_ranges,
-  NULL,NULL,NULL,NULL   /* reserved[1234] */
-};
-static const ProtobufCEnumValue rpc__auth_flavor__enum_values_by_number[5] =
-{
-  { "AUTH_NONE", "RPC__AUTH_FLAVOR__AUTH_NONE", 0 },
-  { "AUTH_SYS", "RPC__AUTH_FLAVOR__AUTH_SYS", 1 },
-  { "AUTH_SHORT", "RPC__AUTH_FLAVOR__AUTH_SHORT", 2 },
-  { "AUTH_DH", "RPC__AUTH_FLAVOR__AUTH_DH", 3 },
-  { "RPCSEC_GSS", "RPC__AUTH_FLAVOR__RPCSEC_GSS", 6 },
-};
-static const ProtobufCIntRange rpc__auth_flavor__value_ranges[] = {
-{0, 0},{6, 4},{0, 5}
-};
-static const ProtobufCEnumValueIndex rpc__auth_flavor__enum_values_by_name[5] =
-{
-  { "AUTH_DH", 3 },
-  { "AUTH_NONE", 0 },
-  { "AUTH_SHORT", 2 },
-  { "AUTH_SYS", 1 },
-  { "RPCSEC_GSS", 4 },
-};
-const ProtobufCEnumDescriptor rpc__auth_flavor__descriptor =
-{
-  PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
-  "rpc.AuthFlavor",
-  "AuthFlavor",
-  "Rpc__AuthFlavor",
-  "rpc",
-  5,
-  rpc__auth_flavor__enum_values_by_number,
-  5,
-  rpc__auth_flavor__enum_values_by_name,
-  2,
-  rpc__auth_flavor__value_ranges,
-  NULL,NULL,NULL,NULL   /* reserved[1234] */
+const ProtobufCEnumDescriptor rpc__auth_flavor__descriptor = {
+    PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
+    "rpc.AuthFlavor",
+    "AuthFlavor",
+    "Rpc__AuthFlavor",
+    "rpc",
+    5,
+    rpc__auth_flavor__enum_values_by_number,
+    5,
+    rpc__auth_flavor__enum_values_by_name,
+    2,
+    rpc__auth_flavor__value_ranges,
+    NULL,
+    NULL,
+    NULL,
+    NULL /* reserved[1234] */
 };
