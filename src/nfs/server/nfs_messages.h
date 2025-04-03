@@ -3,9 +3,9 @@
 
 #include <stdlib.h>
 
-#include <protobuf-c/protobuf-c.h>
-#include "src/serialization/rpc/rpc.pb-c.h"
 #include "src/serialization/nfs/nfs.pb-c.h"
+#include "src/serialization/rpc/rpc.pb-c.h"
+#include <protobuf-c/protobuf-c.h>
 
 Nfs__NfsStat *create_nfs_stat(Nfs__Stat stat);
 

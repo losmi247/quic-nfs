@@ -6,65 +6,57 @@ typedef struct GetattrData {
 } GetattrData;
 
 void *blocking_getattr(void *arg) {
-    CallbackData *callback_data = (CallbackData *) arg;
+    CallbackData *callback_data = (CallbackData *)arg;
 
-    GetattrData *getattr_data = (GetattrData *) callback_data->return_data;
+    GetattrData *getattr_data = (GetattrData *)callback_data->return_data;
 
     struct stat *stbuf = getattr_data->stbuf;
 
     memset(stbuf, 0, sizeof(struct stat));
 
-    pthread_mutex_lock(&nfs_mutex);
-
     Nfs__FType file_type;
     int error_code;
-    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, getattr_data->path, &file_type, &error_code);
-    if(file_fhandle == NULL) {
+    Nfs__FHandle *file_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle,
+                                                       getattr_data->path, &file_type, &error_code);
+    if (file_fhandle == NULL) {
         printf("nfs_getattr: failed to resolve the path %s to a file\n", getattr_data->path);
 
         callback_data->error_code = -error_code;
-
-        pthread_mutex_unlock(&nfs_mutex);
 
         goto signal;
     }
 
     Nfs__AttrStat *attrstat = malloc(sizeof(Nfs__AttrStat));
     int status = nfs_procedure_1_get_file_attributes(rpc_connection_context, *file_fhandle, attrstat);
-    if(status != 0) {
+    if (status != 0) {
         printf("Error: Invalid RPC reply received from the server with status %d\n", status);
 
         free(attrstat);
 
         callback_data->error_code = -EIO;
 
-        pthread_mutex_unlock(&nfs_mutex);
-
         goto signal;
     }
 
-    pthread_mutex_unlock(&nfs_mutex);
-
-    if(validate_nfs_attr_stat(attrstat) > 0) {
+    if (validate_nfs_attr_stat(attrstat) > 0) {
         printf("Error: Invalid NFS procedure result received from the server\n");
 
         nfs__attr_stat__free_unpacked(attrstat, NULL);
 
         callback_data->error_code = -EIO;
-        
+
         goto signal;
     }
 
-    if(attrstat->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
+    if (attrstat->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
         printf("Error: Permission denied\n");
-        
+
         nfs__attr_stat__free_unpacked(attrstat, NULL);
 
         callback_data->error_code = -EACCES;
-        
+
         goto signal;
-    }
-    else if(attrstat->nfs_status->stat != NFS__STAT__NFS_OK) {
+    } else if (attrstat->nfs_status->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(attrstat->nfs_status->stat);
         printf("Error: Failed to get attributes of the file with status %s\n", string_status);
         free(string_status);
@@ -72,7 +64,7 @@ void *blocking_getattr(void *arg) {
         nfs__attr_stat__free_unpacked(attrstat, NULL);
 
         callback_data->error_code = map_nfs_error(attrstat->nfs_status->stat);
-        
+
         goto signal;
     }
 
@@ -97,7 +89,7 @@ void *blocking_getattr(void *arg) {
 
     stbuf->st_ctim.tv_sec = attrstat->attributes->ctime->seconds;
     stbuf->st_ctim.tv_nsec = attrstat->attributes->ctime->useconds;
-    
+
     nfs__attr_stat__free_unpacked(attrstat, NULL);
     free(file_fhandle->nfs_filehandle);
     free(file_fhandle);
@@ -114,10 +106,10 @@ signal:
 }
 
 /*
-* Handles the FUSE call to get file attributes.
-*
-* Returns 0 on success and the appropriate negative error code on failure.
-*/
+ * Handles the FUSE call to get file attributes.
+ *
+ * Returns 0 on success and the appropriate negative error code on failure.
+ */
 int nfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi) {
     /*memset(stbuf, 0, sizeof(struct stat));
 
@@ -136,7 +128,7 @@ int nfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
 
     GetattrData getattr_data;
     getattr_data.path = discard_const(path);
-	getattr_data.stbuf = stbuf;
+    getattr_data.stbuf = stbuf;
 
     callback_data.return_data = &getattr_data;
 
@@ -144,17 +136,16 @@ int nfs_getattr(const char *path, struct stat *stbuf, struct fuse_file_info *fi)
     pthread_cond_init(&callback_data.cond, NULL);
 
     pthread_t blocking_thread;
-    if(pthread_create(&blocking_thread, NULL, blocking_getattr, &callback_data) != 0) {
+    if (pthread_create(&blocking_thread, NULL, blocking_getattr, &callback_data) != 0) {
         return -EIO;
     }
 
     pthread_detach(blocking_thread);
 
-	wait_for_nfs_reply(&callback_data);
+    wait_for_nfs_reply(&callback_data);
 
     pthread_mutex_destroy(&callback_data.lock);
     pthread_cond_destroy(&callback_data.cond);
 
     return callback_data.error_code;
 }
- 

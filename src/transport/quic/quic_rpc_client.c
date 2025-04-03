@@ -1,116 +1,220 @@
 #include "quic_rpc_client.h"
 
+#include "streams.h"
+
+void timeout_callback(EV_P_ ev_timer *w, int revents);
+void process_connections(QuicClient *client);
+void read_callback(EV_P_ ev_io *w, int revents);
+void async_process_connections_callback(EV_P_ ev_async *w, int revents);
+void async_stream_allocator_callback(EV_P_ ev_async *w, int revents);
+void async_shutdown_loop_callback(EV_P_ ev_async *w, int revents);
+
 // Callback handlers for QUIC events
 void client_on_conn_created(void *tctx, struct quic_conn_t *conn) {
     QuicClient *client = tctx;
-    client->quic_client_connection_context->quic_connection = conn;
+    client->quic_connection = conn;
+}
+
+/*
+ * The function that the event loop thread runs.
+ */
+void *event_loop_runner(void *arg) {
+    QuicClient *client = arg;
+
+    client->event_loop = ev_loop_new(EVFLAG_AUTO);
+
+    // initialize the process_connections callback
+    ev_async_init(&client->process_connections_async_watcher, async_process_connections_callback);
+    client->process_connections_async_watcher.data = client;
+    ev_async_start(client->event_loop, &client->process_connections_async_watcher);
+
+    // initialize the stream allocator callback
+    ev_async_init(&client->stream_allocator_async_watcher, async_stream_allocator_callback);
+    client->stream_allocator_async_watcher.data = client;
+    ev_async_start(client->event_loop, &client->stream_allocator_async_watcher);
+
+    // initialize the connection closing callback
+    ev_async_init(&client->connection_closing_async_watcher, async_connection_closing_callback);
+    client->connection_closing_async_watcher.data = client;
+    ev_async_start(client->event_loop, &client->connection_closing_async_watcher);
+
+    // initialize the event loop shutdown callback
+    ev_async_init(&client->event_loop_shutdown_async_watcher, async_shutdown_loop_callback);
+    client->event_loop_shutdown_async_watcher.data = client;
+    ev_async_start(client->event_loop, &client->event_loop_shutdown_async_watcher);
+
+    // initialize the timer
+    ev_init(&client->timer, timeout_callback);
+    client->timer.data = client;
+
+    // process_connections(client);
+    ev_async_send(client->event_loop, &client->process_connections_async_watcher);
+
+    // start the event loop
+    ev_io udp_socket_watcher;
+    ev_io_init(&udp_socket_watcher, read_callback, client->socket_fd, EV_READ);
+    udp_socket_watcher.data = client;
+    ev_io_start(client->event_loop, &udp_socket_watcher);
+
+    ev_run(client->event_loop, 0);
+
+    return NULL;
+}
+
+/*
+ * This function should be called from the RPC invoker thread to
+ * kill the event loop thread if an error has happened.
+ */
+void kill_event_loop_thread(QuicClient *client) {
+    if (client == NULL) {
+        return;
+    }
+
+    ev_break(client->event_loop, EVBREAK_ALL);
+
+    pthread_cancel(client->event_loop_thread);
+    pthread_join(client->event_loop_thread, NULL);
 }
 
 void client_on_conn_established(void *tctx, struct quic_conn_t *conn) {
     QuicClient *client = tctx;
 
-    uint64_t new_stream_id;
-    int error_code = quic_stream_bidi_new(conn, 0, true, &new_stream_id);
-    client->quic_client_connection_context->attempted_to_create_main_stream = true;
-    if(error_code != 0) {
-        fprintf(stderr, "client_on_conn_established: failed to create the main stream\n");
+    Stream *main_stream = create_new_stream(client->quic_connection);
+    if (main_stream == NULL) {
+        fprintf(stderr, "client_on_conn_established: failed to allocate memory for the main stream\n");
 
-        client->quic_client_connection_context->main_stream_created_successfully = false;
-
-        client->finished = true;
-        ev_break(client->event_loop, EVBREAK_ALL);
+        client->connection_established = true;
+        pthread_cond_signal(&client->connection_established_condition_variable);
 
         return;
     }
+    client->main_stream = main_stream;
 
-    client->quic_client_connection_context->main_stream_created_successfully = true;
-    client->quic_client_connection_context->main_stream_id = new_stream_id;
-
-    quic_stream_wantwrite(conn, new_stream_id, true);
+    client->connection_established = true;
+    pthread_cond_signal(&client->connection_established_condition_variable);
 }
 
 void client_on_conn_closed(void *tctx, struct quic_conn_t *conn) {
-    printf("WTF WHY IS THE CONNECTION CLOSING\n"); fflush(stdout);
+    QuicClient *client = tctx;
+
+    client->connection_closed = true;
+
+    ev_async_send(client->event_loop, &client->event_loop_shutdown_async_watcher);
+
+    pthread_cond_signal(&client->connection_closed_condition_variable);
 }
 
-void client_on_stream_created(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {}
+void client_on_stream_created(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {
+}
 
 void client_on_stream_readable(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {
     QuicClient *client = tctx;
 
-    if(client->rm_receiving_context == NULL) {
-        client->rm_receiving_context = create_rm_receiving_context(conn, stream_id);
+    QuicClientStreamContext *stream_context =
+        find_stream_context(client->stream_contexts, stream_id, &client->stream_contexts_list_lock);
+    if (stream_context == NULL) {
+        fprintf(stderr,
+                "client_on_stream_readable: client stream is readable but no response expected on this stream\n");
+        return;
+    }
 
-        if(client->rm_receiving_context == NULL) {
-            fprintf(stderr, "client_on_stream_readable: failed to create a RM receiving context\n");
+    if (stream_context->rm_receiving_context == NULL) {
+        stream_context->rm_receiving_context = create_rm_receiving_context(conn, stream_id);
+
+        if (stream_context->rm_receiving_context == NULL) {
+            fprintf(stderr, "client_on_stream_readable: failed to create an RM receiving context\n");
+
+            stream_context->reply_rpc_msg_successfully_received = false;
+
+            stream_context->finished = true;
+            kill_event_loop_thread(client);
+
+            pthread_cond_signal(&stream_context->cond);
+
             return;
         }
     }
 
-    int error_code = receive_available_bytes_quic(client->rm_receiving_context);
-    if(error_code > 0) {
-        fprintf(stderr, "client_on_stream_readable: failed to read available data from the readable stream %ld\n", stream_id);
+    int error_code = receive_available_bytes_quic(stream_context->rm_receiving_context);
+    if (error_code > 0) {
+        fprintf(stderr, "client_on_stream_readable: failed to read available data from the readable stream %ld\n",
+                stream_id);
 
-        client->reply_rpc_msg_successfully_received = false;
+        stream_context->reply_rpc_msg_successfully_received = false;
 
-        client->finished = true;
-        ev_break(client->event_loop, EVBREAK_ALL);
+        stream_context->finished = true;
+        kill_event_loop_thread(client);
+
+        pthread_cond_signal(&stream_context->cond);
 
         return;
     }
 
     // we've received a complete RPC on this stream
-    if(client->rm_receiving_context->record_fully_received) {
-        client->reply_rpc_msg_successfully_received = true;
+    if (stream_context->rm_receiving_context->record_fully_received) {
+        stream_context->reply_rpc_msg_successfully_received = true;
+        stream_context->finished = true;
 
-        client->finished = true;
-        ev_break(client->event_loop, EVBREAK_ALL);
+        pthread_cond_signal(&stream_context->cond);
     }
 }
 
 void client_on_stream_writable(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {
-    quic_stream_wantwrite(conn, stream_id, false);
-
     QuicClient *client = tctx;
-    
-    if(client->attempted_call_rpc_msg_send) {
-        fprintf(stderr, "client_on_stream_writable: QUIC client attempted to resend the RPC\n");
 
-        client->resend_attempted = true;
-        ev_break(client->event_loop, EVBREAK_ALL);
+    QuicClientStreamContext *stream_context =
+        find_stream_context(client->stream_contexts, stream_id, &client->stream_contexts_list_lock);
+    if (stream_context == NULL) {
+        return;
+    }
 
+    Stream *designated_stream = stream_context->designated_stream;
+    if (designated_stream == NULL || stream_id != designated_stream->id) {
+        fprintf(stderr, "client_ongit _stream_writable: a stream context was found for a non-designated stream\n");
+
+        stream_context->finished = true;
+        stream_context->call_rpc_msg_successfully_sent = false;
+        kill_event_loop_thread(client);
+
+        return;
+    }
+
+    if (stream_context->attempted_call_rpc_msg_send) {
         return;
     }
 
     // send the serialized RpcMsg to the server as a single Record Marking record on stream 0
     // TODO: (QNFS-37) implement time-outs + reconnections
-    int error_code = send_rm_record_quic(conn, stream_id, client->call_rpc_msg_buffer, client->call_rpc_msg_size);
-    client->attempted_call_rpc_msg_send = true;
-    client->call_rpc_msg_successfully_sent = (error_code == 0);
+    int error_code =
+        send_rm_record_quic(conn, stream_id, stream_context->call_rpc_msg_buffer, stream_context->call_rpc_msg_size);
+    stream_context->attempted_call_rpc_msg_send = true;
+    stream_context->call_rpc_msg_successfully_sent = (error_code == 0);
 
-    if(!client->call_rpc_msg_successfully_sent) {
-        ev_break(client->event_loop, EVBREAK_ALL);
+    if (!stream_context->call_rpc_msg_successfully_sent) {
+        kill_event_loop_thread(client);
     }
 }
 
-void client_on_stream_closed(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {}
+void client_on_stream_closed(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {
+}
 
 /*
-* Sends outbound QUIC packets via the underlying UDP socket.
-*/
+ * Sends outbound QUIC packets via the underlying UDP socket.
+ */
 int client_on_packets_send(void *psctx, struct quic_packet_out_spec_t *pkts, unsigned int count) {
     QuicClient *client = psctx;
 
     unsigned int sent_count = 0;
-    for(int i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
         struct quic_packet_out_spec_t *pkt = pkts + i;
-        for(int j = 0; j < (*pkt).iovlen; j++) {
+        for (int j = 0; j < (*pkt).iovlen; j++) {
             const struct iovec *iov = pkt->iov + j;
-            ssize_t sent = sendto(client->quic_client_connection_context->socket_fd, iov->iov_base, iov->iov_len, 0, (struct sockaddr *)pkt->dst_addr, pkt->dst_addr_len);
+            ssize_t sent = sendto(client->socket_fd, iov->iov_base, iov->iov_len, 0, (struct sockaddr *)pkt->dst_addr,
+                                  pkt->dst_addr_len);
             // we've sent a packet of 'sent' bytes
 
-            if(sent != iov->iov_len) {
-                if((errno == EWOULDBLOCK) || (errno == EAGAIN)) {
+            if (sent != iov->iov_len) {
+                if ((errno == EWOULDBLOCK) || (errno == EAGAIN)) {
                     fprintf(stderr, "send would block, already sent: %d\n", sent_count);
                     return sent_count;
                 }
@@ -138,14 +242,14 @@ struct quic_packet_send_methods_t quic_packet_send_methods = {
 };
 
 /*
-* Processes awaiting events on all QUIC connections at the given server's
-* endpoint, advancing the QUIC state machine.
-*/
-static void process_connections(QuicClient *client) {
-    quic_endpoint_process_connections(client->quic_client_connection_context->quic_endpoint);
+ * Processes awaiting events on all QUIC connections at the given client's
+ * endpoint, advancing the QUIC state machine.
+ */
+void process_connections(QuicClient *client) {
+    quic_endpoint_process_connections(client->quic_endpoint);
 
-    double timeout = quic_endpoint_timeout(client->quic_client_connection_context->quic_endpoint) / 1e3f;
-    if(timeout < 0.0001) {
+    double timeout = quic_endpoint_timeout(client->quic_endpoint) / 1e3f;
+    if (timeout < 0.0001) {
         timeout = 0.0001;
     }
     client->timer.repeat = timeout;
@@ -153,20 +257,20 @@ static void process_connections(QuicClient *client) {
 }
 
 /*
-* Forwards packets received (via the underlying UDP socket) to the client's QUIC endpoint.
-*/
-static void read_callback(EV_P_ ev_io *w, int revents) {
+ * Forwards packets received (via the underlying UDP socket) to the client's QUIC endpoint.
+ */
+void read_callback(EV_P_ ev_io *w, int revents) {
     QuicClient *client = w->data;
     static uint8_t buf[READ_BUF_SIZE];
 
-    while(true) {
+    while (true) {
         struct sockaddr_storage peer_addr;
         socklen_t peer_addr_len = sizeof(peer_addr);
         memset(&peer_addr, 0, peer_addr_len);
 
-        ssize_t read = recvfrom(client->quic_client_connection_context->socket_fd, buf, sizeof(buf), 0, (struct sockaddr *)&peer_addr, &peer_addr_len);
-        if(read < 0) {
-            if((errno == EWOULDBLOCK) || (errno == EAGAIN)) {
+        ssize_t read = recvfrom(client->socket_fd, buf, sizeof(buf), 0, (struct sockaddr *)&peer_addr, &peer_addr_len);
+        if (read < 0) {
+            if ((errno == EWOULDBLOCK) || (errno == EAGAIN)) {
                 // read would block, i.e. all data available now has been forwarded to QUIC
                 break;
             }
@@ -178,151 +282,279 @@ static void read_callback(EV_P_ ev_io *w, int revents) {
         quic_packet_info_t quic_packet_info = {
             .src = (struct sockaddr *)&peer_addr,
             .src_len = peer_addr_len,
-            .dst = (struct sockaddr *)&client->quic_client_connection_context->local_addr,
-            .dst_len = client->quic_client_connection_context->local_addr_len,
+            .dst = (struct sockaddr *)&client->local_addr,
+            .dst_len = client->local_addr_len,
         };
 
-        int error_code = quic_endpoint_recv(client->quic_client_connection_context->quic_endpoint, buf, read, &quic_packet_info);
-        if(error_code != 0) {
+        int error_code = quic_endpoint_recv(client->quic_endpoint, buf, read, &quic_packet_info);
+        if (error_code != 0) {
             fprintf(stderr, "read_callback: recv failed with error %d\n", error_code);
             continue;
         }
     }
 
-    process_connections(client);
+    ev_async_send(client->event_loop, &client->process_connections_async_watcher);
 }
 
-static void timeout_callback(EV_P_ ev_timer *w, int revents) {
+void timeout_callback(EV_P_ ev_timer *w, int revents) {
     QuicClient *client = w->data;
-    quic_endpoint_on_timeout(client->quic_client_connection_context->quic_endpoint);
-    process_connections(client);
+    quic_endpoint_on_timeout(client->quic_endpoint);
+    ev_async_send(client->event_loop, &client->process_connections_async_watcher);
 }
 
 /*
-* Logs all QUIC events.
-*
-* To use, do 'quic_set_logger(debug_log, NULL, "TRACE");' when creating a QUIC endpoint.
-*/
-static void debug_log(const uint8_t *data, size_t data_len, void *argp) {
+ * Logs all QUIC events.
+ *
+ * To use, do 'quic_set_logger(debug_log, NULL, "TRACE");' when creating a QUIC endpoint.
+ */
+void debug_log(const uint8_t *data, size_t data_len, void *argp) {
     fwrite(data, sizeof(uint8_t), data_len, stderr);
 }
 
+void async_process_connections_callback(EV_P_ ev_async *w, int revents) {
+    QuicClient *client = w->data;
+
+    process_connections(client);
+}
+
+void async_stream_allocator_callback(EV_P_ ev_async *w, int revents) {
+    QuicClient *client = w->data;
+
+    Stream *quic_stream = NULL;
+    if (client->use_auxilliary_stream) {
+        Stream *allocated_auxilliary_stream = get_available_auxilliary_stream(
+            client->quic_connection, &client->auxilliary_streams_list_head, &client->auxilliary_streams_list_lock);
+        if (allocated_auxilliary_stream == NULL) {
+            fprintf(stderr, "async_stream_allocator_callback: failed to allocate an auxilliary stream\n");
+
+            client->successfully_allocated_stream = false;
+            client->stream_allocation_finished = true;
+            pthread_cond_signal(&client->stream_allocator_condition_variable);
+
+            return;
+        }
+        quic_stream_wantwrite(client->quic_connection, allocated_auxilliary_stream->id, true);
+
+        quic_stream = allocated_auxilliary_stream;
+    } else {
+        if (client->main_stream == NULL) {
+            fprintf(stderr, "async_stream_allocator_callback: failed to create the main stream\n");
+
+            client->successfully_allocated_stream = false;
+            client->stream_allocation_finished = true;
+            pthread_cond_signal(&client->stream_allocator_condition_variable);
+
+            return;
+        }
+
+        quic_stream_wantwrite(client->quic_connection, client->main_stream->id, true);
+
+        quic_stream = client->main_stream;
+    }
+
+    client->allocated_stream = quic_stream;
+    client->successfully_allocated_stream = true;
+    client->stream_allocation_finished = true;
+
+    pthread_cond_signal(&client->stream_allocator_condition_variable);
+}
+
+void async_connection_closing_callback(EV_P_ ev_async *w, int revents) {
+    QuicClient *client = w->data;
+
+    ev_async_send(client->event_loop, &client->process_connections_async_watcher);
+
+    const char *reason = "ok";
+    quic_conn_close(client->quic_connection, true, 0, (const uint8_t *)reason, strlen(reason));
+}
+
+void async_shutdown_loop_callback(EV_P_ ev_async *w, int revents) {
+    QuicClient *client = w->data;
+
+    ev_break(client->event_loop, EVBREAK_ALL);
+}
+
 /*
-* Sends an RPC call for the given program number, program version, procedure number, and parameters,
-* to the QUIC connection in the given RpcConnectionContext.
-*
-* Returns the RPC reply received from the server on success, and NULL on failure.
-*
-* The user of this function takes on the responsibility to call 'rpc__rpc_msg__free_unpacked(rpc_reply, NULL)' 
-* when it's done using the rpc_reply and it's subfields (e.g. procedure parameters).
-*/
-Rpc__RpcMsg *execute_rpc_call_quic(RpcConnectionContext *rpc_connection_context, Rpc__RpcMsg *call_rpc_msg) {
-    if(rpc_connection_context == NULL) {
+ * Progresses the event loop until the QUIC connection has been established.
+ *
+ * Returns 0 on success and > 0 on failure.
+ */
+int wait_for_connection_establishment(QuicClient *quic_client) {
+    if (quic_client == NULL) {
+        return 1;
+    }
+
+    if (quic_client->connection_established) {
+        return 0;
+    }
+
+    // spawn the event loop thread
+    if (pthread_create(&quic_client->event_loop_thread, NULL, event_loop_runner, quic_client) != 0) {
+        fprintf(stderr, "wait_for_connection_establishment: failed to create the event loop thread\n");
+
+        quic_client->successfully_created_event_loop_thread = false;
+
+        return 2;
+    }
+    quic_client->successfully_created_event_loop_thread = true;
+
+    pthread_mutex_lock(&quic_client->connection_established_lock);
+    while (!quic_client->connection_established) {
+        pthread_cond_wait(&quic_client->connection_established_condition_variable,
+                          &quic_client->connection_established_lock);
+    }
+    pthread_mutex_unlock(&quic_client->connection_established_lock);
+
+    if (quic_client->main_stream == NULL) {
+        return 3;
+    }
+
+    return 0;
+}
+
+/*
+ * Given a stream context, uses its condition variable to wait for the
+ * RPC reply to to be received for the RPC call that is being or has been
+ * sent on this stream.
+ *
+ * Returns 0 on success and > 0 on failure.
+ */
+int wait_for_rpc_reply(QuicClientStreamContext *stream_context) {
+    if (stream_context == NULL) {
+        return 1;
+    }
+
+    pthread_mutex_lock(&stream_context->lock);
+    while (!stream_context->finished) {
+        pthread_cond_wait(&stream_context->cond, &stream_context->lock);
+    }
+    pthread_mutex_unlock(&stream_context->lock);
+
+    if (!stream_context->call_rpc_msg_successfully_sent) {
+        fprintf(stderr, "wait_for_rpc_reply: failed to send RPC call message\n");
+        return 2;
+    }
+
+    if (!stream_context->reply_rpc_msg_successfully_received) {
+        fprintf(stderr, "wait_for_rpc_reply: failed to receive RPC reply message\n");
+        return 3;
+    }
+
+    return 0;
+}
+
+/*
+ * Sends an RPC call for the given program number, program version, procedure number, and parameters,
+ * to the QUIC connection in the given RpcConnectionContext.
+ *
+ * If 'use_alternative_stream' is true, this function will attempt to send the RPC over one of the streams
+ * not currently labeled as in use.
+ *
+ * Returns the RPC reply received from the server on success, and NULL on failure.
+ *
+ * The user of this function takes on the responsibility to call 'rpc__rpc_msg__free_unpacked(rpc_reply, NULL)'
+ * when it's done using the rpc_reply and it's subfields (e.g. procedure parameters).
+ */
+Rpc__RpcMsg *execute_rpc_call_quic(RpcConnectionContext *rpc_connection_context, Rpc__RpcMsg *call_rpc_msg,
+                                   bool use_auxilliary_stream) {
+    if (rpc_connection_context == NULL) {
         return NULL;
     }
 
-    if(rpc_connection_context->transport_connection == NULL) {
+    if (rpc_connection_context->transport_connection == NULL) {
         return NULL;
     }
 
     QuicClient *client = rpc_connection_context->transport_connection->quic_client;
-    if(client == NULL) {
+    if (client == NULL) {
         return NULL;
     }
 
-    if(call_rpc_msg == NULL) {
+    if (call_rpc_msg == NULL) {
         return NULL;
     }
 
-    client->event_loop = NULL;
-
-    client->rm_receiving_context = NULL;
-
-    client->resend_attempted = false;
-    client->attempted_call_rpc_msg_send = client->call_rpc_msg_successfully_sent = false;
-    client->reply_rpc_msg_successfully_received = false;
-    client->finished = false;
-
-    Rpc__RpcMsg *ret;
+    int error_code = wait_for_connection_establishment(client);
+    if (error_code != 0) {
+        fprintf(stderr, "execute_rpc_call_quic: failed to wait for connection establishment\n");
+        return NULL;
+    }
 
     // serialize the RpcMsg to be sent
     size_t rpc_msg_size = rpc__rpc_msg__get_packed_size(call_rpc_msg);
     uint8_t *rpc_msg_buffer = malloc(sizeof(uint8_t) * rpc_msg_size);
     rpc__rpc_msg__pack(call_rpc_msg, rpc_msg_buffer);
-    client->call_rpc_msg_size = rpc_msg_size;
-    client->call_rpc_msg_buffer = rpc_msg_buffer;
 
-    // if the main stream has been created, clients wants to write to it
-    if(client->quic_client_connection_context->main_stream_created_successfully) {
-        quic_stream_wantwrite(client->quic_client_connection_context->quic_connection, client->quic_client_connection_context->main_stream_id, true);
+    Rpc__RpcMsg *ret;
+
+    // make the event loop thread execute the stream allocator callback, and wait for it to finish
+    client->use_auxilliary_stream = use_auxilliary_stream;
+    client->stream_allocation_finished = false;
+
+    ev_async_send(client->event_loop, &client->stream_allocator_async_watcher);
+
+    pthread_mutex_lock(&client->stream_allocator_lock);
+    while (!client->stream_allocation_finished) {
+        pthread_cond_wait(&client->stream_allocator_condition_variable, &client->stream_allocator_lock);
     }
+    pthread_mutex_unlock(&client->stream_allocator_lock);
 
-    // initialize the event loop
-    client->event_loop = ev_default_loop(0);
-    ev_init(&client->timer, timeout_callback);
-    client->timer.data = client;
-
-    process_connections(client);
-
-    // start the event loop
-    ev_io udp_socket_watcher;
-    ev_io_init(&udp_socket_watcher, read_callback, client->quic_client_connection_context->socket_fd, EV_READ);
-    udp_socket_watcher.data = client;
-    ev_io_start(client->event_loop, &udp_socket_watcher);
-
-    ev_run(client->event_loop, 0);
-
-    if(!client->quic_client_connection_context->main_stream_created_successfully) {
-        fprintf(stderr, "execute_rpc_call_quic: failed to create the main stream\n");
+    if (!client->successfully_allocated_stream) {
+        fprintf(stderr, "client_on_conn_established: failed to allocate a stream\n");
         ret = NULL;
         goto cleanup;
     }
 
-    if(client->resend_attempted) {
-        fprintf(stderr, "execute_rpc_call_quic: QUIC client attempted to resend an RPC\n");
+    QuicClientStreamContext *stream_context = create_client_stream_context(rpc_msg_buffer, rpc_msg_size);
+    if (stream_context == NULL) {
+        fprintf(stderr, "client_on_conn_established: failed to create a stream context\n");
+        ret = NULL;
+        goto cleanup;
+    }
+    error_code = add_stream_context(stream_context, &client->stream_contexts, &client->stream_contexts_list_lock);
+    if (error_code != 0) {
+        fprintf(stderr, "client_on_conn_established: failed to add stream context to collection of stream contexts\n");
+        ret = NULL;
+        goto cleanup;
+    }
+    stream_context->designated_stream = client->allocated_stream;
+
+    // make the event loop thread execute the process connections callback
+    ev_async_send(client->event_loop, &client->process_connections_async_watcher);
+
+    error_code = wait_for_rpc_reply(stream_context);
+    if (error_code != 0) {
         ret = NULL;
         goto cleanup;
     }
 
-    if(!client->call_rpc_msg_successfully_sent) {
-        fprintf(stderr, "execute_rpc_call_quic: failed to send RPC call message\n");
-        ret = NULL;
-        goto cleanup;
-    }
-
-    if(!client->reply_rpc_msg_successfully_received) {
-        fprintf(stderr, "execute_rpc_call_quic: failed to receive RPC reply message\n");
-        ret = NULL;
-        goto cleanup;
-    }
-
-    Rpc__RpcMsg *reply_rpc_msg = deserialize_rpc_msg(client->rm_receiving_context->accumulated_payloads, client->rm_receiving_context->accumulated_payloads_size);
+    Rpc__RpcMsg *reply_rpc_msg = deserialize_rpc_msg(stream_context->rm_receiving_context->accumulated_payloads,
+                                                     stream_context->rm_receiving_context->accumulated_payloads_size);
 
     ret = reply_rpc_msg;
 
 cleanup:
-    if(client->call_rpc_msg_buffer != NULL) {
-        free(client->call_rpc_msg_buffer);
-    }
-    if(client->event_loop != NULL) {
-        ev_loop_destroy(client->event_loop);
-    }
-    free_rm_receiving_context(client->rm_receiving_context);
+    remove_stream_context(&client->stream_contexts, client->allocated_stream->id, &client->stream_contexts_list_lock,
+                          &client->stream_contexts_condition_variable);
+    client->allocated_stream->stream_in_use = false;
+    client->allocated_stream = NULL;
 
     return ret;
 }
 
 /*
-* Given the RPC program number to be called, program version, procedure number, and the parameters for it, calls
-* the appropriate remote procedure over QUIC.
-*
-* Returns the server's RPC reply on success, and NULL on failure.
-*
-* The user of this function takes the responsibility to call 'rpc__rpc_msg__free_unpacked(rpc_reply, NULL)' 
-* when it's done using the rpc_reply and it's subfields (e.g. procedure parameters).
-*/
-Rpc__RpcMsg *invoke_rpc_remote_quic(RpcConnectionContext *rpc_connection_context, uint32_t program_number, uint32_t program_version, uint32_t procedure_number, Google__Protobuf__Any parameters) {
-    if(rpc_connection_context == NULL) {
+ * Given the RPC program number to be called, program version, procedure number, and the parameters for it, calls
+ * the appropriate remote procedure over QUIC.
+ *
+ * Returns the server's RPC reply on success, and NULL on failure.
+ *
+ * The user of this function takes the responsibility to call 'rpc__rpc_msg__free_unpacked(rpc_reply, NULL)'
+ * when it's done using the rpc_reply and it's subfields (e.g. procedure parameters).
+ */
+Rpc__RpcMsg *invoke_rpc_remote_quic(RpcConnectionContext *rpc_connection_context, uint32_t program_number,
+                                    uint32_t program_version, uint32_t procedure_number,
+                                    Google__Protobuf__Any parameters, bool use_auxilliary_stream) {
+    if (rpc_connection_context == NULL) {
         fprintf(stderr, "invoke_rpc_remote_quic: RpcConnectionContext is NULL\n");
         return NULL;
     }
@@ -344,7 +576,7 @@ Rpc__RpcMsg *invoke_rpc_remote_quic(RpcConnectionContext *rpc_connection_context
     call_rpc_msg.body_case = RPC__RPC_MSG__BODY_CBODY; // this body_case enum is not actually sent over the network
     call_rpc_msg.cbody = &call_body;
 
-    Rpc__RpcMsg *reply_rpc_msg = execute_rpc_call_quic(rpc_connection_context, &call_rpc_msg);
+    Rpc__RpcMsg *reply_rpc_msg = execute_rpc_call_quic(rpc_connection_context, &call_rpc_msg, use_auxilliary_stream);
 
     return reply_rpc_msg;
 }

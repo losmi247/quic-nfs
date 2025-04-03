@@ -1,39 +1,40 @@
 #include "nfsproc.h"
 
 /*
-* Runs the NFSPROC_READDIR procedure (16).
-*
-* Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
-* credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported authentication
-* flavor) before being passed here.
-* This procedure must not be given AUTH_NONE credential+verifier pair.
-*
-* The user of this function takes the responsibility to deallocate the received AcceptedReply
-* using the 'free_accepted_reply()' function.
-*/
-Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier, Google__Protobuf__Any *parameters) {
+ * Runs the NFSPROC_READDIR procedure (16).
+ *
+ * Takes a RPC credential+verifier pair corresponding to a supported authentication flavor. The provided
+ * credential and verifier must be structurally validated (i.e. no NULL fields and correspond to a supported
+ * authentication flavor) before being passed here. This procedure must not be given AUTH_NONE credential+verifier pair.
+ *
+ * The user of this function takes the responsibility to deallocate the received AcceptedReply
+ * using the 'free_accepted_reply()' function.
+ */
+Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *credential, Rpc__OpaqueAuth *verifier,
+                                                               Google__Protobuf__Any *parameters) {
     // check parameters are of expected type for this procedure
-    if(parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/ReadDirArgs") != 0) {
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: Expected nfs/ReadDirArgs but received %s\n", parameters->type_url);
-        
+    if (parameters->type_url == NULL || strcmp(parameters->type_url, "nfs/ReadDirArgs") != 0) {
+        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: Expected nfs/ReadDirArgs but received %s\n",
+                parameters->type_url);
+
         return create_garbage_args_accepted_reply();
     }
 
     // deserialize parameters
     Nfs__ReadDirArgs *readdirargs = nfs__read_dir_args__unpack(NULL, parameters->value.len, parameters->value.data);
-    if(readdirargs == NULL) {
+    if (readdirargs == NULL) {
         fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: Failed to unpack ReadDirArgs\n");
-        
+
         return create_garbage_args_accepted_reply();
     }
-    if(readdirargs->dir == NULL) {
+    if (readdirargs->dir == NULL) {
         fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: 'dir' in ReadDirArgs is null\n");
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
 
         return create_garbage_args_accepted_reply();
     }
-    if(readdirargs->cookie == NULL) {
+    if (readdirargs->cookie == NULL) {
         fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: 'cookie' in ReadDirArgs is null\n");
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
@@ -41,7 +42,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *
         return create_garbage_args_accepted_reply();
     }
     Nfs__FHandle *directory_fhandle = readdirargs->dir;
-    if(directory_fhandle->nfs_filehandle == NULL) {
+    if (directory_fhandle->nfs_filehandle == NULL) {
         fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: FHandle->nfs_filehandle is null\n");
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
@@ -53,9 +54,12 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *
     ino_t directory_inode_number = directory_nfs_filehandle->inode_number;
 
     char *directory_absolute_path = get_absolute_path_from_inode_number(directory_inode_number, inode_cache);
-    if(directory_absolute_path == NULL) {
-        // we couldn't decode inode number back to a file/directory - we assume the client gave us a wrong NFS filehandle, i.e. no such directory
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed to decode inode number %ld back to a directory\n", directory_inode_number);
+    if (directory_absolute_path == NULL) {
+        // we couldn't decode inode number back to a file/directory - we assume the client gave us a wrong NFS
+        // filehandle, i.e. no such directory
+        fprintf(stderr,
+                "serve_nfs_procedure_16_read_from_directory: failed to decode inode number %ld back to a directory\n",
+                directory_inode_number);
 
         // build the procedure results
         Nfs__ReadDirRes *readdirres = create_default_case_read_dir_res(NFS__STAT__NFSERR_NOENT);
@@ -70,25 +74,34 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *
         free(readdirres->default_case);
         free(readdirres);
 
-        return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
+        return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer,
+                                                                   "nfs/ReadDirRes");
     }
 
     // get the attributes of this directory before the read, to check that it is actually a directory
     Nfs__FAttr fattr = NFS__FATTR__INIT;
     int error_code = get_attributes(directory_absolute_path, &fattr);
-    if(error_code > 0) {
+    if (error_code > 0) {
         // we failed getting attributes for this file
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed getting file attributes for file at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
+        fprintf(stderr,
+                "serve_nfs_procedure_16_read_from_directory: failed getting file attributes for file at absolute path "
+                "'%s' with error code %d\n",
+                directory_absolute_path, error_code);
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
 
-        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this
+        // directory back to its absolute path
         return create_system_error_accepted_reply();
     }
     // only directories can be read using READDIR
-    if(fattr.nfs_ftype->ftype != NFS__FTYPE__NFDIR) {
-        // if the file is not a directory, return ReadDirRes with 'non-directory specified in a directory operation' status
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: a non-directory '%s' was specified for 'readdir' which is a directory operation\n", directory_absolute_path);
+    if (fattr.nfs_ftype->ftype != NFS__FTYPE__NFDIR) {
+        // if the file is not a directory, return ReadDirRes with 'non-directory specified in a directory operation'
+        // status
+        fprintf(stderr,
+                "serve_nfs_procedure_16_read_from_directory: a non-directory '%s' was specified for 'readdir' which is "
+                "a directory operation\n",
+                directory_absolute_path);
 
         // build the procedure results
         Nfs__ReadDirRes *readdirres = create_default_case_read_dir_res(NFS__STAT__NFSERR_NOTDIR);
@@ -104,15 +117,20 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *
         free(readdirres->default_case);
         free(readdirres);
 
-        return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
+        return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer,
+                                                                   "nfs/ReadDirRes");
     }
     clean_up_fattr(&fattr);
 
     // check permissions
-    if(credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
-        int stat = check_readdir_proc_permissions(directory_absolute_path, credential->auth_sys->uid, credential->auth_sys->gid);
-        if(stat < 0) {
-            fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed checking READDIR permissions for reading entries in the directory at absolute path '%s' with error code %d\n", directory_absolute_path, stat);
+    if (credential->flavor == RPC__AUTH_FLAVOR__AUTH_SYS) {
+        int stat = check_readdir_proc_permissions(directory_absolute_path, credential->auth_sys->uid,
+                                                  credential->auth_sys->gid);
+        if (stat < 0) {
+            fprintf(stderr,
+                    "serve_nfs_procedure_16_read_from_directory: failed checking READDIR permissions for reading "
+                    "entries in the directory at absolute path '%s' with error code %d\n",
+                    directory_absolute_path, stat);
 
             nfs__read_dir_args__free_unpacked(readdirargs, NULL);
 
@@ -120,7 +138,7 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *
         }
 
         // client does not have correct permission to read entries in this directory
-        if(stat == 1) {
+        if (stat == 1) {
             // build the procedure results
             Nfs__ReadDirRes *readdirres = create_default_case_read_dir_res(NFS__STAT__NFSERR_ACCES);
 
@@ -134,25 +152,33 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *
             free(readdirres->default_case);
             free(readdirres);
 
-            return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
+            return wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer,
+                                                                       "nfs/ReadDirRes");
         }
     }
-    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with supported authentication flavor)
+    // there's no other supported authentication flavor yet (this function only receives credential+verifier pairs with
+    // supported authentication flavor)
 
     // read entries from the directory
     Nfs__DirectoryEntriesList *directory_entries = NULL;
     int end_of_stream = 0;
-    error_code = read_from_directory(credential->auth_sys, directory_absolute_path, directory_inode_number, &readdir_sessions_list, readdirargs->cookie->value, readdirargs->count, &directory_entries, &end_of_stream);
-    if(error_code > 0) {
+    error_code = read_from_directory(credential->auth_sys, directory_absolute_path, directory_inode_number,
+                                     &readdir_sessions_list, readdirargs->cookie->value, readdirargs->count,
+                                     &directory_entries, &end_of_stream);
+    if (error_code > 0) {
         // we failed reading directory entries
-        fprintf(stderr, "serve_nfs_procedure_16_read_from_directory: failed reading directory entries for directory at absolute path '%s' with error code %d\n", directory_absolute_path, error_code);
+        fprintf(stderr,
+                "serve_nfs_procedure_16_read_from_directory: failed reading directory entries for directory at "
+                "absolute path '%s' with error code %d\n",
+                directory_absolute_path, error_code);
 
         nfs__read_dir_args__free_unpacked(readdirargs, NULL);
 
-        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this directory back to its absolute path
+        // return AcceptedReply with SYSTEM_ERR, as this shouldn't happen once we've decoded the NFS filehandle for this
+        // directory back to its absolute path
         return create_system_error_accepted_reply();
     }
-    
+
     // build the procedure results
     Nfs__ReadDirRes readdirres = NFS__READ_DIR_RES__INIT;
 
@@ -173,7 +199,8 @@ Rpc__AcceptedReply *serve_nfs_procedure_16_read_from_directory(Rpc__OpaqueAuth *
     uint8_t *readdirres_buffer = malloc(readdirres_size);
     nfs__read_dir_res__pack(&readdirres, readdirres_buffer);
 
-    Rpc__AcceptedReply *accepted_reply = wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
+    Rpc__AcceptedReply *accepted_reply =
+        wrap_procedure_results_in_successful_accepted_reply(readdirres_size, readdirres_buffer, "nfs/ReadDirRes");
 
     nfs__read_dir_args__free_unpacked(readdirargs, NULL);
 

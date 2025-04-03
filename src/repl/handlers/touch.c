@@ -1,14 +1,14 @@
-#include "handlers.h" 
+#include "handlers.h"
 
 #include "src/path_building/path_building.h"
 
 /*
-* Creates a file with the given name inside the current working directory.
-*
-* Returns 0 on success and > 0 on failure.
-*/
+ * Creates a file with the given name inside the current working directory.
+ *
+ * Returns 0 on success and > 0 on failure.
+ */
 int handle_touch(char *file_name) {
-    if(!is_filesystem_mounted()) {
+    if (!is_filesystem_mounted()) {
         printf("Error: No remote file system is currently mounted\n");
         return 1;
     }
@@ -21,8 +21,9 @@ int handle_touch(char *file_name) {
     diropargs.name = &filename;
 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
-    sattr.mode = 0644;                                              // default mode for a created file is 644 in octal
-    sattr.uid = rpc_connection_context->credential->auth_sys->uid;  // the REPL that creates the file is the owner of the file
+    sattr.mode = 0644; // default mode for a created file is 644 in octal
+    sattr.uid =
+        rpc_connection_context->credential->auth_sys->uid; // the REPL that creates the file is the owner of the file
     sattr.gid = rpc_connection_context->credential->auth_sys->gid;
     sattr.size = -1;
     Nfs__TimeVal atime = NFS__TIME_VAL__INIT, mtime = NFS__TIME_VAL__INIT;
@@ -36,7 +37,7 @@ int handle_touch(char *file_name) {
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
     int status = nfs_procedure_9_create_file(rpc_connection_context, createargs, diropres);
-    if(status != 0) {
+    if (status != 0) {
         printf("Error: Invalid RPC reply received from the server with status %d\n", status);
 
         free(diropres);
@@ -44,7 +45,7 @@ int handle_touch(char *file_name) {
         return 1;
     }
 
-    if(validate_nfs_dir_op_res(diropres) > 0) {
+    if (validate_nfs_dir_op_res(diropres) > 0) {
         printf("Error: Invalid NFS procedure result received from the server\n");
 
         nfs__dir_op_res__free_unpacked(diropres, NULL);
@@ -52,14 +53,13 @@ int handle_touch(char *file_name) {
         return 1;
     }
 
-    if(diropres->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
+    if (diropres->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
         printf("touch: Permission denied\n");
-        
+
         nfs__dir_op_res__free_unpacked(diropres, NULL);
 
         return 1;
-    }
-    else if(diropres->nfs_status->stat != NFS__STAT__NFS_OK) {
+    } else if (diropres->nfs_status->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(diropres->nfs_status->stat);
         printf("Error: Failed to create a file in the current working directory with status %s\n", string_status);
         free(string_status);

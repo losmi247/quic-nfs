@@ -1,11 +1,11 @@
 #include "mount_messages.h"
 
 /*
-* Creates a FhStatus with the given non-MNT_OK status and default case.
-*
-* The user of this function takes the responsibility to free the FhStatus, MntStat,
-* and Empty allocated in this function.
-*/
+ * Creates a FhStatus with the given non-MNT_OK status and default case.
+ *
+ * The user of this function takes the responsibility to free the FhStatus, MntStat,
+ * and Empty allocated in this function.
+ */
 Mount__FhStatus *create_default_case_fh_status(Mount__Stat non_mnt_ok_status) {
     Mount__FhStatus *fh_status = malloc(sizeof(Mount__FhStatus));
     mount__fh_status__init(fh_status);

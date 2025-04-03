@@ -2,16 +2,16 @@
 #define common_rpc__header__INCLUDED
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "src/serialization/rpc/rpc.pb-c.h"
 
-#define NFS_RPC_MSG_BUFFER_SIZE 20000  // size of the buffer allocated for receiving a NFS RPC message
+#define NFS_RPC_MSG_BUFFER_SIZE 20000 // size of the buffer allocated for receiving a NFS RPC message
 
 /*
-* Functions used in both client and server RPC program implementations.
-*/
+ * Functions used in both client and server RPC program implementations.
+ */
 
 uint32_t generate_rpc_xid(void);
 

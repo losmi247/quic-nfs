@@ -1,30 +1,30 @@
 #include "nfs_messages.h"
 
 /*
-* Creates a NfsStat structure with the given status.
-*
-* The user of this fuction takes the responsibility to free the NfsStat allocated
-* in this function.
-*/
+ * Creates a NfsStat structure with the given status.
+ *
+ * The user of this fuction takes the responsibility to free the NfsStat allocated
+ * in this function.
+ */
 Nfs__NfsStat *create_nfs_stat(Nfs__Stat stat) {
     Nfs__NfsStat *nfs_status = malloc(sizeof(Nfs__NfsStat));
     nfs__nfs_stat__init(nfs_status);
     nfs_status->stat = stat;
-    
+
     return nfs_status;
 }
 
 /*
-* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates an AttrStat message
-* with default case and that status.
-*
-* If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
-*
-* The user of this fuction takes the responsibility to free the AttrStat, NfsStat,
-* and Empty allocated in this function.
-*/
+ * Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates an AttrStat message
+ * with default case and that status.
+ *
+ * If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
+ *
+ * The user of this fuction takes the responsibility to free the AttrStat, NfsStat,
+ * and Empty allocated in this function.
+ */
 Nfs__AttrStat *create_default_case_attr_stat(Nfs__Stat non_nfs_ok_status) {
-    if(non_nfs_ok_status == NFS__STAT__NFS_OK) {
+    if (non_nfs_ok_status == NFS__STAT__NFS_OK) {
         return NULL;
     }
 
@@ -42,16 +42,16 @@ Nfs__AttrStat *create_default_case_attr_stat(Nfs__Stat non_nfs_ok_status) {
 }
 
 /*
-* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates a DiOpRes message
-* with default case and that status.
-*
-* If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
-*
-* The user of this fuction takes the responsibility to free the DirOpRes, NfsStat,
-* and Empty allocated in this function.
-*/
+ * Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates a DiOpRes message
+ * with default case and that status.
+ *
+ * If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
+ *
+ * The user of this fuction takes the responsibility to free the DirOpRes, NfsStat,
+ * and Empty allocated in this function.
+ */
 Nfs__DirOpRes *create_default_case_dir_op_res(Nfs__Stat non_nfs_ok_status) {
-    if(non_nfs_ok_status == NFS__STAT__NFS_OK) {
+    if (non_nfs_ok_status == NFS__STAT__NFS_OK) {
         return NULL;
     }
 
@@ -69,16 +69,16 @@ Nfs__DirOpRes *create_default_case_dir_op_res(Nfs__Stat non_nfs_ok_status) {
 }
 
 /*
-* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates a ReadLinkRes message
-* with default case and that status.
-*
-* If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
-*
-* The user of this fuction takes the responsibility to free the ReadLinkRes, NfsStat,
-* and Empty allocated in this function.
-*/
+ * Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates a ReadLinkRes message
+ * with default case and that status.
+ *
+ * If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
+ *
+ * The user of this fuction takes the responsibility to free the ReadLinkRes, NfsStat,
+ * and Empty allocated in this function.
+ */
 Nfs__ReadLinkRes *create_default_case_read_link_res(Nfs__Stat non_nfs_ok_status) {
-    if(non_nfs_ok_status == NFS__STAT__NFS_OK) {
+    if (non_nfs_ok_status == NFS__STAT__NFS_OK) {
         return NULL;
     }
 
@@ -96,16 +96,16 @@ Nfs__ReadLinkRes *create_default_case_read_link_res(Nfs__Stat non_nfs_ok_status)
 }
 
 /*
-* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates a ReadRes message
-* with default case and that status.
-*
-* If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
-*
-* The user of this fuction takes the responsibility to free the ReadRes, NfsStat,
-* and Empty allocated in this function.
-*/
+ * Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates a ReadRes message
+ * with default case and that status.
+ *
+ * If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
+ *
+ * The user of this fuction takes the responsibility to free the ReadRes, NfsStat,
+ * and Empty allocated in this function.
+ */
 Nfs__ReadRes *create_default_case_read_res(Nfs__Stat non_nfs_ok_status) {
-    if(non_nfs_ok_status == NFS__STAT__NFS_OK) {
+    if (non_nfs_ok_status == NFS__STAT__NFS_OK) {
         return NULL;
     }
 
@@ -123,16 +123,16 @@ Nfs__ReadRes *create_default_case_read_res(Nfs__Stat non_nfs_ok_status) {
 }
 
 /*
-* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates an ReadDirRes message
-* with default case and that status.
-*
-* If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
-*
-* The user of this fuction takes the responsibility to free the ReadDirRes, NfsStat,
-* and Empty allocated in this function.
-*/
+ * Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates an ReadDirRes message
+ * with default case and that status.
+ *
+ * If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
+ *
+ * The user of this fuction takes the responsibility to free the ReadDirRes, NfsStat,
+ * and Empty allocated in this function.
+ */
 Nfs__ReadDirRes *create_default_case_read_dir_res(Nfs__Stat non_nfs_ok_status) {
-    if(non_nfs_ok_status == NFS__STAT__NFS_OK) {
+    if (non_nfs_ok_status == NFS__STAT__NFS_OK) {
         return NULL;
     }
 
@@ -150,16 +150,16 @@ Nfs__ReadDirRes *create_default_case_read_dir_res(Nfs__Stat non_nfs_ok_status) {
 }
 
 /*
-* Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates an StatFsRes message
-* with default case and that status.
-*
-* If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
-*
-* The user of this fuction takes the responsibility to free the StatFsRes, NfsStat,
-* and Empty allocated in this function.
-*/
+ * Takes a Nfs__Stat and if it's not NFS__STAT__NFS_OK, creates an StatFsRes message
+ * with default case and that status.
+ *
+ * If the given Nfs__Stat is NFS__STAT__NFS_OK, NULL is returned.
+ *
+ * The user of this fuction takes the responsibility to free the StatFsRes, NfsStat,
+ * and Empty allocated in this function.
+ */
 Nfs__StatFsRes *create_default_case_stat_fs_res(Nfs__Stat non_nfs_ok_status) {
-    if(non_nfs_ok_status == NFS__STAT__NFS_OK) {
+    if (non_nfs_ok_status == NFS__STAT__NFS_OK) {
         return NULL;
     }
 

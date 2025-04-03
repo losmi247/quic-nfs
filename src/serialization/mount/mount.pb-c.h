@@ -26,32 +26,30 @@ typedef struct Mount__MountList Mount__MountList;
 typedef struct Mount__Groups Mount__Groups;
 typedef struct Mount__ExportList Mount__ExportList;
 
-
 /* --- enums --- */
 
 typedef enum _Mount__Stat {
-  MOUNT__STAT__MNT_OK = 0,
-  /*
-   * no such file or directory
-   */
-  MOUNT__STAT__MNTERR_NOENT = 2,
-  /*
-   * the file is not exported for NFS
-   */
-  MOUNT__STAT__MNTERR_NOTEXP = 3,
-  /*
-   * hard error e.g. disk error
-   */
-  MOUNT__STAT__MNTERR_IO = 5,
-  /*
-   * the caller does not have the correct permission to perform the requested operation
-   */
-  MOUNT__STAT__MNTERR_ACCES = 13,
-  /*
-   * not a directory - caller specified a non-directory in a directory operation
-   */
-  MOUNT__STAT__MNTERR_NOTDIR = 20
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(MOUNT__STAT)
+    MOUNT__STAT__MNT_OK = 0,
+    /*
+     * no such file or directory
+     */
+    MOUNT__STAT__MNTERR_NOENT = 2,
+    /*
+     * the file is not exported for NFS
+     */
+    MOUNT__STAT__MNTERR_NOTEXP = 3,
+    /*
+     * hard error e.g. disk error
+     */
+    MOUNT__STAT__MNTERR_IO = 5,
+    /*
+     * the caller does not have the correct permission to perform the requested operation
+     */
+    MOUNT__STAT__MNTERR_ACCES = 13,
+    /*
+     * not a directory - caller specified a non-directory in a directory operation
+     */
+    MOUNT__STAT__MNTERR_NOTDIR = 20 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(MOUNT__STAT)
 } Mount__Stat;
 
 /* --- messages --- */
@@ -59,321 +57,210 @@ typedef enum _Mount__Stat {
 /*
  * File Handle
  */
-struct  Mount__FHandle
-{
-  ProtobufCMessage base;
-  NfsFh__NfsFileHandle *nfs_filehandle;
+struct Mount__FHandle {
+    ProtobufCMessage base;
+    NfsFh__NfsFileHandle *nfs_filehandle;
 };
-#define MOUNT__FHANDLE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&mount__fhandle__descriptor) \
-    , NULL }
+#define MOUNT__FHANDLE__INIT                                                                                           \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&mount__fhandle__descriptor)                                                           \
+        , NULL                                                                                                         \
+    }
 
-
-struct  Mount__MntStat
-{
-  ProtobufCMessage base;
-  /*
-   * 0 for success, non-zero for error
-   */
-  Mount__Stat stat;
+struct Mount__MntStat {
+    ProtobufCMessage base;
+    /*
+     * 0 for success, non-zero for error
+     */
+    Mount__Stat stat;
 };
-#define MOUNT__MNT_STAT__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&mount__mnt_stat__descriptor) \
-    , MOUNT__STAT__MNT_OK }
-
+#define MOUNT__MNT_STAT__INIT                                                                                          \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&mount__mnt_stat__descriptor)                                                          \
+        , MOUNT__STAT__MNT_OK                                                                                          \
+    }
 
 typedef enum {
-  MOUNT__FH_STATUS__FHSTATUS_BODY__NOT_SET = 0,
-  MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY = 2,
-  MOUNT__FH_STATUS__FHSTATUS_BODY_DEFAULT_CASE = 3
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(MOUNT__FH_STATUS__FHSTATUS_BODY__CASE)
+    MOUNT__FH_STATUS__FHSTATUS_BODY__NOT_SET = 0,
+    MOUNT__FH_STATUS__FHSTATUS_BODY_DIRECTORY = 2,
+    MOUNT__FH_STATUS__FHSTATUS_BODY_DEFAULT_CASE =
+        3 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(MOUNT__FH_STATUS__FHSTATUS_BODY__CASE)
 } Mount__FhStatus__FhstatusBodyCase;
 
-struct  Mount__FhStatus
-{
-  ProtobufCMessage base;
-  Mount__MntStat *mnt_status;
-  Mount__FhStatus__FhstatusBodyCase fhstatus_body_case;
-  union {
-    /*
-     * case status is 0
-     */
-    Mount__FHandle *directory;
-    /*
-     * default case (status > 0)
-     */
-    Google__Protobuf__Empty *default_case;
-  };
+struct Mount__FhStatus {
+    ProtobufCMessage base;
+    Mount__MntStat *mnt_status;
+    Mount__FhStatus__FhstatusBodyCase fhstatus_body_case;
+    union {
+        /*
+         * case status is 0
+         */
+        Mount__FHandle *directory;
+        /*
+         * default case (status > 0)
+         */
+        Google__Protobuf__Empty *default_case;
+    };
 };
-#define MOUNT__FH_STATUS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&mount__fh_status__descriptor) \
-    , NULL, MOUNT__FH_STATUS__FHSTATUS_BODY__NOT_SET, {0} }
-
+#define MOUNT__FH_STATUS__INIT                                                                                         \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&mount__fh_status__descriptor)                                                         \
+        , NULL, MOUNT__FH_STATUS__FHSTATUS_BODY__NOT_SET, {                                                            \
+            0                                                                                                          \
+        }                                                                                                              \
+    }
 
 /*
  * A string representing a server pathname of directory
  */
-struct  Mount__DirPath
-{
-  ProtobufCMessage base;
-  char *path;
+struct Mount__DirPath {
+    ProtobufCMessage base;
+    char *path;
 };
-#define MOUNT__DIR_PATH__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&mount__dir_path__descriptor) \
-    , (char *)protobuf_c_empty_string }
-
+#define MOUNT__DIR_PATH__INIT                                                                                          \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&mount__dir_path__descriptor)                                                          \
+        , (char *)protobuf_c_empty_string                                                                              \
+    }
 
 /*
  * An arbitrary string used for hostnames and group names
  */
-struct  Mount__Name
-{
-  ProtobufCMessage base;
-  char *name;
+struct Mount__Name {
+    ProtobufCMessage base;
+    char *name;
 };
-#define MOUNT__NAME__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&mount__name__descriptor) \
-    , (char *)protobuf_c_empty_string }
-
+#define MOUNT__NAME__INIT                                                                                              \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&mount__name__descriptor)                                                              \
+        , (char *)protobuf_c_empty_string                                                                              \
+    }
 
 /*
  * A linked list of mounted entries
  */
-struct  Mount__MountList
-{
-  ProtobufCMessage base;
-  Mount__Name *hostname;
-  Mount__DirPath *directory;
-  /*
-   * Recursive reference for the linked list
-   */
-  Mount__MountList *nextentry;
+struct Mount__MountList {
+    ProtobufCMessage base;
+    Mount__Name *hostname;
+    Mount__DirPath *directory;
+    /*
+     * Recursive reference for the linked list
+     */
+    Mount__MountList *nextentry;
 };
-#define MOUNT__MOUNT_LIST__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&mount__mount_list__descriptor) \
-    , NULL, NULL, NULL }
-
+#define MOUNT__MOUNT_LIST__INIT                                                                                        \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&mount__mount_list__descriptor)                                                        \
+        , NULL, NULL, NULL                                                                                             \
+    }
 
 /*
  * The "groups" type, a linked list of group names
  */
-struct  Mount__Groups
-{
-  ProtobufCMessage base;
-  Mount__Name *grname;
-  /*
-   * Recursive reference for the linked list
-   */
-  Mount__Groups *grnext;
+struct Mount__Groups {
+    ProtobufCMessage base;
+    Mount__Name *grname;
+    /*
+     * Recursive reference for the linked list
+     */
+    Mount__Groups *grnext;
 };
-#define MOUNT__GROUPS__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&mount__groups__descriptor) \
-    , NULL, NULL }
-
+#define MOUNT__GROUPS__INIT                                                                                            \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&mount__groups__descriptor)                                                            \
+        , NULL, NULL                                                                                                   \
+    }
 
 /*
  * The "exportlist" type, a linked list of exported filesystems
  */
-struct  Mount__ExportList
-{
-  ProtobufCMessage base;
-  Mount__DirPath *filesys;
-  Mount__Groups *groups;
-  /*
-   * Recursive reference for the linked list
-   */
-  Mount__ExportList *next;
+struct Mount__ExportList {
+    ProtobufCMessage base;
+    Mount__DirPath *filesys;
+    Mount__Groups *groups;
+    /*
+     * Recursive reference for the linked list
+     */
+    Mount__ExportList *next;
 };
-#define MOUNT__EXPORT_LIST__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&mount__export_list__descriptor) \
-    , NULL, NULL, NULL }
-
+#define MOUNT__EXPORT_LIST__INIT                                                                                       \
+    {                                                                                                                  \
+        PROTOBUF_C_MESSAGE_INIT(&mount__export_list__descriptor)                                                       \
+        , NULL, NULL, NULL                                                                                             \
+    }
 
 /* Mount__FHandle methods */
-void   mount__fhandle__init
-                     (Mount__FHandle         *message);
-size_t mount__fhandle__get_packed_size
-                     (const Mount__FHandle   *message);
-size_t mount__fhandle__pack
-                     (const Mount__FHandle   *message,
-                      uint8_t             *out);
-size_t mount__fhandle__pack_to_buffer
-                     (const Mount__FHandle   *message,
-                      ProtobufCBuffer     *buffer);
-Mount__FHandle *
-       mount__fhandle__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   mount__fhandle__free_unpacked
-                     (Mount__FHandle *message,
-                      ProtobufCAllocator *allocator);
+void mount__fhandle__init(Mount__FHandle *message);
+size_t mount__fhandle__get_packed_size(const Mount__FHandle *message);
+size_t mount__fhandle__pack(const Mount__FHandle *message, uint8_t *out);
+size_t mount__fhandle__pack_to_buffer(const Mount__FHandle *message, ProtobufCBuffer *buffer);
+Mount__FHandle *mount__fhandle__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void mount__fhandle__free_unpacked(Mount__FHandle *message, ProtobufCAllocator *allocator);
 /* Mount__MntStat methods */
-void   mount__mnt_stat__init
-                     (Mount__MntStat         *message);
-size_t mount__mnt_stat__get_packed_size
-                     (const Mount__MntStat   *message);
-size_t mount__mnt_stat__pack
-                     (const Mount__MntStat   *message,
-                      uint8_t             *out);
-size_t mount__mnt_stat__pack_to_buffer
-                     (const Mount__MntStat   *message,
-                      ProtobufCBuffer     *buffer);
-Mount__MntStat *
-       mount__mnt_stat__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   mount__mnt_stat__free_unpacked
-                     (Mount__MntStat *message,
-                      ProtobufCAllocator *allocator);
+void mount__mnt_stat__init(Mount__MntStat *message);
+size_t mount__mnt_stat__get_packed_size(const Mount__MntStat *message);
+size_t mount__mnt_stat__pack(const Mount__MntStat *message, uint8_t *out);
+size_t mount__mnt_stat__pack_to_buffer(const Mount__MntStat *message, ProtobufCBuffer *buffer);
+Mount__MntStat *mount__mnt_stat__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void mount__mnt_stat__free_unpacked(Mount__MntStat *message, ProtobufCAllocator *allocator);
 /* Mount__FhStatus methods */
-void   mount__fh_status__init
-                     (Mount__FhStatus         *message);
-size_t mount__fh_status__get_packed_size
-                     (const Mount__FhStatus   *message);
-size_t mount__fh_status__pack
-                     (const Mount__FhStatus   *message,
-                      uint8_t             *out);
-size_t mount__fh_status__pack_to_buffer
-                     (const Mount__FhStatus   *message,
-                      ProtobufCBuffer     *buffer);
-Mount__FhStatus *
-       mount__fh_status__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   mount__fh_status__free_unpacked
-                     (Mount__FhStatus *message,
-                      ProtobufCAllocator *allocator);
+void mount__fh_status__init(Mount__FhStatus *message);
+size_t mount__fh_status__get_packed_size(const Mount__FhStatus *message);
+size_t mount__fh_status__pack(const Mount__FhStatus *message, uint8_t *out);
+size_t mount__fh_status__pack_to_buffer(const Mount__FhStatus *message, ProtobufCBuffer *buffer);
+Mount__FhStatus *mount__fh_status__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void mount__fh_status__free_unpacked(Mount__FhStatus *message, ProtobufCAllocator *allocator);
 /* Mount__DirPath methods */
-void   mount__dir_path__init
-                     (Mount__DirPath         *message);
-size_t mount__dir_path__get_packed_size
-                     (const Mount__DirPath   *message);
-size_t mount__dir_path__pack
-                     (const Mount__DirPath   *message,
-                      uint8_t             *out);
-size_t mount__dir_path__pack_to_buffer
-                     (const Mount__DirPath   *message,
-                      ProtobufCBuffer     *buffer);
-Mount__DirPath *
-       mount__dir_path__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   mount__dir_path__free_unpacked
-                     (Mount__DirPath *message,
-                      ProtobufCAllocator *allocator);
+void mount__dir_path__init(Mount__DirPath *message);
+size_t mount__dir_path__get_packed_size(const Mount__DirPath *message);
+size_t mount__dir_path__pack(const Mount__DirPath *message, uint8_t *out);
+size_t mount__dir_path__pack_to_buffer(const Mount__DirPath *message, ProtobufCBuffer *buffer);
+Mount__DirPath *mount__dir_path__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void mount__dir_path__free_unpacked(Mount__DirPath *message, ProtobufCAllocator *allocator);
 /* Mount__Name methods */
-void   mount__name__init
-                     (Mount__Name         *message);
-size_t mount__name__get_packed_size
-                     (const Mount__Name   *message);
-size_t mount__name__pack
-                     (const Mount__Name   *message,
-                      uint8_t             *out);
-size_t mount__name__pack_to_buffer
-                     (const Mount__Name   *message,
-                      ProtobufCBuffer     *buffer);
-Mount__Name *
-       mount__name__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   mount__name__free_unpacked
-                     (Mount__Name *message,
-                      ProtobufCAllocator *allocator);
+void mount__name__init(Mount__Name *message);
+size_t mount__name__get_packed_size(const Mount__Name *message);
+size_t mount__name__pack(const Mount__Name *message, uint8_t *out);
+size_t mount__name__pack_to_buffer(const Mount__Name *message, ProtobufCBuffer *buffer);
+Mount__Name *mount__name__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void mount__name__free_unpacked(Mount__Name *message, ProtobufCAllocator *allocator);
 /* Mount__MountList methods */
-void   mount__mount_list__init
-                     (Mount__MountList         *message);
-size_t mount__mount_list__get_packed_size
-                     (const Mount__MountList   *message);
-size_t mount__mount_list__pack
-                     (const Mount__MountList   *message,
-                      uint8_t             *out);
-size_t mount__mount_list__pack_to_buffer
-                     (const Mount__MountList   *message,
-                      ProtobufCBuffer     *buffer);
-Mount__MountList *
-       mount__mount_list__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   mount__mount_list__free_unpacked
-                     (Mount__MountList *message,
-                      ProtobufCAllocator *allocator);
+void mount__mount_list__init(Mount__MountList *message);
+size_t mount__mount_list__get_packed_size(const Mount__MountList *message);
+size_t mount__mount_list__pack(const Mount__MountList *message, uint8_t *out);
+size_t mount__mount_list__pack_to_buffer(const Mount__MountList *message, ProtobufCBuffer *buffer);
+Mount__MountList *mount__mount_list__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void mount__mount_list__free_unpacked(Mount__MountList *message, ProtobufCAllocator *allocator);
 /* Mount__Groups methods */
-void   mount__groups__init
-                     (Mount__Groups         *message);
-size_t mount__groups__get_packed_size
-                     (const Mount__Groups   *message);
-size_t mount__groups__pack
-                     (const Mount__Groups   *message,
-                      uint8_t             *out);
-size_t mount__groups__pack_to_buffer
-                     (const Mount__Groups   *message,
-                      ProtobufCBuffer     *buffer);
-Mount__Groups *
-       mount__groups__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   mount__groups__free_unpacked
-                     (Mount__Groups *message,
-                      ProtobufCAllocator *allocator);
+void mount__groups__init(Mount__Groups *message);
+size_t mount__groups__get_packed_size(const Mount__Groups *message);
+size_t mount__groups__pack(const Mount__Groups *message, uint8_t *out);
+size_t mount__groups__pack_to_buffer(const Mount__Groups *message, ProtobufCBuffer *buffer);
+Mount__Groups *mount__groups__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void mount__groups__free_unpacked(Mount__Groups *message, ProtobufCAllocator *allocator);
 /* Mount__ExportList methods */
-void   mount__export_list__init
-                     (Mount__ExportList         *message);
-size_t mount__export_list__get_packed_size
-                     (const Mount__ExportList   *message);
-size_t mount__export_list__pack
-                     (const Mount__ExportList   *message,
-                      uint8_t             *out);
-size_t mount__export_list__pack_to_buffer
-                     (const Mount__ExportList   *message,
-                      ProtobufCBuffer     *buffer);
-Mount__ExportList *
-       mount__export_list__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   mount__export_list__free_unpacked
-                     (Mount__ExportList *message,
-                      ProtobufCAllocator *allocator);
+void mount__export_list__init(Mount__ExportList *message);
+size_t mount__export_list__get_packed_size(const Mount__ExportList *message);
+size_t mount__export_list__pack(const Mount__ExportList *message, uint8_t *out);
+size_t mount__export_list__pack_to_buffer(const Mount__ExportList *message, ProtobufCBuffer *buffer);
+Mount__ExportList *mount__export_list__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+void mount__export_list__free_unpacked(Mount__ExportList *message, ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
-typedef void (*Mount__FHandle_Closure)
-                 (const Mount__FHandle *message,
-                  void *closure_data);
-typedef void (*Mount__MntStat_Closure)
-                 (const Mount__MntStat *message,
-                  void *closure_data);
-typedef void (*Mount__FhStatus_Closure)
-                 (const Mount__FhStatus *message,
-                  void *closure_data);
-typedef void (*Mount__DirPath_Closure)
-                 (const Mount__DirPath *message,
-                  void *closure_data);
-typedef void (*Mount__Name_Closure)
-                 (const Mount__Name *message,
-                  void *closure_data);
-typedef void (*Mount__MountList_Closure)
-                 (const Mount__MountList *message,
-                  void *closure_data);
-typedef void (*Mount__Groups_Closure)
-                 (const Mount__Groups *message,
-                  void *closure_data);
-typedef void (*Mount__ExportList_Closure)
-                 (const Mount__ExportList *message,
-                  void *closure_data);
+typedef void (*Mount__FHandle_Closure)(const Mount__FHandle *message, void *closure_data);
+typedef void (*Mount__MntStat_Closure)(const Mount__MntStat *message, void *closure_data);
+typedef void (*Mount__FhStatus_Closure)(const Mount__FhStatus *message, void *closure_data);
+typedef void (*Mount__DirPath_Closure)(const Mount__DirPath *message, void *closure_data);
+typedef void (*Mount__Name_Closure)(const Mount__Name *message, void *closure_data);
+typedef void (*Mount__MountList_Closure)(const Mount__MountList *message, void *closure_data);
+typedef void (*Mount__Groups_Closure)(const Mount__Groups *message, void *closure_data);
+typedef void (*Mount__ExportList_Closure)(const Mount__ExportList *message, void *closure_data);
 
 /* --- services --- */
 
-
 /* --- descriptors --- */
 
-extern const ProtobufCEnumDescriptor    mount__stat__descriptor;
+extern const ProtobufCEnumDescriptor mount__stat__descriptor;
 extern const ProtobufCMessageDescriptor mount__fhandle__descriptor;
 extern const ProtobufCMessageDescriptor mount__mnt_stat__descriptor;
 extern const ProtobufCMessageDescriptor mount__fh_status__descriptor;
@@ -385,5 +272,4 @@ extern const ProtobufCMessageDescriptor mount__export_list__descriptor;
 
 PROTOBUF_C__END_DECLS
 
-
-#endif  /* PROTOBUF_C_src_2fserialization_2fmount_2fmount_2eproto__INCLUDED */
+#endif /* PROTOBUF_C_src_2fserialization_2fmount_2fmount_2eproto__INCLUDED */

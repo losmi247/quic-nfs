@@ -22,15 +22,16 @@
 Sending Record Marking records
 */
 
-int send_rm_record_quic(struct quic_conn_t *conn, uint64_t stream_id, const uint8_t *rm_record_data, size_t rm_record_data_size);
+int send_rm_record_quic(struct quic_conn_t *conn, uint64_t stream_id, const uint8_t *rm_record_data,
+                        size_t rm_record_data_size);
 
 /*
-* Receiving Record Marking records
-*/
+ * Receiving Record Marking records
+ */
 
 /*
-* RM Receiving Context
-*/
+ * RM Receiving Context
+ */
 
 typedef struct RecordMarkingReceivingContext {
     // the QUIC connection and the stream where this RM record is being received
@@ -61,8 +62,8 @@ RecordMarkingReceivingContext *create_rm_receiving_context(struct quic_conn_t *q
 void free_rm_receiving_context(RecordMarkingReceivingContext *rm_receiving_context);
 
 /*
-* Lists of RM Receiving Contexts
-*/
+ * Lists of RM Receiving Contexts
+ */
 
 typedef struct RecordMarkingReceivingContextsList {
     RecordMarkingReceivingContext *rm_receiving_context;
@@ -70,13 +71,17 @@ typedef struct RecordMarkingReceivingContextsList {
     struct RecordMarkingReceivingContextsList *next;
 } RecordMarkingReceivingContextsList;
 
-int add_new_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t stream_id, RecordMarkingReceivingContextsList **rm_receiving_contexts);
+int add_new_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t stream_id,
+                                 RecordMarkingReceivingContextsList **rm_receiving_contexts);
 
-int find_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t stream_id, RecordMarkingReceivingContextsList *rm_receiving_contexts);
+int find_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t stream_id,
+                              RecordMarkingReceivingContextsList *rm_receiving_contexts);
 
-RecordMarkingReceivingContext *get_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t stream_id, RecordMarkingReceivingContextsList *rm_receiving_contexts);
+RecordMarkingReceivingContext *get_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t stream_id,
+                                                        RecordMarkingReceivingContextsList *rm_receiving_contexts);
 
-int remove_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t stream_id, RecordMarkingReceivingContextsList **rm_receiving_contexts);
+int remove_rm_receiving_context(struct quic_conn_t *quic_connection, uint64_t stream_id,
+                                RecordMarkingReceivingContextsList **rm_receiving_contexts);
 
 void clean_up_rm_receiving_contexts_list(RecordMarkingReceivingContextsList *rm_receiving_contexts);
 

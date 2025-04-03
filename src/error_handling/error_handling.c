@@ -1,8 +1,8 @@
 #include "error_handling.h"
 
 /*
-* Equips perror() with ability to print a formatted message.
-*/
+ * Equips perror() with ability to print a formatted message.
+ */
 void perror_msg(const char *format, ...) {
     va_list args;
     va_start(args, format);

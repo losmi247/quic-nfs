@@ -3,8 +3,8 @@
 
 #include "src/transport/quic/quic_client.h"
 
-#define RM_FRAGMENT_HEADER_SIZE 4             // RPC Record Marking fragment header size in bytes
-#define RM_MAX_FRAGMENT_DATA_SIZE 0x7FFFFFFF  // max size in bytes of the data in a Record Marking fragment
+#define RM_FRAGMENT_HEADER_SIZE 4            // RPC Record Marking fragment header size in bytes
+#define RM_MAX_FRAGMENT_DATA_SIZE 0x7FFFFFFF // max size in bytes of the data in a Record Marking fragment
 
 typedef enum TransportProtocol {
     TRANSPORT_PROTOCOL_TCP = 0,

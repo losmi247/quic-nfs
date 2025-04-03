@@ -1,12 +1,12 @@
 #ifndef tcp_record_marking__header__INCLUDED
 #define tcp_record_marking__header__INCLUDED
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
 #include <arpa/inet.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "src/transport/transport_common.h"
 

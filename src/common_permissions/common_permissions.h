@@ -1,10 +1,10 @@
 #ifndef common_permissions__header__INCLUDED
 #define common_permissions__header__INCLUDED
 
-#include <unistd.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/sysmacros.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "src/error_handling/error_handling.h"
 

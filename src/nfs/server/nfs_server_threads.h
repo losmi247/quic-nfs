@@ -14,7 +14,8 @@ typedef struct NfsServerThreadsList {
     struct NfsServerThreadsList *next;
 } NfsServerThreadsList;
 
-int add_server_thread(pthread_t server_thread, TransportProtocol transport_protocol, TransportConnection transport_connection, NfsServerThreadsList **head);
+int add_server_thread(pthread_t server_thread, TransportProtocol transport_protocol,
+                      TransportConnection transport_connection, NfsServerThreadsList **head);
 
 int remove_server_thread(pthread_t server_thread, NfsServerThreadsList **head);
 

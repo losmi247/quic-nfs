@@ -8,8 +8,8 @@
 #include "src/serialization/nfs/nfs.pb-c.h"
 
 /*
-* Nfs client state
-*/
+ * Nfs client state
+ */
 
 extern RpcConnectionContext *rpc_connection_context;
 

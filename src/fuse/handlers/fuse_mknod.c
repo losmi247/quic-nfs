@@ -9,21 +9,19 @@ typedef struct MknodData {
 } MknodData;
 
 void *blocking_mknod(void *arg) {
-    CallbackData *callback_data = (CallbackData *) arg;
+    CallbackData *callback_data = (CallbackData *)arg;
 
-    MknodData *mknod_data = (MknodData *) callback_data->return_data;
-
-    pthread_mutex_lock(&nfs_mutex);
+    MknodData *mknod_data = (MknodData *)callback_data->return_data;
 
     Nfs__FType file_type;
     int error_code;
-    Nfs__FHandle *containing_directory_fhandle = resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, mknod_data->containing_directory_path, &file_type, &error_code);
-    if(containing_directory_fhandle == NULL) {
+    Nfs__FHandle *containing_directory_fhandle =
+        resolve_absolute_path(rpc_connection_context, filesystem_root_fhandle, mknod_data->containing_directory_path,
+                              &file_type, &error_code);
+    if (containing_directory_fhandle == NULL) {
         printf("nfs_mknod: failed to resolve the path %s to a file\n", mknod_data->containing_directory_path);
 
         callback_data->error_code = -error_code;
-
-        pthread_mutex_unlock(&nfs_mutex);
 
         goto signal;
     }
@@ -40,7 +38,8 @@ void *blocking_mknod(void *arg) {
 
     Nfs__SAttr sattr = NFS__SATTR__INIT;
     sattr.mode = mknod_data->mode;
-    sattr.uid = rpc_connection_context->credential->auth_sys->uid;         // the REPL that creates the file is the owner of the file
+    sattr.uid =
+        rpc_connection_context->credential->auth_sys->uid; // the REPL that creates the file is the owner of the file
     sattr.gid = rpc_connection_context->credential->auth_sys->gid;
     sattr.size = -1;
     Nfs__TimeVal atime = NFS__TIME_VAL__INIT, mtime = NFS__TIME_VAL__INIT;
@@ -52,40 +51,35 @@ void *blocking_mknod(void *arg) {
 
     Nfs__DirOpRes *diropres = malloc(sizeof(Nfs__DirOpRes));
     int status = nfs_procedure_9_create_file(rpc_connection_context, createargs, diropres);
-    if(status != 0) {
+    if (status != 0) {
         printf("Error: Invalid RPC reply received from the server with status %d\n", status);
 
         free(diropres);
 
         callback_data->error_code = -EIO;
 
-        pthread_mutex_unlock(&nfs_mutex);
-
         goto signal;
     }
 
-    pthread_mutex_unlock(&nfs_mutex);
-
-    if(validate_nfs_dir_op_res(diropres) > 0) {
+    if (validate_nfs_dir_op_res(diropres) > 0) {
         printf("Error: Invalid NFS procedure result received from the server\n");
 
         nfs__dir_op_res__free_unpacked(diropres, NULL);
 
         callback_data->error_code = -EIO;
-        
+
         goto signal;
     }
 
-    if(diropres->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
+    if (diropres->nfs_status->stat == NFS__STAT__NFSERR_ACCES) {
         printf("Error: Permission denied\n");
-        
+
         nfs__dir_op_res__free_unpacked(diropres, NULL);
 
         callback_data->error_code = -EACCES;
-        
+
         goto signal;
-    }
-    else if(diropres->nfs_status->stat != NFS__STAT__NFS_OK) {
+    } else if (diropres->nfs_status->stat != NFS__STAT__NFS_OK) {
         char *string_status = nfs_stat_to_string(diropres->nfs_status->stat);
         printf("Error: Failed to create file with status %s\n", string_status);
         free(string_status);
@@ -93,10 +87,10 @@ void *blocking_mknod(void *arg) {
         nfs__dir_op_res__free_unpacked(diropres, NULL);
 
         callback_data->error_code = map_nfs_error(diropres->nfs_status->stat);
-        
+
         goto signal;
     }
-    
+
     nfs__dir_op_res__free_unpacked(diropres, NULL);
     free(containing_directory_fhandle->nfs_filehandle);
     free(containing_directory_fhandle);
@@ -113,10 +107,10 @@ signal:
 }
 
 /*
-* Handles the FUSE call to create a file.
-*
-* Returns 0 on success and the appropriate negative error code on failure.
-*/
+ * Handles the FUSE call to create a file.
+ *
+ * Returns 0 on success and the appropriate negative error code on failure.
+ */
 int nfs_mknod(const char *path, mode_t mode, dev_t rdev) {
     CallbackData callback_data;
     memset(&callback_data, 0, sizeof(CallbackData));
@@ -128,8 +122,9 @@ int nfs_mknod(const char *path, mode_t mode, dev_t rdev) {
     char *path_copy = strdup(path);
 
     MknodData mknod_data;
-    char *directory_path = dirname(dir_copy);   // returns "." if there are no '/'s in the path (i.e. just file name 'file')
-    mknod_data.containing_directory_path = strcmp(directory_path,".") == 0 ? "/" : directory_path;
+    char *directory_path =
+        dirname(dir_copy); // returns "." if there are no '/'s in the path (i.e. just file name 'file')
+    mknod_data.containing_directory_path = strcmp(directory_path, ".") == 0 ? "/" : directory_path;
     mknod_data.new_file_name = basename(path_copy);
 
     mknod_data.mode = mode;
@@ -141,13 +136,13 @@ int nfs_mknod(const char *path, mode_t mode, dev_t rdev) {
     pthread_cond_init(&callback_data.cond, NULL);
 
     pthread_t blocking_thread;
-    if(pthread_create(&blocking_thread, NULL, blocking_mknod, &callback_data) != 0) {
+    if (pthread_create(&blocking_thread, NULL, blocking_mknod, &callback_data) != 0) {
         return -EIO;
     }
 
     pthread_detach(blocking_thread);
 
-	wait_for_nfs_reply(&callback_data);
+    wait_for_nfs_reply(&callback_data);
 
     pthread_mutex_destroy(&callback_data.lock);
     pthread_cond_destroy(&callback_data.cond);
@@ -157,4 +152,3 @@ int nfs_mknod(const char *path, mode_t mode, dev_t rdev) {
 
     return callback_data.error_code;
 }
- 

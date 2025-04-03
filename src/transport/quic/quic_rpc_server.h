@@ -23,8 +23,8 @@
 
 #include "src/serialization/rpc/rpc.pb-c.h"
 
-#include "src/common_rpc/server_common_rpc.h"
 #include "src/common_rpc/common_rpc.h"
+#include "src/common_rpc/server_common_rpc.h"
 
 #include "src/transport/quic/quic_record_marking.h"
 
@@ -51,8 +51,8 @@ struct QuicServer {
 int run_server_quic(uint16_t port_number);
 
 /*
-* QUIC Nfs+Mount server state.
-*/
+ * QUIC Nfs+Mount server state.
+ */
 
 extern struct QuicServer quic_server;
 
