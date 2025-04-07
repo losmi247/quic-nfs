@@ -146,19 +146,13 @@ int connect_to_quic_server(RpcConnectionContext *rpc_connection_context) {
     pthread_cond_init(&quic_client->connection_established_condition_variable, NULL);
     quic_client->connection_established = false;
 
-    quic_client->use_auxilliary_stream = false;
-    quic_client->allocated_stream = NULL;
-    quic_client->successfully_allocated_stream = quic_client->stream_allocation_finished = false;
-    pthread_mutex_init(&quic_client->stream_allocator_lock, NULL);
-    pthread_cond_init(&quic_client->stream_allocator_condition_variable, NULL);
-
     pthread_mutex_init(&quic_client->connection_closed_lock, NULL);
     pthread_cond_init(&quic_client->connection_closed_condition_variable, NULL);
     quic_client->connection_closed = false;
 
     quic_client->main_stream = NULL;
-    quic_client->auxilliary_streams_list_head = NULL;
-    pthread_mutex_init(&quic_client->auxilliary_streams_list_lock, NULL);
+    quic_client->auxiliary_streams_list_head = NULL;
+    pthread_mutex_init(&quic_client->auxiliary_streams_list_lock, NULL);
 
     quic_client->stream_contexts = NULL;
     pthread_mutex_init(&quic_client->stream_contexts_list_lock, NULL);
@@ -448,18 +442,14 @@ void free_rpc_connection_context(RpcConnectionContext *rpc_connection_context) {
                 pthread_mutex_destroy(&quic_client->stream_contexts_list_lock);
                 pthread_cond_destroy(&quic_client->stream_contexts_condition_variable);
 
-                free_streams_list(quic_client->auxilliary_streams_list_head,
-                                  &quic_client->auxilliary_streams_list_lock);
+                free_streams_list(quic_client->auxiliary_streams_list_head, &quic_client->auxiliary_streams_list_lock);
 
-                pthread_mutex_destroy(&quic_client->auxilliary_streams_list_lock);
+                pthread_mutex_destroy(&quic_client->auxiliary_streams_list_lock);
 
                 free(quic_client->main_stream);
 
                 pthread_mutex_destroy(&quic_client->connection_established_lock);
                 pthread_cond_destroy(&quic_client->connection_established_condition_variable);
-
-                pthread_mutex_destroy(&quic_client->stream_allocator_lock);
-                pthread_cond_destroy(&quic_client->stream_allocator_condition_variable);
 
                 pthread_mutex_destroy(&quic_client->connection_closed_lock);
                 pthread_cond_destroy(&quic_client->connection_closed_condition_variable);

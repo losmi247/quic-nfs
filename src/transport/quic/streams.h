@@ -21,8 +21,8 @@ typedef struct StreamsList {
 
 Stream *create_new_stream(struct quic_conn_t *quic_connection);
 
-Stream *get_available_auxilliary_stream(struct quic_conn_t *quic_connection, StreamsList **auxilliary_streams_list,
-                                        pthread_mutex_t *list_lock);
+Stream *get_available_auxiliary_stream(struct quic_conn_t *quic_connection, StreamsList **auxiliary_streams_list,
+                                       pthread_mutex_t *list_lock);
 
 void free_streams_list(StreamsList *head, pthread_mutex_t *list_lock);
 

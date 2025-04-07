@@ -146,6 +146,7 @@ Test(nfs_mkdir_test_suite, mkdir_file_name_too_long, .description = "NFSPROC_MKD
     mtime.useconds = 0;
     create_directory_fail(rpc_connection_context, &mkdir_test_dir_fhandle, filename, 0440, 0, 0, &atime, &mtime,
                           NFS__STAT__NFSERR_NAMETOOLONG);
+    free(filename);
 
     free_rpc_connection_context(rpc_connection_context);
 }

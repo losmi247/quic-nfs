@@ -60,6 +60,7 @@ Test(nfs_read_test_suite, read_no_such_file, .description = "NFSPROC_READ no suc
     read_from_file_fail(rpc_connection_context, &file_fhandle, 2, 10, NFS__STAT__NFSERR_NOENT);
 
     mount__fh_status__free_unpacked(fhstatus, NULL);
+    free_rpc_connection_context(rpc_connection_context);
 }
 
 Test(nfs_read_test_suite, read_is_directory,

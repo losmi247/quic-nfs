@@ -284,6 +284,7 @@ Test(nfs_link_test_suite, link_file_name_too_long, .description = "NFSPROC_LINK 
 
     create_link_to_file_fail(rpc_connection_context, &target_file_fhandle, &link_test_dir_fhandle, filename,
                              NFS__STAT__NFSERR_NAMETOOLONG);
+    free(filename);
 
     free_rpc_connection_context(rpc_connection_context);
 }

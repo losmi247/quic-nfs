@@ -34,28 +34,31 @@ Stream *create_new_stream(struct quic_conn_t *quic_connection) {
 }
 
 /*
- * If the given list of auxilliary streams has a free stream in the pool,
+ * If the given list of auxiliary streams has a free stream in the pool,
  * returns that stream. If there is no such stream we create a new stream in
  * the given QUIC connection if the limit on the number of streams has not
  * already been reached.
  *
  * Locks the given mutex before accessing the list.
  *
- * Returns NULL on failure to allocate an auxilliary stream.
+ * Returns NULL on failure to allocate an auxiliary stream.
  */
-Stream *get_available_auxilliary_stream(struct quic_conn_t *quic_connection, StreamsList **auxilliary_streams_list,
-                                        pthread_mutex_t *list_lock) {
-    if (auxilliary_streams_list == NULL) {
+Stream *get_available_auxiliary_stream(struct quic_conn_t *quic_connection, StreamsList **auxiliary_streams_list,
+                                       pthread_mutex_t *list_lock) {
+    if (auxiliary_streams_list == NULL) {
         return NULL;
     }
 
     pthread_mutex_lock(list_lock);
 
-    StreamsList *head = *auxilliary_streams_list;
+    StreamsList *head = *auxiliary_streams_list;
     int number_of_streams = 0;
     while (head != NULL) {
         if (head->stream == NULL) {
             fprintf(stderr, "get_available_stream: NULL stream encountered in the stream pool");
+
+            pthread_mutex_unlock(list_lock);
+
             return NULL;
         }
 
@@ -68,38 +71,42 @@ Stream *get_available_auxilliary_stream(struct quic_conn_t *quic_connection, Str
         }
 
         number_of_streams++;
+
+        head = head->next;
     }
 
     if (number_of_streams == MAX_STREAMS_PER_CONNECTION) {
+        pthread_mutex_unlock(list_lock);
+
         return NULL;
     }
 
-    // create a new auxilliary stream
-    Stream *new_auxilliary_stream = create_new_stream(quic_connection);
-    if (new_auxilliary_stream == NULL) {
-        fprintf(stderr, "get_available_stream: failed to create a new auxilliary stream");
+    // create a new auxiliary stream
+    Stream *new_auxiliary_stream = create_new_stream(quic_connection);
+    if (new_auxiliary_stream == NULL) {
+        fprintf(stderr, "get_available_stream: failed to create a new auxiliary stream");
 
         pthread_mutex_unlock(list_lock);
 
         return NULL;
     }
-    new_auxilliary_stream->stream_in_use = true;
+    new_auxiliary_stream->stream_in_use = true;
 
     StreamsList *new_entry = malloc(sizeof(StreamsList));
     if (new_entry == NULL) {
-        free(new_auxilliary_stream);
+        free(new_auxiliary_stream);
 
         pthread_mutex_unlock(list_lock);
 
         return NULL;
     }
-    new_entry->stream = new_auxilliary_stream;
-    new_entry->next = *auxilliary_streams_list;
-    *auxilliary_streams_list = new_entry;
+    new_entry->stream = new_auxiliary_stream;
+    new_entry->next = *auxiliary_streams_list;
+    *auxiliary_streams_list = new_entry;
 
     pthread_mutex_unlock(list_lock);
 
-    return new_auxilliary_stream;
+    return new_auxiliary_stream;
 }
 
 /*

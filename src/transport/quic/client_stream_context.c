@@ -1,27 +1,35 @@
 #include "client_stream_context.h"
 
 /*
- * Creates an empty QUIC client stream context with the given RPC call message, and returns it.
+ * Creates an empty QUIC client stream context for the given QUIC client with the given RPC
+ * call message, and returns it.
  *
  * Returns NULL on failure.
  *
  * The user of this function takes the responsibility to deallocated the created stream context.
  */
-QuicClientStreamContext *create_client_stream_context(uint8_t *rpc_msg_buffer, size_t rpc_msg_size) {
+QuicClientStreamContext *create_client_stream_context(QuicClient *quic_client, uint8_t *rpc_msg_buffer,
+                                                      size_t rpc_msg_size, bool use_auxiliary_stream) {
     QuicClientStreamContext *stream_context = malloc(sizeof(QuicClientStreamContext));
     if (stream_context == NULL) {
         return NULL;
     }
 
-    stream_context->designated_stream = NULL;
-    pthread_mutex_init(&stream_context->lock, NULL);
-    pthread_cond_init(&stream_context->cond, NULL);
+    stream_context->quic_client = quic_client;
+
+    stream_context->use_auxiliary_stream = use_auxiliary_stream;
+    stream_context->allocated_stream = NULL;
+    stream_context->successfully_allocated_stream = stream_context->stream_allocation_finished = false;
+    pthread_mutex_init(&stream_context->stream_allocator_lock, NULL);
+    pthread_cond_init(&stream_context->stream_allocator_condition_variable, NULL);
 
     stream_context->rm_receiving_context = NULL;
 
     stream_context->attempted_call_rpc_msg_send = stream_context->call_rpc_msg_successfully_sent = false;
     stream_context->reply_rpc_msg_successfully_received = false;
     stream_context->finished = false;
+    pthread_mutex_init(&stream_context->reply_lock, NULL);
+    pthread_cond_init(&stream_context->reply_cond, NULL);
 
     stream_context->call_rpc_msg_size = rpc_msg_size;
     stream_context->call_rpc_msg_buffer = rpc_msg_buffer;
@@ -39,8 +47,11 @@ void free_stream_context(QuicClientStreamContext *stream_context) {
         return;
     }
 
-    pthread_mutex_destroy(&stream_context->lock);
-    pthread_cond_destroy(&stream_context->cond);
+    pthread_mutex_destroy(&stream_context->stream_allocator_lock);
+    pthread_cond_destroy(&stream_context->stream_allocator_condition_variable);
+
+    pthread_mutex_destroy(&stream_context->reply_lock);
+    pthread_cond_destroy(&stream_context->reply_cond);
 
     if (stream_context->call_rpc_msg_buffer != NULL) {
         free(stream_context->call_rpc_msg_buffer);
@@ -69,13 +80,12 @@ int add_stream_context(QuicClientStreamContext *stream_context, QuicClientStream
         return 2;
     }
 
-    pthread_mutex_lock(list_lock);
-
     QuicClientStreamContextsList *new_head = malloc(sizeof(QuicClientStreamContextsList));
     if (new_head == NULL) {
-        pthread_mutex_unlock(list_lock);
         return 3;
     }
+
+    pthread_mutex_lock(list_lock);
 
     new_head->stream_context = stream_context;
     new_head->next = *head;
@@ -106,13 +116,13 @@ QuicClientStreamContext *find_stream_context(QuicClientStreamContextsList *head,
             return NULL;
         }
 
-        if (stream_context->designated_stream == NULL) {
-            fprintf(stderr, "find_stream_context: stream context with no designated stream encountered\n");
+        if (stream_context->allocated_stream == NULL) {
+            fprintf(stderr, "find_stream_context: stream context with no allocated stream encountered\n");
             pthread_mutex_unlock(list_lock);
             return NULL;
         }
 
-        if (stream_context->designated_stream->id == stream_id) {
+        if (stream_context->allocated_stream->id == stream_id) {
             pthread_mutex_unlock(list_lock);
             return stream_context;
         }
@@ -152,12 +162,12 @@ int remove_stream_context(QuicClientStreamContextsList **head, uint64_t stream_i
         pthread_mutex_unlock(list_lock);
         return 2;
     }
-    if (first_stream_context->designated_stream == NULL) {
-        fprintf(stderr, "remove_stream_context: stream context with no designated stream encountered\n");
+    if (first_stream_context->allocated_stream == NULL) {
+        fprintf(stderr, "remove_stream_context: stream context with no allocated stream encountered\n");
         pthread_mutex_unlock(list_lock);
         return 3;
     }
-    if (first_stream_context->designated_stream->id == stream_id) {
+    if (first_stream_context->allocated_stream->id == stream_id) {
         *head = (*head)->next;
 
         free_stream_context(first_stream_context);
@@ -177,13 +187,13 @@ int remove_stream_context(QuicClientStreamContextsList **head, uint64_t stream_i
             pthread_mutex_unlock(list_lock);
             return 4;
         }
-        if (stream_context->designated_stream == NULL) {
-            fprintf(stderr, "find_stream_context: stream context with no designated stream encountered\n");
+        if (stream_context->allocated_stream == NULL) {
+            fprintf(stderr, "find_stream_context: stream context with no allocated stream encountered\n");
             pthread_mutex_unlock(list_lock);
             return 5;
         }
 
-        if (stream_context->designated_stream->id == stream_id) {
+        if (stream_context->allocated_stream->id == stream_id) {
             prev->next = curr->next;
 
             free_stream_context(curr->stream_context);

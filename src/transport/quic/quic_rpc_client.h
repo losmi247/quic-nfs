@@ -43,7 +43,7 @@ extern struct quic_packet_send_methods_t quic_packet_send_methods;
 
 Rpc__RpcMsg *invoke_rpc_remote_quic(RpcConnectionContext *rpc_connection_context, uint32_t program_number,
                                     uint32_t program_version, uint32_t procedure_number,
-                                    Google__Protobuf__Any parameters, bool use_auxilliary_stream);
+                                    Google__Protobuf__Any parameters, bool use_auxiliary_stream);
 
 void async_connection_closing_callback(EV_P_ ev_async *w, int revents);
 
