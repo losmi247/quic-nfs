@@ -6,10 +6,19 @@
 
 #include "pthread.h"
 
+struct QuicClient;
+typedef struct QuicClient QuicClient;
+
 typedef struct QuicClientStreamContext {
-    Stream *designated_stream;
-    pthread_mutex_t lock;
-    pthread_cond_t cond;
+    QuicClient *quic_client;
+
+    bool use_auxiliary_stream;
+    ev_async stream_allocator_async_watcher;
+    Stream *allocated_stream;
+    bool stream_allocation_finished;
+    bool successfully_allocated_stream;
+    pthread_mutex_t stream_allocator_lock;
+    pthread_cond_t stream_allocator_condition_variable;
 
     // the RPC message to be sent by the client
     size_t call_rpc_msg_size;
@@ -21,6 +30,8 @@ typedef struct QuicClientStreamContext {
     bool attempted_call_rpc_msg_send, call_rpc_msg_successfully_sent;
     bool reply_rpc_msg_successfully_received;
     bool finished;
+    pthread_mutex_t reply_lock;
+    pthread_cond_t reply_cond;
 } QuicClientStreamContext;
 
 typedef struct QuicClientStreamContextsList {
@@ -29,7 +40,10 @@ typedef struct QuicClientStreamContextsList {
     struct QuicClientStreamContextsList *next;
 } QuicClientStreamContextsList;
 
-QuicClientStreamContext *create_client_stream_context(uint8_t *rpc_msg_buffer, size_t rpc_msg_size);
+QuicClientStreamContext *create_client_stream_context(QuicClient *quic_client, uint8_t *rpc_msg_buffer,
+                                                      size_t rpc_msg_size, bool use_auxiliary_stream);
+
+void free_stream_context(QuicClientStreamContext *stream_context);
 
 int add_stream_context(QuicClientStreamContext *stream_context, QuicClientStreamContextsList **head,
                        pthread_mutex_t *list_lock);

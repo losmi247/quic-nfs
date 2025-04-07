@@ -1029,6 +1029,7 @@ void create_file_fail(RpcConnectionContext *rpc_connection_context, Nfs__FHandle
         }
         created_rpc_connection_context = 1;
     }
+
     Nfs__DirOpRes *diropres = create_file(rpc_connection_context, directory_fhandle, filename, &sattr);
     if (created_rpc_connection_context) {
         free_rpc_connection_context(rpc_connection_context);

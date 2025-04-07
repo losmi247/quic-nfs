@@ -147,6 +147,8 @@ Test(nfs_create_test_suite, create_file_name_too_long, .description = "NFSPROC_C
     create_file_fail(rpc_connection_context, &create_test_dir_fhandle, filename, 0440, 0, 0, 10, &atime, &mtime,
                      NFS__STAT__NFSERR_NAMETOOLONG);
 
+    free(filename);
+
     free_rpc_connection_context(rpc_connection_context);
 }
 

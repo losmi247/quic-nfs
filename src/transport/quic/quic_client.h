@@ -29,14 +29,6 @@ typedef struct QuicClient {
 
     ev_async process_connections_async_watcher;
 
-    bool use_auxilliary_stream;
-    ev_async stream_allocator_async_watcher;
-    Stream *allocated_stream;
-    bool stream_allocation_finished;
-    bool successfully_allocated_stream;
-    pthread_mutex_t stream_allocator_lock;
-    pthread_cond_t stream_allocator_condition_variable;
-
     ev_async connection_closing_async_watcher;
     pthread_mutex_t connection_closed_lock;
     pthread_cond_t connection_closed_condition_variable;
@@ -45,8 +37,8 @@ typedef struct QuicClient {
     ev_async event_loop_shutdown_async_watcher;
 
     Stream *main_stream;
-    StreamsList *auxilliary_streams_list_head;
-    pthread_mutex_t auxilliary_streams_list_lock;
+    StreamsList *auxiliary_streams_list_head;
+    pthread_mutex_t auxiliary_streams_list_lock;
 
     QuicClientStreamContextsList *stream_contexts;
     pthread_mutex_t stream_contexts_list_lock;
