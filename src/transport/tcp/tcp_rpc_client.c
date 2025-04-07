@@ -18,11 +18,16 @@ Rpc__RpcMsg *execute_rpc_call_tcp(RpcConnectionContext *rpc_connection_context, 
         return NULL;
     }
 
-    if (rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd == NULL) {
+    TcpClient *tcp_client = rpc_connection_context->transport_connection->tcp_client;
+    if (tcp_client == NULL) {
         return NULL;
     }
 
-    int rpc_client_socket_fd = *(rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd);
+    if (tcp_client->tcp_rpc_client_socket_fd == NULL) {
+        return NULL;
+    }
+
+    int rpc_client_socket_fd = *(tcp_client->tcp_rpc_client_socket_fd);
 
     if (call_rpc_msg == NULL) {
         return NULL;
@@ -33,11 +38,14 @@ Rpc__RpcMsg *execute_rpc_call_tcp(RpcConnectionContext *rpc_connection_context, 
     uint8_t *rpc_msg_buffer = malloc(sizeof(uint8_t) * rpc_msg_size);
     rpc__rpc_msg__pack(call_rpc_msg, rpc_msg_buffer);
 
+    pthread_mutex_lock(&tcp_client->tcp_connection_mutex);
+
     // send the serialized RpcMsg to the server as a single Record Marking record
     // TODO: (QNFS-37) implement time-outs + reconnections
     int error_code = send_rm_record_tcp(rpc_client_socket_fd, rpc_msg_buffer, rpc_msg_size);
     free(rpc_msg_buffer);
     if (error_code > 0) {
+        pthread_mutex_unlock(&tcp_client->tcp_connection_mutex);
         return NULL;
     }
 
@@ -45,8 +53,11 @@ Rpc__RpcMsg *execute_rpc_call_tcp(RpcConnectionContext *rpc_connection_context, 
     size_t reply_rpc_msg_size = -1;
     uint8_t *reply_rpc_msg_buffer = receive_rm_record_tcp(rpc_client_socket_fd, &reply_rpc_msg_size);
     if (reply_rpc_msg_buffer == NULL) {
+        pthread_mutex_unlock(&tcp_client->tcp_connection_mutex);
         return NULL;
     }
+
+    pthread_mutex_unlock(&tcp_client->tcp_connection_mutex);
 
     Rpc__RpcMsg *reply_rpc_msg = deserialize_rpc_msg(reply_rpc_msg_buffer, reply_rpc_msg_size);
     free(reply_rpc_msg_buffer);

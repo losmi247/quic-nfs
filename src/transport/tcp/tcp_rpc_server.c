@@ -441,8 +441,19 @@ int run_server_tcp(uint16_t port_number) {
             break;
         }
 
+        TcpClient *tcp_client = malloc(sizeof(TcpClient));
+        if (tcp_client == NULL) {
+            fprintf(stderr, "run_server_tcp: server failed to allocate a new TCP client\n");
+
+            close(*rpc_client_socket_fd);
+            free(rpc_client_socket_fd);
+
+            break;
+        }
+        tcp_client->tcp_rpc_client_socket_fd = rpc_client_socket_fd;
+
         TransportConnection transport_connection;
-        transport_connection.tcp_rpc_client_socket_fd = rpc_client_socket_fd;
+        transport_connection.tcp_client = tcp_client;
         int error_code =
             add_server_thread(server_thread, TRANSPORT_PROTOCOL_TCP, transport_connection, &nfs_server_threads_list);
         if (error_code > 0) {

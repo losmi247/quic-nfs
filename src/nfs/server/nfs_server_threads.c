@@ -20,12 +20,12 @@ void clean_up_nfs_server_threads_list_entry(NfsServerThreadsList *server_threads
 
     switch (server_threads_list_entry->transport_protocol) {
     case TRANSPORT_PROTOCOL_TCP:
-        if (server_threads_list_entry->transport_connection.tcp_rpc_client_socket_fd == NULL) {
+        if (server_threads_list_entry->transport_connection.tcp_client->tcp_rpc_client_socket_fd == NULL) {
             break;
         }
 
-        close(*server_threads_list_entry->transport_connection.tcp_rpc_client_socket_fd);
-        free(server_threads_list_entry->transport_connection.tcp_rpc_client_socket_fd);
+        close(*server_threads_list_entry->transport_connection.tcp_client->tcp_rpc_client_socket_fd);
+        free(server_threads_list_entry->transport_connection.tcp_client->tcp_rpc_client_socket_fd);
 
         break;
     case TRANSPORT_PROTOCOL_QUIC:
