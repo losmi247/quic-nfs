@@ -56,7 +56,16 @@ int connect_to_tcp_server(RpcConnectionContext *rpc_connection_context) {
     if (transport_connection == NULL) {
         return 5;
     }
-    transport_connection->tcp_rpc_client_socket_fd = tcp_rpc_client_socket_fd;
+
+    TcpClient *tcp_client = malloc(sizeof(TcpClient));
+    if (tcp_client == NULL) {
+        return 6;
+    }
+
+    tcp_client->tcp_rpc_client_socket_fd = tcp_rpc_client_socket_fd;
+    pthread_mutex_init(&tcp_client->tcp_connection_mutex, NULL);
+
+    transport_connection->tcp_client = tcp_client;
     rpc_connection_context->transport_connection = transport_connection;
 
     struct sockaddr_in rpc_server_addr;
@@ -65,14 +74,14 @@ int connect_to_tcp_server(RpcConnectionContext *rpc_connection_context) {
     rpc_server_addr.sin_port = htons(rpc_connection_context->server_port);
 
     // connect the rpc client socket to rpc server socket
-    if (connect(*rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd,
+    if (connect(*rpc_connection_context->transport_connection->tcp_client->tcp_rpc_client_socket_fd,
                 (struct sockaddr *)&rpc_server_addr, sizeof(rpc_server_addr)) < 0) {
         perror_msg("Connection to the server failed");
 
-        close(*rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd);
-        free(rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd);
+        close(*rpc_connection_context->transport_connection->tcp_client->tcp_rpc_client_socket_fd);
+        free(rpc_connection_context->transport_connection->tcp_client->tcp_rpc_client_socket_fd);
 
-        return 6;
+        return 7;
     }
 
     return 0;
@@ -387,13 +396,19 @@ void free_rpc_connection_context(RpcConnectionContext *rpc_connection_context) {
     case TRANSPORT_PROTOCOL_TCP:
         // close the TCP client socket if it was correctly opened
         if (rpc_connection_context->transport_connection != NULL &&
-            rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd != NULL) {
-            int tcp_rpc_client_socket_fd = *rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd;
-            if (tcp_rpc_client_socket_fd >= 0) {
-                close(tcp_rpc_client_socket_fd);
+            rpc_connection_context->transport_connection->tcp_client != NULL) {
+            TcpClient *tcp_client = rpc_connection_context->transport_connection->tcp_client;
+
+            int *tcp_rpc_client_socket_fd = tcp_client->tcp_rpc_client_socket_fd;
+            if (tcp_rpc_client_socket_fd != NULL && *tcp_rpc_client_socket_fd >= 0) {
+                close(*tcp_rpc_client_socket_fd);
             }
 
-            free(rpc_connection_context->transport_connection->tcp_rpc_client_socket_fd);
+            free(tcp_rpc_client_socket_fd);
+
+            pthread_mutex_destroy(&tcp_client->tcp_connection_mutex);
+
+            free(tcp_client);
         }
 
         free(rpc_connection_context->transport_connection);
