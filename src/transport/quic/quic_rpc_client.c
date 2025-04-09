@@ -1,5 +1,6 @@
 #include "quic_rpc_client.h"
 
+#include "stream_allocation.h"
 #include "streams.h"
 
 void timeout_callback(EV_P_ ev_timer *w, int revents);
@@ -27,6 +28,11 @@ void *event_loop_runner(void *arg) {
     ev_async_init(&client->process_connections_async_watcher, async_process_connections_callback);
     client->process_connections_async_watcher.data = client;
     ev_async_start(client->event_loop, &client->process_connections_async_watcher);
+
+    // initialize the stream allocator callback
+    ev_async_init(&client->stream_allocator_async_watcher, async_stream_allocator_callback);
+    client->stream_allocator_async_watcher.data = client;
+    ev_async_start(client->event_loop, &client->stream_allocator_async_watcher);
 
     // initialize the connection closing callback
     ev_async_init(&client->connection_closing_async_watcher, async_connection_closing_callback);
@@ -85,6 +91,8 @@ void client_on_conn_established(void *tctx, struct quic_conn_t *conn) {
     }
     client->main_stream = main_stream;
 
+    quic_stream_wantwrite(conn, main_stream->id, false);
+
     client->connection_established = true;
     pthread_cond_signal(&client->connection_established_condition_variable);
 }
@@ -105,11 +113,13 @@ void client_on_stream_created(void *tctx, struct quic_conn_t *conn, uint64_t str
 void client_on_stream_readable(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {
     QuicClient *client = tctx;
 
-    QuicClientStreamContext *stream_context =
-        find_stream_context(client->stream_contexts, stream_id, &client->stream_contexts_list_lock);
+    pthread_mutex_lock(&client->stream_contexts_list_lock);
+
+    QuicClientStreamContext *stream_context = find_stream_context(client->stream_contexts, stream_id);
     if (stream_context == NULL) {
         fprintf(stderr,
                 "client_on_stream_readable: client stream is readable but no response expected on this stream\n");
+        pthread_mutex_unlock(&client->stream_contexts_list_lock);
         return;
     }
 
@@ -125,6 +135,8 @@ void client_on_stream_readable(void *tctx, struct quic_conn_t *conn, uint64_t st
             kill_event_loop_thread(client);
 
             pthread_cond_signal(&stream_context->reply_cond);
+
+            pthread_mutex_unlock(&client->stream_contexts_list_lock);
 
             return;
         }
@@ -142,6 +154,8 @@ void client_on_stream_readable(void *tctx, struct quic_conn_t *conn, uint64_t st
 
         pthread_cond_signal(&stream_context->reply_cond);
 
+        pthread_mutex_unlock(&client->stream_contexts_list_lock);
+
         return;
     }
 
@@ -152,14 +166,18 @@ void client_on_stream_readable(void *tctx, struct quic_conn_t *conn, uint64_t st
 
         pthread_cond_signal(&stream_context->reply_cond);
     }
+
+    pthread_mutex_unlock(&client->stream_contexts_list_lock);
 }
 
 void client_on_stream_writable(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {
     QuicClient *client = tctx;
 
-    QuicClientStreamContext *stream_context =
-        find_stream_context(client->stream_contexts, stream_id, &client->stream_contexts_list_lock);
+    pthread_mutex_lock(&client->stream_contexts_list_lock);
+
+    QuicClientStreamContext *stream_context = find_stream_context(client->stream_contexts, stream_id);
     if (stream_context == NULL) {
+        pthread_mutex_unlock(&client->stream_contexts_list_lock);
         return;
     }
 
@@ -171,10 +189,13 @@ void client_on_stream_writable(void *tctx, struct quic_conn_t *conn, uint64_t st
         stream_context->call_rpc_msg_successfully_sent = false;
         kill_event_loop_thread(client);
 
+        pthread_mutex_unlock(&client->stream_contexts_list_lock);
+
         return;
     }
 
     if (stream_context->attempted_call_rpc_msg_send) {
+        pthread_mutex_unlock(&client->stream_contexts_list_lock);
         return;
     }
 
@@ -185,9 +206,12 @@ void client_on_stream_writable(void *tctx, struct quic_conn_t *conn, uint64_t st
     stream_context->attempted_call_rpc_msg_send = true;
     stream_context->call_rpc_msg_successfully_sent = (error_code == 0);
 
+    quic_stream_wantwrite(conn, stream_id, false);
     if (!stream_context->call_rpc_msg_successfully_sent) {
         kill_event_loop_thread(client);
     }
+
+    pthread_mutex_unlock(&client->stream_contexts_list_lock);
 }
 
 void client_on_stream_closed(void *tctx, struct quic_conn_t *conn, uint64_t stream_id) {
@@ -310,52 +334,6 @@ void async_process_connections_callback(EV_P_ ev_async *w, int revents) {
     QuicClient *client = w->data;
 
     process_connections(client);
-}
-
-void async_stream_allocator_callback(EV_P_ ev_async *w, int revents) {
-    QuicClientStreamContext *stream_context = w->data;
-    QuicClient *client = stream_context->quic_client;
-
-    pthread_mutex_lock(&stream_context->stream_allocator_lock);
-
-    Stream *quic_stream = NULL;
-    if (stream_context->use_auxiliary_stream) {
-        Stream *allocated_auxiliary_stream = get_available_auxiliary_stream(
-            client->quic_connection, &client->auxiliary_streams_list_head, &client->auxiliary_streams_list_lock);
-        if (allocated_auxiliary_stream == NULL) {
-            fprintf(stderr, "async_stream_allocator_callback: failed to allocate an auxiliary stream\n");
-
-            stream_context->successfully_allocated_stream = false;
-            stream_context->stream_allocation_finished = true;
-            pthread_cond_signal(&stream_context->stream_allocator_condition_variable);
-
-            return;
-        }
-        quic_stream_wantwrite(client->quic_connection, allocated_auxiliary_stream->id, true);
-
-        quic_stream = allocated_auxiliary_stream;
-    } else {
-        if (client->main_stream == NULL) {
-            fprintf(stderr, "async_stream_allocator_callback: failed to create the main stream\n");
-
-            stream_context->successfully_allocated_stream = false;
-            stream_context->stream_allocation_finished = true;
-            pthread_cond_signal(&stream_context->stream_allocator_condition_variable);
-
-            return;
-        }
-
-        quic_stream_wantwrite(client->quic_connection, client->main_stream->id, true);
-
-        quic_stream = client->main_stream;
-    }
-
-    stream_context->allocated_stream = quic_stream;
-    stream_context->successfully_allocated_stream = true;
-    stream_context->stream_allocation_finished = true;
-
-    pthread_mutex_unlock(&stream_context->stream_allocator_lock);
-    pthread_cond_signal(&stream_context->stream_allocator_condition_variable);
 }
 
 void async_connection_closing_callback(EV_P_ ev_async *w, int revents) {
@@ -491,20 +469,19 @@ Rpc__RpcMsg *execute_rpc_call_quic(RpcConnectionContext *rpc_connection_context,
         return NULL;
     }
 
-    // initialize the stream allocator callback
-    ev_async_init(&stream_context->stream_allocator_async_watcher, async_stream_allocator_callback);
-    stream_context->stream_allocator_async_watcher.data = stream_context;
-    ev_async_start(client->event_loop, &stream_context->stream_allocator_async_watcher);
+    pthread_mutex_lock(&client->stream_allocation_queue_lock);
+    error_code = push_to_stream_allocation_queue(stream_context, &client->stream_allocation_queue_back,
+                                                 &client->stream_allocation_queue_front);
+    pthread_mutex_unlock(&client->stream_allocation_queue_lock);
 
     // make the event loop thread execute the stream allocator callback, and wait for it to finish
-    ev_async_send(client->event_loop, &stream_context->stream_allocator_async_watcher);
+    ev_async_send(client->event_loop, &client->stream_allocator_async_watcher);
 
     pthread_mutex_lock(&stream_context->stream_allocator_lock);
     while (!stream_context->stream_allocation_finished) {
         pthread_cond_wait(&stream_context->stream_allocator_condition_variable, &stream_context->stream_allocator_lock);
     }
     pthread_mutex_unlock(&stream_context->stream_allocator_lock);
-    ev_async_stop(client->event_loop, &stream_context->stream_allocator_async_watcher);
 
     if (!stream_context->successfully_allocated_stream) {
         fprintf(stderr, "client_on_conn_established: failed to allocate a stream\n");
@@ -514,7 +491,9 @@ Rpc__RpcMsg *execute_rpc_call_quic(RpcConnectionContext *rpc_connection_context,
         return NULL;
     }
 
-    error_code = add_stream_context(stream_context, &client->stream_contexts, &client->stream_contexts_list_lock);
+    pthread_mutex_lock(&client->stream_contexts_list_lock);
+    error_code = add_stream_context(stream_context, &client->stream_contexts);
+    pthread_mutex_unlock(&client->stream_contexts_list_lock);
     if (error_code != 0) {
         fprintf(stderr, "client_on_conn_established: failed to add stream context to collection of stream contexts\n");
 
@@ -541,8 +520,13 @@ Rpc__RpcMsg *execute_rpc_call_quic(RpcConnectionContext *rpc_connection_context,
 
 cleanup:
     Stream *allocated_stream = stream_context->allocated_stream;
-    remove_stream_context(&client->stream_contexts, stream_context->allocated_stream->id,
-                          &client->stream_contexts_list_lock, &client->stream_contexts_condition_variable);
+    pthread_mutex_lock(&client->stream_contexts_list_lock);
+    remove_stream_context(&client->stream_contexts, stream_context->allocated_stream->id);
+    if (client->stream_contexts == NULL) {
+        pthread_cond_signal(&client->stream_contexts_condition_variable);
+    }
+    pthread_mutex_unlock(&client->stream_contexts_list_lock);
+
     allocated_stream->stream_in_use = false;
 
     return ret;

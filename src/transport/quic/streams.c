@@ -91,6 +91,8 @@ Stream *get_available_auxiliary_stream(struct quic_conn_t *quic_connection, Stre
         return NULL;
     }
     new_auxiliary_stream->stream_in_use = true;
+    printf("NOW WE HAVE %d STREAMS\n", number_of_streams + 1);
+    fflush(stdout);
 
     StreamsList *new_entry = malloc(sizeof(StreamsList));
     if (new_entry == NULL) {
