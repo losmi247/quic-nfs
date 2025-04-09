@@ -4,6 +4,7 @@
 #include "quic_record_marking.h"
 
 #include "client_stream_context.h"
+#include "stream_allocation.h"
 #include "streams.h"
 
 typedef struct QuicClient {
@@ -28,6 +29,11 @@ typedef struct QuicClient {
     bool connection_established;
 
     ev_async process_connections_async_watcher;
+
+    ev_async stream_allocator_async_watcher;
+    StreamAllocationQueue *stream_allocation_queue_back;
+    StreamAllocationQueue *stream_allocation_queue_front;
+    pthread_mutex_t stream_allocation_queue_lock;
 
     ev_async connection_closing_async_watcher;
     pthread_mutex_t connection_closed_lock;

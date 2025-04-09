@@ -66,12 +66,9 @@ void free_stream_context(QuicClientStreamContext *stream_context) {
  *
  * Returns > 0 on failure and 0 on success.
  *
- * Locks the given mutex before accessing the given list of stream contexts.
- *
  * The user of this function takes the responsibility to free the added list entry.
  */
-int add_stream_context(QuicClientStreamContext *stream_context, QuicClientStreamContextsList **head,
-                       pthread_mutex_t *list_lock) {
+int add_stream_context(QuicClientStreamContext *stream_context, QuicClientStreamContextsList **head) {
     if (stream_context == NULL) {
         return 1;
     }
@@ -85,13 +82,9 @@ int add_stream_context(QuicClientStreamContext *stream_context, QuicClientStream
         return 3;
     }
 
-    pthread_mutex_lock(list_lock);
-
     new_head->stream_context = stream_context;
     new_head->next = *head;
     *head = new_head;
-
-    pthread_mutex_unlock(list_lock);
 
     return 0;
 }
@@ -99,38 +92,28 @@ int add_stream_context(QuicClientStreamContext *stream_context, QuicClientStream
 /*
  * Searches the given list of stream contexts for the client context of the stream with the given ID.
  *
- * Locks the given mutex before accessing the given list of stream contexts.
- *
  * Returns the found stream context or NULL if the context is not present in the list.
  */
-QuicClientStreamContext *find_stream_context(QuicClientStreamContextsList *head, uint64_t stream_id,
-                                             pthread_mutex_t *list_lock) {
-    pthread_mutex_lock(list_lock);
-
+QuicClientStreamContext *find_stream_context(QuicClientStreamContextsList *head, uint64_t stream_id) {
     QuicClientStreamContextsList *curr = head;
     while (curr != NULL) {
         QuicClientStreamContext *stream_context = curr->stream_context;
         if (stream_context == NULL) {
             fprintf(stderr, "find_stream_context: NULL stream context encountered\n");
-            pthread_mutex_unlock(list_lock);
             return NULL;
         }
 
         if (stream_context->allocated_stream == NULL) {
             fprintf(stderr, "find_stream_context: stream context with no allocated stream encountered\n");
-            pthread_mutex_unlock(list_lock);
             return NULL;
         }
 
         if (stream_context->allocated_stream->id == stream_id) {
-            pthread_mutex_unlock(list_lock);
             return stream_context;
         }
 
         curr = curr->next;
     }
-
-    pthread_mutex_unlock(list_lock);
 
     return NULL;
 }
@@ -142,8 +125,7 @@ QuicClientStreamContext *find_stream_context(QuicClientStreamContextsList *head,
  *
  * Returns 0 on success and > 0 on failure.
  */
-int remove_stream_context(QuicClientStreamContextsList **head, uint64_t stream_id, pthread_mutex_t *list_lock,
-                          pthread_cond_t *list_cond) {
+int remove_stream_context(QuicClientStreamContextsList **head, uint64_t stream_id) {
     if (head == NULL) {
         return 1;
     }
@@ -153,18 +135,14 @@ int remove_stream_context(QuicClientStreamContextsList **head, uint64_t stream_i
         return 0;
     }
 
-    pthread_mutex_lock(list_lock);
-
     QuicClientStreamContextsList *first_entry = *head;
     QuicClientStreamContext *first_stream_context = first_entry->stream_context;
     if (first_stream_context == NULL) {
         fprintf(stderr, "remove_stream_context: NULL stream context encountered\n");
-        pthread_mutex_unlock(list_lock);
         return 2;
     }
     if (first_stream_context->allocated_stream == NULL) {
         fprintf(stderr, "remove_stream_context: stream context with no allocated stream encountered\n");
-        pthread_mutex_unlock(list_lock);
         return 3;
     }
     if (first_stream_context->allocated_stream->id == stream_id) {
@@ -173,23 +151,18 @@ int remove_stream_context(QuicClientStreamContextsList **head, uint64_t stream_i
         free_stream_context(first_stream_context);
         free(first_entry);
 
-        pthread_mutex_unlock(list_lock);
-        pthread_cond_signal(list_cond);
-
         return 0;
     }
 
-    QuicClientStreamContextsList *curr = *head, *prev = *head;
+    QuicClientStreamContextsList *curr = *head, *prev = NULL;
     while (curr != NULL) {
         QuicClientStreamContext *stream_context = curr->stream_context;
         if (stream_context == NULL) {
             fprintf(stderr, "find_stream_context: NULL stream context encountered\n");
-            pthread_mutex_unlock(list_lock);
             return 4;
         }
         if (stream_context->allocated_stream == NULL) {
             fprintf(stderr, "find_stream_context: stream context with no allocated stream encountered\n");
-            pthread_mutex_unlock(list_lock);
             return 5;
         }
 
@@ -199,15 +172,12 @@ int remove_stream_context(QuicClientStreamContextsList **head, uint64_t stream_i
             free_stream_context(curr->stream_context);
             free(curr);
 
-            pthread_mutex_unlock(list_lock);
-
             return 0;
         }
 
+        prev = curr;
         curr = curr->next;
     }
-
-    pthread_mutex_unlock(list_lock);
 
     return 0;
 }

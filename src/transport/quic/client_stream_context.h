@@ -13,7 +13,6 @@ typedef struct QuicClientStreamContext {
     QuicClient *quic_client;
 
     bool use_auxiliary_stream;
-    ev_async stream_allocator_async_watcher;
     Stream *allocated_stream;
     bool stream_allocation_finished;
     bool successfully_allocated_stream;
@@ -45,14 +44,11 @@ QuicClientStreamContext *create_client_stream_context(QuicClient *quic_client, u
 
 void free_stream_context(QuicClientStreamContext *stream_context);
 
-int add_stream_context(QuicClientStreamContext *stream_context, QuicClientStreamContextsList **head,
-                       pthread_mutex_t *list_lock);
+int add_stream_context(QuicClientStreamContext *stream_context, QuicClientStreamContextsList **head);
 
-QuicClientStreamContext *find_stream_context(QuicClientStreamContextsList *head, uint64_t stream_id,
-                                             pthread_mutex_t *list_lock);
+QuicClientStreamContext *find_stream_context(QuicClientStreamContextsList *head, uint64_t stream_id);
 
-int remove_stream_context(QuicClientStreamContextsList **head, uint64_t stream_id, pthread_mutex_t *list_lock,
-                          pthread_cond_t *list_cond);
+int remove_stream_context(QuicClientStreamContextsList **head, uint64_t stream_id);
 
 void free_stream_contexts_list(QuicClientStreamContextsList *head, pthread_mutex_t *list_lock,
                                pthread_cond_t *list_cond);

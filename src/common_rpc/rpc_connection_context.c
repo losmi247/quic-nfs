@@ -155,6 +155,9 @@ int connect_to_quic_server(RpcConnectionContext *rpc_connection_context) {
     pthread_cond_init(&quic_client->connection_established_condition_variable, NULL);
     quic_client->connection_established = false;
 
+    pthread_mutex_init(&quic_client->stream_allocation_queue_lock, NULL);
+    quic_client->stream_allocation_queue_back = quic_client->stream_allocation_queue_front = NULL;
+
     pthread_mutex_init(&quic_client->connection_closed_lock, NULL);
     pthread_cond_init(&quic_client->connection_closed_condition_variable, NULL);
     quic_client->connection_closed = false;
@@ -228,7 +231,7 @@ int connect_to_quic_server(RpcConnectionContext *rpc_connection_context) {
         quic_config_free(quic_client->quic_config);
         quic_tls_config_free(quic_client->tls_config);
 
-        return 10;
+        return 9;
     }
     transport_connection->quic_client = quic_client;
     rpc_connection_context->transport_connection = transport_connection;
@@ -247,7 +250,7 @@ int connect_to_quic_server(RpcConnectionContext *rpc_connection_context) {
 
         freeaddrinfo(peer);
 
-        return 11;
+        return 10;
     }
     freeaddrinfo(peer);
 
@@ -465,6 +468,10 @@ void free_rpc_connection_context(RpcConnectionContext *rpc_connection_context) {
 
                 pthread_mutex_destroy(&quic_client->connection_established_lock);
                 pthread_cond_destroy(&quic_client->connection_established_condition_variable);
+
+                free_stream_allocation_queue(quic_client->stream_allocation_queue_back);
+
+                pthread_mutex_destroy(&quic_client->stream_allocation_queue_lock);
 
                 pthread_mutex_destroy(&quic_client->connection_closed_lock);
                 pthread_cond_destroy(&quic_client->connection_closed_condition_variable);

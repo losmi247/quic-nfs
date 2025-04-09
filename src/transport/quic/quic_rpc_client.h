@@ -47,4 +47,6 @@ Rpc__RpcMsg *invoke_rpc_remote_quic(RpcConnectionContext *rpc_connection_context
 
 void async_connection_closing_callback(EV_P_ ev_async *w, int revents);
 
+void debug_log(const uint8_t *data, size_t data_len, void *argp);
+
 #endif /* quic_client__header__INCLUDED */
